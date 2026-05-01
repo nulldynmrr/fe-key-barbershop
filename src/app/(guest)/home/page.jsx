@@ -2,10 +2,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { Clock3, Mail, MapPinned, Phone, Scissors, Sparkles, Wine } from "lucide-react";
 import Separator from "../../../components/Separator";
+import SiteFooter from "@/components/SiteFooter";
+import SiteNavbar from "@/components/SiteNavbar";
 
 const navItems = [
-  { label: "Home", href: "#home", active: true },
-  { label: "AI Feature", href: "#ai-feature" },
+  { label: "Home", href: "#", active: true },
+  { label: "AI Feature", href: "/ai" },
   { label: "Services", href: "#services" },
   { label: "Gallery", href: "#gallery" },
 ];
@@ -76,37 +78,7 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(74,26,26,0.38)_0%,rgba(74,26,26,0.12)_42%,rgba(254,248,243,0.65)_100%)]" />
         </div>
 
-        <header className="absolute inset-x-0 top-0 z-20 bg-white bg-[radial-gradient(ellipse_74.79%_67.23%_at_50%_50%,rgba(29,27,25,0)_0%,rgba(29,27,25,0.4)_100%)]">
-          <div className="relative mx-auto flex max-w-8xl items-center justify-between px-6 py-0 lg:px-12">
-            <Link href="#home" className="flex pl-5 items-center gap-3">
-              <Image src="/images/logo-navbar.png" alt="Key Barber logo" width={100} height={100} className="h-18 w-24 object-contain" />
-              {/* <span className="relative flex h-14 w-14 items-center justify-center">
-                <Image src="/images/logo-navbar.png" alt="Key Barber logo" width={56} height={56} className="h-14 w-14 object-contain" />
-              </span> */}
-            </Link>
-
-            <nav className="hidden items-center gap-10 lg:absolute lg:left-1/2 lg:flex lg:-translate-x-1/2" style={{ fontFamily: "Liberation Serif" }}>
-              {navItems.map((item) => (
-                <Link key={item.label} href={item.href} className={`text-sm uppercase tracking-[0.25em] transition ${item.active ? "border-b-2 border-[#4a1a1a] text-[#4a1a1a] pb-0.5" : "text-[#78716c] hover:text-[#4a1a1a]"}`}>
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-
-            <div className="hidden items-center gap-6 lg:flex">
-              <Link href="/user/login-admin" className="text-sm uppercase tracking-[0.25em] text-[#4a1a1a] transition hover:text-[#2b1d19]" style={{ fontFamily: "Liberation Serif" }}>
-                Sign In
-              </Link>
-              <Link
-                href="/user/ai-analyze"
-                className="inline-flex h-11 items-center justify-center bg-[#4a1a1a] px-6 text-xs font-medium uppercase tracking-[0.28em] text-[#fbf7f3] shadow-[0_10px_24px_rgba(74,26,26,0.2)] transition hover:bg-[#5a2725]"
-                style={{ fontFamily: "Liberation Serif" }}
-              >
-                Try AI Now
-              </Link>
-            </div>
-          </div>
-        </header>
+        <SiteNavbar navItems={navItems}/>
 
         <div className="relative mx-auto flex min-h-[min(100svh,58rem)] max-w-7xl flex-col items-center justify-center px-6 pb-24 pt-32 text-center lg:px-10 lg:pt-36">
           <div className="mb-7 flex items-center gap-4">
@@ -184,142 +156,56 @@ export default function HomePage() {
             <div className="pointer-events-none absolute -right-6 -top-8 h-44 w-44 rounded-full bg-[#4a1a1a]/6 blur-3xl" />
           </article>
         </div>
-        
+
         <div className="col-span-2">
-      <Separator />
-            
+          <Separator />
         </div>
-            <div className="grid gap-8 lg:grid-cols-[0.65fr_0.35fr]">
-                <article className="relative row-span-2 min-h-128 overflow-hidden border border-[#e6d1c7] bg-[#ede8e0]">
-              <Image src="/images/figma/home/feature-room-59f9db.png" alt="Barbershop interior" fill sizes="(min-width: 1024px) 52vw, 100vw" className="object-cover object-center opacity-85" />
-              <div className="absolute inset-0 bg-[linear-gradient(270deg,rgba(74,26,26,0.82)_0%,rgba(74,26,26,0.42)_34%,rgba(74,26,26,0.06)_62%,rgba(74,26,26,0)_100%)]" />
-              <div className="absolute inset-x-0 bottom-0 p-8 md:p-12">
-                <p className="text-sm uppercase tracking-[0.42em] text-[#f3ded6]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
-                  The Technique
-                </p>
-                <h3 className="mt-3 text-3xl text-white sm:text-4xl" style={{ fontFamily: "var(--font-noto-serif)" }}>
-                  Artisanal Precision
-                </h3>
-                <p className="mt-4 max-w-xl text-base leading-7 text-[#f7e7e1]" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
-                  Every cut is a collaboration between technique and individuality, guided by experience, refined through detail.
-                </p>
-              </div>
-            </article>
-            <SectionCard
-              className="border border-[#e6d1c7] bg-[#ede8e0] px-9 py-5 text-center"
-              title="The Calm"
-              titleClassName="text-[#4a1a1a]"
-              description="A space designed for comfort, where every detail is crafted to give you a relaxing and refined grooming experience."
-              descriptionClassName="text-[#8f6b5f]"
-            >
-                <Wine className="mx-auto mt-2 h-10 w-10"></Wine>
-            </SectionCard>
-
-            <SectionCard
-              className="border border-[#4a1a1a] bg-[#4a1a1a] px-9 py-5 text-left text-[#fbf7f3] shadow-[0_28px_60px_rgba(74,26,26,0.28)]"
-              title="AI Stylist"
-              titleClassName="text-[#fbf7f3]"
-              description="Our intelligent system analyzes your facial structure and hair characteristics to recommend the most suitable hairstyle for you."
-              descriptionClassName="text-[#f3ded6]"
-            >
-              <Link
-                href="/user/ai-analyze"
-                className="mt-8 inline-flex items-center gap-2 border-b border-white/30 pb-1 text-[0.72rem] uppercase tracking-[0.38em] text-[#fbf7f3] transition hover:border-white/70"
-                style={{ fontFamily: "var(--font-be-vietnam)" }}
-              >
-                Discover your look
-                <Sparkles className="h-4 w-4" />
-              </Link>
-            </SectionCard>
-
-            
+        <div className="grid gap-8 lg:grid-cols-[0.65fr_0.35fr]">
+          <article className="relative row-span-2 min-h-128 overflow-hidden border border-[#e6d1c7] bg-[#ede8e0]">
+            <Image src="/images/figma/home/feature-room-59f9db.png" alt="Barbershop interior" fill sizes="(min-width: 1024px) 52vw, 100vw" className="object-cover object-center opacity-85" />
+            <div className="absolute inset-0 bg-[linear-gradient(270deg,rgba(74,26,26,0.82)_0%,rgba(74,26,26,0.42)_34%,rgba(74,26,26,0.06)_62%,rgba(74,26,26,0)_100%)]" />
+            <div className="absolute inset-x-0 bottom-0 p-8 md:p-12">
+              <p className="text-sm uppercase tracking-[0.42em] text-[#f3ded6]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
+                The Technique
+              </p>
+              <h3 className="mt-3 text-3xl text-white sm:text-4xl" style={{ fontFamily: "var(--font-noto-serif)" }}>
+                Artisanal Precision
+              </h3>
+              <p className="mt-4 max-w-xl text-base leading-7 text-[#f7e7e1]" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
+                Every cut is a collaboration between technique and individuality, guided by experience, refined through detail.
+              </p>
             </div>
-            
+          </article>
+          <SectionCard
+            className="border border-[#e6d1c7] bg-[#ede8e0] px-9 py-5 text-center"
+            title="The Calm"
+            titleClassName="text-[#4a1a1a]"
+            description="A space designed for comfort, where every detail is crafted to give you a relaxing and refined grooming experience."
+            descriptionClassName="text-[#8f6b5f]"
+          >
+            <Wine className="mx-auto mt-2 h-10 w-10"></Wine>
+          </SectionCard>
+
+          <SectionCard
+            className="border border-[#4a1a1a] bg-[#4a1a1a] px-9 py-5 text-left text-[#fbf7f3] shadow-[0_28px_60px_rgba(74,26,26,0.28)]"
+            title="AI Stylist"
+            titleClassName="text-[#fbf7f3]"
+            description="Our intelligent system analyzes your facial structure and hair characteristics to recommend the most suitable hairstyle for you."
+            descriptionClassName="text-[#f3ded6]"
+          >
+            <Link
+              href="/user/ai-analyze"
+              className="mt-8 inline-flex items-center gap-2 border-b border-white/30 pb-1 text-[0.72rem] uppercase tracking-[0.38em] text-[#fbf7f3] transition hover:border-white/70"
+              style={{ fontFamily: "var(--font-be-vietnam)" }}
+            >
+              Discover your look
+              <Sparkles className="h-4 w-4" />
+            </Link>
+          </SectionCard>
+        </div>
       </section>
 
-
-      <footer id="gallery" className="bg-[#2D0D0D] text-[#C57E7B]">
-        <div className="mx-auto max-w-7xl px-6 py-20 lg:px-10">
-          <div className="grid gap-16 lg:grid-cols-[1.1fr_0.8fr_0.95fr]">
-            <div>
-              <div className="flex items-center gap-4">
-                
-                <div>
-                  <div className="text-2xl text-[#f3e8de]" style={{ fontFamily: "var(--font-playfair)" }}>
-                    Key Barber
-                  </div>
-                </div>
-              </div>
-
-              <p className="mt-6 max-w-md text-base leading-7 text-[#c57e7b]" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
-                Premium barbershop combining traditional craftsmanship with AI-powered precision.
-              </p>
-
-              <div className="mt-8 flex items-center gap-3">
-                <Link
-                  href="https://www.instagram.com/"
-                  aria-label="Instagram"
-                  className="inline-flex h-11 w-11 items-center justify-center border border-[#c57e7b]/20 text-[0.72rem] font-semibold uppercase tracking-[0.3em] text-[#f3e8de] transition hover:bg-white/5"
-                  style={{ fontFamily: "var(--font-be-vietnam)" }}
-                >
-                  IG
-                </Link>
-                <Link href="tel:+628131380798" aria-label="Phone" className="inline-flex h-11 w-11 items-center justify-center border border-[#c57e7b]/20 text-[#f3e8de] transition hover:bg-white/5">
-                  <Phone className="h-4 w-4" />
-                </Link>
-              </div>
-            </div>
-
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.42em] text-[#f3e8de]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
-                Menu
-              </p>
-              <div className="mt-6 space-y-4">
-                {footerLinks.map((item) => (
-                  <Link key={item.label} href={item.href} className="block text-base text-[#c57e7b] transition hover:text-[#f3e8de]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.42em] text-[#f3e8de]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
-                Contact us
-              </p>
-
-              <div className="mt-6 space-y-4">
-                {contactDetails.map(({ icon: Icon, label }) => (
-                  <div key={label} className="flex gap-3 text-base leading-7 text-[#c57e7b]">
-                    <Icon className="mt-1 h-4 w-4 shrink-0 text-[#D07B46]" />
-                    <span style={{ fontFamily: "var(--font-plus-jakarta)" }}>{label}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-8 border-t border-[#c57e7b]/20 pt-6">
-                <div className="flex items-center gap-2 text-xs uppercase tracking-[0.34em] text-[#D07B46]">
-                  <Clock3 className="h-4 w-4" />
-                  Opening Hours
-                </div>
-                <div className="mt-4 space-y-3">
-                  {openingHours.map(([day, time]) => (
-                    <div key={day} className="flex items-center justify-between gap-4 text-base text-[#c57e7b]">
-                      <span style={{ fontFamily: "var(--font-plus-jakarta)" }}>{day}</span>
-                      <span style={{ fontFamily: "var(--font-plus-jakarta)" }}>{time}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-                  <Separator></Separator>
-          <div className=" flex flex-col gap-4 text-xs uppercase tracking-[0.34em] text-[#c57e7b]/70 md:flex-row md:items-center md:justify-between">
-            <span>© 2026 Key Barber. Seluruh hak cipta dilindungi.</span>
-            <span>DIKEMBANGKAN OLEH <span className="text-[#D07B46]">IUM26-042 · TELKOM UNIVERSITY</span></span>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter/>
     </main>
   );
 }

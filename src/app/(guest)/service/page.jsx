@@ -45,11 +45,7 @@ const pricingPlans = [
     tier: "Entry Level",
     title: "Starter",
     credits: "50 Credits",
-    features: [
-      "Standard Visual Exports",
-      "Style Recommendations",
-      "Priority Processing",
-    ],
+    features: ["Standard Visual Exports", "Style Recommendations", "Priority Processing"],
     price: "IDR 75.000",
     recommended: false,
   },
@@ -57,11 +53,7 @@ const pricingPlans = [
     tier: "Most Popular",
     title: "Gentleman's Choice",
     credits: "300 Credits",
-    features: [
-      "Face Shape Analysis",
-      "Personalised Style Suggestions",
-      "Explore Multiple Styles",
-    ],
+    features: ["Face Shape Analysis", "Personalised Style Suggestions", "Explore Multiple Styles"],
     price: "IDR 195.000",
     recommended: true,
   },
@@ -69,11 +61,7 @@ const pricingPlans = [
     tier: "Ultimate Value",
     title: "Master's Collection",
     credits: "Premium Member",
-    features: [
-      "Unlimited Style Exploration",
-      "High-Resolution Visual Results",
-      "Priority Processing",
-    ],
+    features: ["Unlimited Style Exploration", "High-Resolution Visual Results", "Priority Processing"],
     price: "IDR 550.000",
     recommended: false,
   },
@@ -138,7 +126,10 @@ function PricingCard({ tier, title, credits, features, price, recommended }) {
         <p className="text-lg font-light" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
           {price}
         </p>
-        <button className={`w-full px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] transition ${recommended ? "bg-[#f7f1ea] text-[#2b1d19] hover:bg-[#ede8e0]" : "border border-[#8b6f59] text-[#f7e7d8] hover:bg-[#5d1818]"}`} style={{ fontFamily: "var(--font-be-vietnam)" }}>
+        <button
+          className={`w-full px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] transition ${recommended ? "bg-[#f7f1ea] text-[#2b1d19] hover:bg-[#ede8e0]" : "border border-[#8b6f59] text-[#f7e7d8] hover:bg-[#5d1818]"}`}
+          style={{ fontFamily: "var(--font-be-vietnam)" }}
+        >
           Buy Now
         </button>
       </div>
@@ -149,53 +140,52 @@ function PricingCard({ tier, title, credits, features, price, recommended }) {
 export default function ServicesPage() {
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#4A1A1A] text-[#f7f1ea] scroll-smooth">
-      <SiteNavbar activeLabel="Services"/>
+      <SiteNavbar activeLabel="Services" />
       <div className="bg-radial from-black/0 to-black/40">
-      {/* Header Section */}
-      <section className="mx-auto max-w-7xl px-6 pb-20 pt-24 lg:px-10 lg:pt-32">
-        <div className="text-center">
-          <p className="text-xl uppercase tracking-[0.5em] text-[#C57E7B]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
-            The Art of Grooming
-          </p>
-          <h1 className="mt-4 text-xl font-light text-[#f7f1ea] sm:text-2xl lg:text-3xl" style={{ fontFamily: "var(--font-playfair)" }}>
-            Premium Grooming for the Modern Gentleman
-          </h1>
-          
-        </div>
-      </section>
+        {/* Header Section */}
+        <section className="mx-auto max-w-7xl px-6 pb-20 pt-24 lg:px-10 lg:pt-32">
+          <div className="text-center">
+            <p className="text-xl uppercase tracking-[0.5em] text-[#C57E7B]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
+              The Art of Grooming
+            </p>
+            <h1 className="mt-4 text-xl font-light text-[#f7f1ea] sm:text-2xl lg:text-3xl" style={{ fontFamily: "var(--font-playfair)" }}>
+              Premium Grooming for the Modern Gentleman
+            </h1>
+          </div>
+        </section>
 
-      <SeparatorKey></SeparatorKey>
+        <SeparatorKey></SeparatorKey>
 
-      {/* Services Grid */}
-      <section className="mx-auto max-w-6xl px-6 pb-20 lg:px-10">
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {services.map((service, idx) => (
-            <ServiceCard key={idx} {...service} />
-          ))}
-        </div>
-      </section>
+        {/* Services Grid */}
+        <section className="mx-auto max-w-6xl px-6 pb-20 lg:px-10">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {services.map((service, idx) => (
+              <ServiceCard key={idx} {...service} />
+            ))}
+          </div>
+        </section>
 
-      {/* AI Enhanced Section */}
-      <section className="mx-auto max-w-6xl px-6 pb-20 lg:px-10">
-        <div className="text-center">
-          <p className="text-xl uppercase tracking-[0.5em] text-[#C57E7B]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
-            AI-Enhanced Experience
-          </p>
-          <h2 className="mt-4 text-3xl font-light text-[#f7f1ea] sm:text-4xl" style={{ fontFamily: "var(--font-playfair)" }}>
-            Digital Ritual Credits
-          </h2>
-          <p className="mx-auto mt-6 max-w-2xl text-sm leading-7 text-[#d8b9b1]" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
-            Fuel your AI style exploration with our credit packages. Use credits for high-definition facial mapping and style simulations.
-          </p>
-        </div>
+        {/* AI Enhanced Section */}
+        <section className="mx-auto max-w-6xl px-6 pb-20 lg:px-10">
+          <div className="text-center">
+            <p className="text-xl uppercase tracking-[0.5em] text-[#C57E7B]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
+              AI-Enhanced Experience
+            </p>
+            <h2 className="mt-4 text-3xl font-light text-[#f7f1ea] sm:text-4xl" style={{ fontFamily: "var(--font-playfair)" }}>
+              Digital Ritual Credits
+            </h2>
+            <p className="mx-auto mt-6 max-w-2xl text-sm leading-7 text-[#d8b9b1]" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
+              Fuel your AI style exploration with our credit packages. Use credits for high-definition facial mapping and style simulations.
+            </p>
+          </div>
 
-        {/* Pricing Cards */}
-        <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-3">
-          {pricingPlans.map((plan, idx) => (
-            <PricingCard key={idx} {...plan} />
-          ))}
-        </div>
-      </section>
+          {/* Pricing Cards */}
+          <div className="mt-16 grid grid-cols-1 gap-8 md:grid-cols-3">
+            {pricingPlans.map((plan, idx) => (
+              <PricingCard key={idx} {...plan} />
+            ))}
+          </div>
+        </section>
       </div>
       <SiteFooter />
     </main>

@@ -78,7 +78,7 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(74,26,26,0.38)_0%,rgba(74,26,26,0.12)_42%,rgba(254,248,243,0.65)_100%)]" />
         </div>
 
-        <SiteNavbar activeLabel="Home"/>
+        <SiteNavbar activeLabel="Home" />
 
         <div className="relative mx-auto flex min-h-[min(100svh,58rem)] max-w-7xl flex-col items-center justify-center px-6 pb-24 pt-32 text-center lg:px-10 lg:pt-36">
           <div className="mb-7 flex items-center gap-4">
@@ -205,7 +205,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <SiteFooter/>
+      <SiteFooter />
     </main>
   );
 }

@@ -75,13 +75,13 @@ export default function HomePage() {
       <section id="home" className="relative isolate overflow-hidden">
         <div className="absolute inset-0">
           <Image src="/images/figma/home/hero-background-3dbeae.png" alt="Key Barber interior" fill priority sizes="100vw" className="object-cover object-center opacity-90" />
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(74,26,26,0.38)_0%,rgba(74,26,26,0.12)_42%,rgba(254,248,243,0.65)_100%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(74,26,26,0.38)_80%,rgba(74,26,26,0.38)_80%,rgba(254,248,243,0.65)_100%)]" />
         </div>
 
         <SiteNavbar activeLabel="Home" />
 
         <div className="relative mx-auto flex min-h-[min(100svh,58rem)] max-w-7xl flex-col items-center justify-center px-6 pb-24 pt-32 text-center lg:px-10 lg:pt-36">
-          <div className="mb-7 flex items-center gap-4">
+          <div className="mb-6 flex items-center gap-4">
             <span className="h-px w-16 bg-[#f0e2d9]/50" />
             <span className="text-lg  uppercase tracking-[0.42em] text-[#f0e2d9]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
               EST. 2024
@@ -102,14 +102,14 @@ export default function HomePage() {
 
           <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:gap-5">
             <Link
-              href="/user/ai-analyze"
+              href="/ai"
               className="inline-flex items-center justify-center border border-[#4a1a1a] bg-[#4a1a1a] px-8 py-4 text-sm font-medium uppercase tracking-[0.3em] text-[#fbf7f3] shadow-[inset_0_1px_2px_rgba(255,255,255,0.35)] transition hover:bg-[#5a2725]"
               style={{ fontFamily: "var(--font-plus-jakarta)" }}
             >
               Start AI Recommendation
             </Link>
             <Link
-              href="/user/price-list"
+              href="/service"
               className="inline-flex items-center justify-center border border-[#c57e7b]/55 bg-white/8 px-8 py-4 text-sm font-medium uppercase tracking-[0.3em] text-[#fbf7f3] backdrop-blur-[2px] transition hover:border-[#f0e2d9] hover:bg-white/14"
               style={{ fontFamily: "var(--font-plus-jakarta)" }}
             >

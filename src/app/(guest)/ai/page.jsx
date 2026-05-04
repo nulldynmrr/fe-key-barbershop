@@ -95,7 +95,7 @@ export default function AiPage() {
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#FBF7F3] text-[#2B1D19] scroll-smooth">
       <AILoadingModal isOpen={isModalOpen} onClose={handleCloseModal} onComplete={handleLoadingComplete} disableAutoProgress={isPreviewLoading} previewStep={1} />
-      <SiteNavbar navItems={aiNavItems} activeLabel="AI Feature" ctaLabel="Try AI Now" ctaHref="/user/ai-analyze" />
+      <SiteNavbar activeLabel="AI Feature" />
 
       <section className="mx-auto max-w-7xl px-6 pb-14 pt-24 lg:px-10 lg:pt-32">
         <div className="text-center">

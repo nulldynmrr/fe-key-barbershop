@@ -6,10 +6,10 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 
 const defaultNavItems = [
-  { label: "Home", href: "#home" },
-  { label: "AI Feature", href: "#ai-feature" },
-  { label: "Services", href: "#services" },
-  { label: "Gallery", href: "#gallery" },
+  { label: "Home", href: "/home" },
+  { label: "AI Feature", href: "/ai" },
+  { label: "Services", href: "/service" },
+  { label: "Gallery", href: "/gallery" },
 ];
 
 export default function SiteNavbar({
@@ -19,8 +19,8 @@ export default function SiteNavbar({
   logoSrc = "/images/logo-navbar.png",
   logoAlt = "Key Barber logo",
   ctaLabel = "Try AI Now",
-  ctaHref = "/user/ai-analyze",
-  signInHref = "/user/login-admin",
+  ctaHref = "/ai",
+  signInHref = "/login",
   showSignIn = true,
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

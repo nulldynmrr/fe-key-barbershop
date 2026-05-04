@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { ScanFace, Sparkles, Upload } from "lucide-react";
-import Separator from "../../../components/Separator";
+import SeparatorKey from "../../../components/SeparatorKey";
 import SiteFooter from "../../../components/SiteFooter";
 import SiteNavbar from "../../../components/SiteNavbar";
 import AILoadingModal from "../../../components/AILoadingModal";
@@ -76,7 +76,13 @@ export default function AiPage() {
     }
 
     setIsLoadingOpen(false);
-    router.push("/user/ai-analyze/results");
+    sessionStorage.setItem(
+      "aiResultAccess",
+      JSON.stringify({
+        grantedAt: Date.now(),
+      }),
+    );
+    router.push("/ai/result");
   };
 
   const handleCloseModal = () => {
@@ -89,7 +95,7 @@ export default function AiPage() {
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#FBF7F3] text-[#2B1D19] scroll-smooth">
       <AILoadingModal isOpen={isModalOpen} onClose={handleCloseModal} onComplete={handleLoadingComplete} disableAutoProgress={isPreviewLoading} previewStep={1} />
-      <SiteNavbar navItems={aiNavItems} activeLabel="AI Feature" ctaLabel="Try AI Now" ctaHref="/user/ai-analyze" />
+      <SiteNavbar activeLabel="AI Feature"  />
 
       <section className="mx-auto max-w-7xl px-6 pb-14 pt-24 lg:px-10 lg:pt-32">
         <div className="text-center">
@@ -113,7 +119,7 @@ export default function AiPage() {
         </div>
       </section>
 
-      <Separator />
+      <SeparatorKey />
 
       <section className="relative mx-auto max-w-6xl px-6 pb-16 pt-16 lg:px-10">
         <div className="text-center">

@@ -1,6 +1,6 @@
 import Image from "next/image";
 
-export default function Separator({ img = "/images/logo-transparent.png", height = 64 }) {
+export default function SeparatorKey({ img = "/images/logo-transparent.png", height = 64 }) {
   return (
     <div className="mx-auto w-full max-w-6xl py-6">
       <div className="separator flex items-center justify-center gap-6">

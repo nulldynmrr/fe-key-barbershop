@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Clock3, Mail, MapPinned, Phone, Scissors, Sparkles, Wine } from "lucide-react";
-import Separator from "../../../components/Separator";
+import SeparatorKey from "../../../components/SeparatorKey";
 import SiteFooter from "@/components/SiteFooter";
 import SiteNavbar from "@/components/SiteNavbar";
 
@@ -78,7 +78,7 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(74,26,26,0.38)_0%,rgba(74,26,26,0.12)_42%,rgba(254,248,243,0.65)_100%)]" />
         </div>
 
-        <SiteNavbar navItems={navItems}/>
+        <SiteNavbar activeLabel="Home"/>
 
         <div className="relative mx-auto flex min-h-[min(100svh,58rem)] max-w-7xl flex-col items-center justify-center px-6 pb-24 pt-32 text-center lg:px-10 lg:pt-36">
           <div className="mb-7 flex items-center gap-4">
@@ -119,7 +119,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <Separator />
+      <SeparatorKey />
 
       <section id="ai-feature" className="mx-auto max-w-7xl px-6 py-10 lg:px-10 lg:pb-14 pt-0">
         <div className="grid gap-8 lg:grid-cols-[0.4fr_0.6fr]">
@@ -158,7 +158,7 @@ export default function HomePage() {
         </div>
 
         <div className="col-span-2">
-          <Separator />
+          <SeparatorKey />
         </div>
         <div className="grid gap-8 lg:grid-cols-[0.65fr_0.35fr]">
           <article className="relative row-span-2 min-h-128 overflow-hidden border border-[#e6d1c7] bg-[#ede8e0]">

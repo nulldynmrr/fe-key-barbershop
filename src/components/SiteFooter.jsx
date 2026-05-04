@@ -3,10 +3,10 @@ import Link from "next/link";
 import { Clock3, Mail, MapPinned, Phone } from "lucide-react";
 
 const defaultFooterLinks = [
-  { label: "Home", href: "#home" },
-  { label: "AI Feature", href: "#ai-feature" },
-  { label: "Services", href: "#services" },
-  { label: "Gallery", href: "#gallery" },
+  { label: "Home", href: "/home" },
+  { label: "AI Feature", href: "/ai" },
+  { label: "Services", href: "/service" },
+  { label: "Gallery", href: "/gallery" },
 ];
 
 const defaultContactDetails = [

@@ -44,7 +44,7 @@ function StepCard({ number, title, description, icon: Icon }) {
     <article className="flex flex-col items-center text-center">
       <div className="relative flex h-32 w-32 items-center justify-center rounded-full bg-[#4a1a1a] shadow-lg">
         <Icon className="h-12 w-12 text-[#fbf7f3]" />
-        <span className="absolute -top-2 -right-0.5 flex h-10 w-10 items-center justify-center rounded-full bg-[#E6E2DD] text-xs font-semibold text-[#4A1A1A]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
+        <span className="absolute -top-2 -right-0.5 flex h-10 w-10 items-center justify-center rounded-full bg-[#FBF7F3] font-bold text-[#4A1A1A]" style={{ fontFamily: "var(--font-noto-serif)" }}>
           {number}
         </span>
       </div>

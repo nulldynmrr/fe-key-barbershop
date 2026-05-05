@@ -1,17 +1,18 @@
 "use client";
 
 import React from "react";
-import { User, Wallet, Scissors, BarChart3, AlertTriangle } from "lucide-react";
+import Image from "next/image";
+import { Scissors, BarChart3, AlertTriangle } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Cell, Tooltip,
   PieChart, Pie
 } from "recharts";
 
 const summaryData = [
-  { title: "Total Users", value: "8,019", change: "+12.5%", isPositive: true, icon: User },
-  { title: "Total Pendapatan", value: "Rp1.200.000", change: "+12.5%", isPositive: true, icon: Wallet },
-  { title: "Pengeluaran AI", value: "Rp1.200.000", change: "-5.5%", isPositive: false, icon: Scissors },
-  { title: "Sisa Token AI", value: "1M", change: "-5.5%", isPositive: false, icon: BarChart3, badge: "Token sedikit lagi" },
+  { title: "Total Users", value: "8,019", change: "+12.5%", isPositive: true, image: "/images/figma/admin-dashboard/total-users.png" },
+  { title: "Total Pendapatan", value: "Rp1.200.000", change: "+12.5%", isPositive: true, image: "/images/figma/admin-dashboard/total-pendapatan.png" },
+  { title: "Pengeluaran AI", value: "Rp1.200.000", change: "-5.5%", isPositive: false, image: "/images/figma/admin-dashboard/pengeluaran-ai.png" },
+  { title: "Sisa Token AI", value: "1M", change: "-5.5%", isPositive: false, image: "/images/figma/admin-dashboard/sisa-token.png", badge: "Token sedikit lagi" },
 ];
 
 const barChartData = [
@@ -85,11 +86,10 @@ export default function DashboardPage() {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {summaryData.map((item, index) => {
-          const Icon = item.icon;
           return (
             <div key={index} className="bg-white p-5 rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-[#f0e2d9] relative flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full bg-[#fafafa] flex items-center justify-center flex-shrink-0">
-                <Icon className="w-6 h-6 text-[#4a1a1a]" />
+              <div className="w-12 h-12 rounded-full bg-[#fafafa] flex items-center justify-center flex-shrink-0 overflow-hidden">
+                <Image src={item.image} alt={item.title} width={28} height={28} className="object-contain" unoptimized />
               </div>
               <div className="flex-1">
                 <p className="text-[11px] text-[#8b6f66] uppercase tracking-wider font-semibold mb-1" style={{ fontFamily: "var(--font-be-vietnam)" }}>
@@ -188,8 +188,8 @@ export default function DashboardPage() {
                       <td className="py-4 text-xs text-[#524342]" style={{ fontFamily: "var(--font-plus-jakarta)" }}>{row.generate}</td>
                       <td className="py-4">
                         <span className={`px-4 py-1 text-[10px] font-bold rounded-md border ${row.status === 'PREMIUM' ? 'bg-white border-[#e6d1c7] text-[#8b6f66]' :
-                            row.status === 'GUEST' ? 'bg-white border-[#e6d1c7] text-[#8b6f66]' :
-                              row.status === 'VIP' ? 'bg-white border-[#e6d1c7] text-[#8b6f66]' : ''
+                          row.status === 'GUEST' ? 'bg-white border-[#e6d1c7] text-[#8b6f66]' :
+                            row.status === 'VIP' ? 'bg-white border-[#e6d1c7] text-[#8b6f66]' : ''
                           }`} style={{ fontFamily: "var(--font-be-vietnam)" }}>
                           {row.status}
                         </span>
@@ -231,7 +231,7 @@ export default function DashboardPage() {
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <Scissors className="w-6 h-6 text-[#4A1A1A]" />
+                <Image src="/images/figma/admin-dashboard/pengeluaran-ai.png" alt="Model AI" width={28} height={28} className="object-contain" unoptimized />
               </div>
             </div>
 
@@ -276,7 +276,7 @@ export default function DashboardPage() {
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <BarChart3 className="w-6 h-6 text-[#4A1A1A]" />
+                <Image src="/images/figma/admin-dashboard/statistik-user.png" alt="Statistik User" width={28} height={28} className="object-contain" unoptimized />
               </div>
             </div>
 

@@ -2,7 +2,7 @@
 
 import React from "react";
 import { User, Wallet, Scissors, BarChart3, AlertTriangle } from "lucide-react";
-import { 
+import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Cell, Tooltip,
   PieChart, Pie
 } from "recharts";
@@ -105,7 +105,7 @@ export default function DashboardPage() {
                   dari 7 hari kebelakang
                 </p>
               </div>
-              
+
               {item.badge && (
                 <div className="absolute top-4 right-4 bg-[#8b1a1a] text-white text-[10px] px-2 py-1 rounded-md flex items-center gap-1 font-semibold tracking-wide">
                   <AlertTriangle className="w-3 h-3" />
@@ -120,7 +120,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column (Main Charts & Tables) */}
         <div className="lg:col-span-2 space-y-6">
-          
+
           {/* Income Chart */}
           <div className="bg-white p-6 rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-[#f0e2d9]">
             <h3 className="text-lg font-bold text-[#2b1d19] mb-6" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
@@ -130,25 +130,25 @@ export default function DashboardPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={barChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0e2d9" />
-                  <XAxis 
-                    dataKey="name" 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fontSize: 10, fill: '#8b6f66', fontFamily: 'var(--font-plus-jakarta)' }} 
+                  <XAxis
+                    dataKey="name"
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fontSize: 10, fill: '#8b6f66', fontFamily: 'var(--font-plus-jakarta)' }}
                     dy={10}
                   />
-                  <YAxis 
-                    axisLine={false} 
-                    tickLine={false} 
+                  <YAxis
+                    axisLine={false}
+                    tickLine={false}
                     tick={{ fontSize: 10, fill: '#8b6f66', fontFamily: 'var(--font-plus-jakarta)' }}
                     ticks={[0, 1500, 14000, 1000000, 12000000, 16000000]} // Rough approximation of the y-axis labels
                     tickFormatter={(value) => {
-                      if(value === 0) return '0';
-                      if(value === 1500) return 'Rp1500';
-                      if(value === 14000) return 'Rp14rb';
-                      if(value === 1000000) return 'Rp1jt';
-                      if(value === 12000000) return 'Rp12jt';
-                      if(value === 16000000) return 'Rp16jt';
+                      if (value === 0) return '0';
+                      if (value === 1500) return 'Rp1500';
+                      if (value === 14000) return 'Rp14rb';
+                      if (value === 1000000) return 'Rp1jt';
+                      if (value === 12000000) return 'Rp12jt';
+                      if (value === 16000000) return 'Rp16jt';
                       return value;
                     }}
                   />
@@ -187,11 +187,10 @@ export default function DashboardPage() {
                       <td className="py-4 text-xs text-[#524342]" style={{ fontFamily: "var(--font-plus-jakarta)" }}>{row.credit}</td>
                       <td className="py-4 text-xs text-[#524342]" style={{ fontFamily: "var(--font-plus-jakarta)" }}>{row.generate}</td>
                       <td className="py-4">
-                        <span className={`px-4 py-1 text-[10px] font-bold rounded-md border ${
-                          row.status === 'PREMIUM' ? 'bg-white border-[#e6d1c7] text-[#8b6f66]' :
-                          row.status === 'GUEST' ? 'bg-white border-[#e6d1c7] text-[#8b6f66]' :
-                          row.status === 'VIP' ? 'bg-white border-[#e6d1c7] text-[#8b6f66]' : ''
-                        }`} style={{ fontFamily: "var(--font-be-vietnam)" }}>
+                        <span className={`px-4 py-1 text-[10px] font-bold rounded-md border ${row.status === 'PREMIUM' ? 'bg-white border-[#e6d1c7] text-[#8b6f66]' :
+                            row.status === 'GUEST' ? 'bg-white border-[#e6d1c7] text-[#8b6f66]' :
+                              row.status === 'VIP' ? 'bg-white border-[#e6d1c7] text-[#8b6f66]' : ''
+                          }`} style={{ fontFamily: "var(--font-be-vietnam)" }}>
                           {row.status}
                         </span>
                       </td>
@@ -205,13 +204,13 @@ export default function DashboardPage() {
 
         {/* Right Column (Donut Charts) */}
         <div className="space-y-6">
-          
+
           {/* Model AI Chart */}
           <div className="bg-white p-6 rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-[#f0e2d9]">
             <h3 className="text-lg font-bold text-[#2b1d19] mb-2" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
               Model AI
             </h3>
-            
+
             <div className="flex justify-center items-center h-[200px] relative">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -232,7 +231,7 @@ export default function DashboardPage() {
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                 <Scissors className="w-6 h-6 text-[#4A1A1A]" />
+                <Scissors className="w-6 h-6 text-[#4A1A1A]" />
               </div>
             </div>
 
@@ -256,7 +255,7 @@ export default function DashboardPage() {
             <h3 className="text-lg font-bold text-[#2b1d19] mb-2" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
               Statistik User
             </h3>
-            
+
             <div className="flex justify-center items-center h-[200px] relative">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -277,7 +276,7 @@ export default function DashboardPage() {
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                 <BarChart3 className="w-6 h-6 text-[#4A1A1A]" />
+                <BarChart3 className="w-6 h-6 text-[#4A1A1A]" />
               </div>
             </div>
 

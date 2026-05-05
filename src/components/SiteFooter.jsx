@@ -32,7 +32,7 @@ export default function SiteFooter({ footerLinks = defaultFooterLinks, contactDe
           <div>
             <div className="flex items-center gap-4">
               <div>
-                <div className="text-2xl text-[#f3e8de]" style={{ fontFamily: "var(--font-playfair)" }}>
+                <div className="text-3xl text-[#f3e8de]" style={{ fontFamily: "var(--font-playfair)" }}>
                   Key Barber
                 </div>
               </div>

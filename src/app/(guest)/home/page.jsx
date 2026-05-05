@@ -42,7 +42,7 @@ const openingHours = [
 
 function StatCard({ value, label }) {
   return (
-    <div className="border border-[#e6d1c7] bg-[#f3e8de] px-5 py-6 text-center shadow-[0_16px_30px_rgba(57,28,22,0.05)]">
+    <div className="border border-[#e6d1c7] bg-[#EDE8E0] px-5 py-6 text-center shadow-[0_16px_30px_rgba(57,28,22,0.05)]">
       <div className="text-3xl leading-none text-[#3a221c]" style={{ fontFamily: "var(--font-playfair)" }}>
         {value}
       </div>
@@ -53,9 +53,10 @@ function StatCard({ value, label }) {
   );
 }
 
-function SectionCard({ title, description, className = "", titleClassName = "", descriptionClassName = "", children }) {
+function SectionCard({ title, description, className = "", titleClassName = "", descriptionClassName = "", children, childrenFirst = false }) {
   return (
     <article className={className}>
+      {childrenFirst ? children : null}
       <h3 className={`text-3xl ${titleClassName}`} style={{ fontFamily: "var(--font-noto-serif)" }}>
         {title}
       </h3>
@@ -64,7 +65,7 @@ function SectionCard({ title, description, className = "", titleClassName = "", 
           {description}
         </p>
       ) : null}
-      {children}
+      {!childrenFirst ? children : null}
     </article>
   );
 }
@@ -75,7 +76,7 @@ export default function HomePage() {
       <section id="home" className="relative isolate overflow-hidden">
         <div className="absolute inset-0">
           <Image src="/images/figma/home/hero-background-3dbeae.png" alt="Key Barber interior" fill priority sizes="100vw" className="object-cover object-center opacity-90" />
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(74,26,26,0.38)_80%,rgba(74,26,26,0.38)_80%,rgba(254,248,243,0.65)_100%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(74,26,26,0.38)_80%,rgba(74,26,26,0.3)_20%,rgba(254,248,243,0.65)_100%)]" />
         </div>
 
         <SiteNavbar activeLabel="Home" />
@@ -121,10 +122,12 @@ export default function HomePage() {
 
       <SeparatorKey />
 
-      <section id="ai-feature" className="mx-auto max-w-7xl px-6 py-10 lg:px-10 lg:pb-14 pt-0">
-        <div className="grid gap-8 lg:grid-cols-[0.4fr_0.6fr]">
+      <section id="about" className="relative isolate mx-auto max-w-7xl px-6 py-10 pt-0 lg:px-10 lg:pb-14">
+        <div className="pointer-events-none absolute inset-y-0 h-[85vh] left-1/2 z-0 w-screen -translate-x-1/2 bg-[linear-gradient(180deg,rgba(254,248,243,0.65)_70%,rgba(0,0,0,0.1)_100%)]" />
+
+        <div className="relative z-10 grid gap-8 lg:grid-cols-[0.4fr_0.6fr]">
           <div className="relative flex flex-col justify-center">
-            <div className="absolute -left-12 text-[230px] font-black leading-none select-none opacity-15" style={{ fontFamily: "var(--font-noto-serif)" }}>
+            <div className="absolute -left-12 bg-gradient-to-b from-[#000000]/50 to-[#d8c8bc]/5 bg-clip-text text-[230px] font-black leading-none select-none text-transparent opacity-15" style={{ fontFamily: "var(--font-noto-serif)" }}>
               01
             </div>
             <div className="relative z-10">
@@ -157,13 +160,13 @@ export default function HomePage() {
           </article>
         </div>
 
-        <div className="col-span-2">
+        <div className="relative z-10 col-span-2">
           <SeparatorKey />
         </div>
-        <div className="grid gap-8 lg:grid-cols-[0.65fr_0.35fr]">
+        <div className="relative z-10 grid gap-8 lg:grid-cols-[0.65fr_0.35fr]">
           <article className="relative row-span-2 min-h-128 overflow-hidden border border-[#e6d1c7] bg-[#ede8e0]">
             <Image src="/images/figma/home/feature-room-59f9db.png" alt="Barbershop interior" fill sizes="(min-width: 1024px) 52vw, 100vw" className="object-cover object-center opacity-85" />
-            <div className="absolute inset-0 bg-[linear-gradient(270deg,rgba(74,26,26,0.82)_0%,rgba(74,26,26,0.42)_34%,rgba(74,26,26,0.06)_62%,rgba(74,26,26,0)_100%)]" />
+            <div className="absolute inset-0 bg-[linear-gradient(360deg,rgba(74,26,26,0.82)_0%,rgba(74,26,26,0.42)_34%,rgba(74,26,26,0.06)_62%,rgba(74,26,26,0)_100%)]" />
             <div className="absolute inset-x-0 bottom-0 p-8 md:p-12">
               <p className="text-sm uppercase tracking-[0.42em] text-[#f3ded6]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
                 The Technique
@@ -181,9 +184,10 @@ export default function HomePage() {
             title="The Calm"
             titleClassName="text-[#4a1a1a]"
             description="A space designed for comfort, where every detail is crafted to give you a relaxing and refined grooming experience."
-            descriptionClassName="text-[#8f6b5f]"
+            descriptionClassName="text-[#8B4513]"
+            childrenFirst={true}
           >
-            <Wine className="mx-auto mt-2 h-10 w-10"></Wine>
+            <Wine className="mx-auto mb-4 h-10 w-10 text-[#8B4513]" />
           </SectionCard>
 
           <SectionCard
@@ -199,7 +203,6 @@ export default function HomePage() {
               style={{ fontFamily: "var(--font-be-vietnam)" }}
             >
               Discover your look
-              <Sparkles className="h-4 w-4" />
             </Link>
           </SectionCard>
         </div>

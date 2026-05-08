@@ -3,11 +3,117 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
+import { useGoogleLogin } from "@react-oauth/google";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
 
 export default function RegistrationPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [nama, setNama] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const handleGoogleLogin = useGoogleLogin({
+    flow: "implicit",
+    onSuccess: async (tokenResponse) => {
+      setError("");
+      setLoading(true);
+      try {
+        const userInfoRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+        });
+        const userInfo = await userInfoRes.json();
+
+        const res = await fetch(`${API_BASE}/auth/google`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: tokenResponse.access_token, email: userInfo.email, name: userInfo.name }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          setError(data.message || "Login Google gagal.");
+          return;
+        }
+
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.data));
+        router.push("/home");
+      } catch (err) {
+        setError("Gagal login dengan Google. Coba lagi.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    onError: () => {
+      setError("Login Google dibatalkan atau gagal.");
+    },
+  });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+
+    // Validasi password match
+    if (password !== confirmPassword) {
+      setError("Password dan Confirm Password tidak sama.");
+      return;
+    }
+
+    // Validasi panjang password
+    if (password.length < 6) {
+      setError("Password minimal 6 karakter.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await fetch(`${API_BASE}/auth/user/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nama, email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        // Handle validation errors array
+        if (data.errors && Array.isArray(data.errors)) {
+          setError(data.errors.join(", "));
+        } else {
+          setError(data.message || "Registrasi gagal. Silakan coba lagi.");
+        }
+        return;
+      }
+
+      // Simpan token dan data user ke localStorage
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.data));
+
+      setSuccess("Akun berhasil dibuat! Mengalihkan ke halaman login...");
+
+      // Redirect ke login setelah 1.5 detik
+      setTimeout(() => {
+        router.push("/login");
+      }, 1500);
+    } catch (err) {
+      setError("Tidak dapat terhubung ke server. Pastikan backend sudah berjalan.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex w-full min-h-screen items-center justify-center relative overflow-hidden py-12 px-4 sm:px-6 lg:px-8">
       {/* Background Decorative Elements */}
@@ -34,8 +140,27 @@ export default function RegistrationPage() {
           </p>
         </div>
 
+        {/* Error Message */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-xs text-red-600 text-center" style={{ fontFamily: "var(--font-be-vietnam)" }}>{error}</p>
+          </div>
+        )}
+
+        {/* Success Message */}
+        {success && (
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
+            <p className="text-xs text-green-600 text-center" style={{ fontFamily: "var(--font-be-vietnam)" }}>{success}</p>
+          </div>
+        )}
+
         {/* Google Button */}
-        <button className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-[#e6d1c7] bg-white rounded-md hover:bg-[#ede8e0] transition-colors mb-6">
+        <button
+          type="button"
+          onClick={() => handleGoogleLogin()}
+          disabled={loading}
+          className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-[#e6d1c7] bg-white rounded-md hover:bg-[#ede8e0] transition-colors mb-6 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
@@ -53,15 +178,31 @@ export default function RegistrationPage() {
         </div>
 
         {/* Form */}
-        <form>
+        <form onSubmit={handleSubmit}>
           <div className="mb-6">
             <label className="block text-[10px] font-normal text-[#201A1A] uppercase tracking-[0.2em] mb-2" style={{ fontFamily: "var(--font-be-vietnam)" }}>Full Name</label>
-            <input type="text" placeholder="Enter your full name" className="w-full pb-2 border-b border-[#e6d1c7] bg-transparent focus:border-[#4a1a1a] focus:outline-none transition-colors text-sm placeholder:text-[#d8c8bc] text-[#2b1d19]" style={{ fontFamily: "var(--font-plus-jakarta)" }} />
+            <input
+              type="text"
+              placeholder="Enter your full name"
+              value={nama}
+              onChange={(e) => setNama(e.target.value)}
+              required
+              className="w-full pb-2 border-b border-[#e6d1c7] bg-transparent focus:border-[#4a1a1a] focus:outline-none transition-colors text-sm placeholder:text-[#d8c8bc] text-[#2b1d19]"
+              style={{ fontFamily: "var(--font-plus-jakarta)" }}
+            />
           </div>
 
           <div className="mb-6">
             <label className="block text-[10px] font-normal text-[#201A1A] uppercase tracking-[0.2em] mb-2" style={{ fontFamily: "var(--font-be-vietnam)" }}>Email Address</label>
-            <input type="email" placeholder="Enter your email" className="w-full pb-2 border-b border-[#e6d1c7] bg-transparent focus:border-[#4a1a1a] focus:outline-none transition-colors text-sm placeholder:text-[#d8c8bc] text-[#2b1d19]" style={{ fontFamily: "var(--font-plus-jakarta)" }} />
+            <input
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full pb-2 border-b border-[#e6d1c7] bg-transparent focus:border-[#4a1a1a] focus:outline-none transition-colors text-sm placeholder:text-[#d8c8bc] text-[#2b1d19]"
+              style={{ fontFamily: "var(--font-plus-jakarta)" }}
+            />
           </div>
 
           <div className="mb-8">
@@ -72,6 +213,9 @@ export default function RegistrationPage() {
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
                 className={`w-full pb-2 pr-8 border-b border-[#e6d1c7] bg-transparent focus:border-[#4a1a1a] focus:outline-none transition-colors text-sm placeholder:text-[#d8c8bc] placeholder:text-sm placeholder:tracking-normal text-[#2b1d19] ${showPassword ? "tracking-normal" : "tracking-widest"}`}
                 style={{ fontFamily: "var(--font-plus-jakarta)" }}
               />
@@ -93,6 +237,9 @@ export default function RegistrationPage() {
               <input
                 type={showConfirmPassword ? "text" : "password"}
                 placeholder="Enter Confirm Password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
                 className={`w-full pb-2 pr-8 border-b border-[#e6d1c7] bg-transparent focus:border-[#4a1a1a] focus:outline-none transition-colors text-sm placeholder:text-[#d8c8bc] placeholder:text-sm placeholder:tracking-normal text-[#2b1d19] ${showConfirmPassword ? "tracking-normal" : "tracking-widest"}`}
                 style={{ fontFamily: "var(--font-plus-jakarta)" }}
               />
@@ -106,8 +253,13 @@ export default function RegistrationPage() {
             </div>
           </div>
 
-          <button type="submit" className="w-full bg-[#4a1a1a] hover:bg-[#2b1d19] text-[#fbf7f3] py-4 rounded-md text-xs font-semibold tracking-[0.3em] uppercase transition-colors shadow-sm" style={{ fontFamily: "var(--font-be-vietnam)" }}>
-            Sign Up
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-[#4a1a1a] hover:bg-[#2b1d19] disabled:opacity-50 disabled:cursor-not-allowed text-[#fbf7f3] py-4 rounded-md text-xs font-semibold tracking-[0.3em] uppercase transition-colors shadow-sm"
+            style={{ fontFamily: "var(--font-be-vietnam)" }}
+          >
+            {loading ? "Creating Account..." : "Sign Up"}
           </button>
         </form>
 

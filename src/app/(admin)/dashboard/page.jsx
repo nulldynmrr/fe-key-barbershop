@@ -87,15 +87,15 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {summaryData.map((item, index) => {
           return (
-            <div key={index} className="bg-white p-5 rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-[#f0e2d9] relative flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full bg-[#fafafa] flex items-center justify-center flex-shrink-0 overflow-hidden">
-                <Image src={item.image} alt={item.title} width={28} height={28} className="object-contain" unoptimized />
+            <div key={index} className="bg-white p-4 rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-[#f0e2d9] relative flex items-start gap-3">
+              <div className="w-9 h-9 rounded-full bg-[#fafafa] flex items-center justify-center flex-shrink-0 overflow-hidden">
+                <Image src={item.image} alt={item.title} width={20} height={20} className="object-contain" unoptimized />
               </div>
               <div className="flex-1">
                 <p className="text-[11px] text-[#8b6f66] uppercase tracking-wider font-semibold mb-1" style={{ fontFamily: "var(--font-be-vietnam)" }}>
                   {item.title}
                 </p>
-                <h3 className="text-2xl font-bold text-[#2b1d19] mb-2" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
+                <h3 className="text-lg font-bold text-[#2b1d19] mb-1.5" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
                   {item.value}
                 </h3>
                 <p className="text-[10px] text-[#8b6f66]" style={{ fontFamily: "var(--font-plus-jakarta)" }}>

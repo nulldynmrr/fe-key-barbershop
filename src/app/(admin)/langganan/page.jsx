@@ -1016,25 +1016,41 @@ export default function LanggananPage() {
                         </span>
                       </div>
                     ) : (
-                      <div className="flex items-start gap-3">
-                        <div className="p-2 bg-blue-100 rounded-full mt-0.5">
-                          <Lightbulb className="w-4 h-4 text-blue-600" />
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold text-blue-900 mb-1">
-                            Saran Koin untuk 1x Generate
-                          </p>
-                          <p className="text-[10px] text-blue-700 leading-relaxed">
-                            Berdasarkan kombinasi fitur yang Anda aktifkan, 1x
-                            analisis akan memotong sekitar{" "}
-                            <strong>{estimasiKoinIdeal} Koin</strong> dari saldo
-                            user. Pastikan pengaturan{" "}
-                            <strong>Jumlah Koin</strong> pada paket ini (
-                            {formData.jumlahKoin || 0}) logis dengan angka
-                            tersebut.
-                          </p>
-                        </div>
-                      </div>
+                      <>
+                        {isCalculatingKoin ? (
+                          <div className="flex items-center gap-2 text-gray-500 text-xs font-medium">
+                            <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+                            <span>Mengkalkulasi potongan koin...</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 bg-blue-100 rounded-full shrink-0">
+                                <Lightbulb className="w-4 h-4 text-blue-600" />
+                              </div>
+                              <div>
+                                <p className="text-xs font-bold text-blue-900">
+                                  Estimasi Potongan per 1x Generate
+                                </p>
+                                <p className="text-[10px] text-blue-700 mt-0.5 leading-relaxed">
+                                  Estimasi koin yang akan dipotong dari saldo
+                                  user 1x analisis
+                                  dengan kombinasi fitur di atas.
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex flex-col items-center justify-center bg-white px-4 py-2 rounded-md border border-blue-200 shadow-sm shrink-0">
+                              <span className="text-lg font-black text-blue-700 leading-none">
+                                {estimasiKoinIdeal}
+                              </span>
+                              <span className="text-[9px] font-bold text-blue-500 uppercase tracking-wider mt-1">
+                                Koin
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>

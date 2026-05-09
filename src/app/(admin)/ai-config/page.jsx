@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Globe, Wallet, Activity, Loader2, Bot, X, CheckCircle2, AlertCircle } from "lucide-react";
+import { Globe, Wallet, Activity, Loader2, Bot, X, CheckCircle2, AlertCircle, SquarePen, Trash2 } from "lucide-react";
 import { aiConfigService } from "@/services/aiConfigService";
 
 const ToggleSwitch = ({ checked, onChange, disabled }) => {
@@ -41,6 +41,8 @@ export default function AiConfigPage() {
 
   // Modal API States
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditingAPI, setIsEditingAPI] = useState(false);
+  const [editingAPIId, setEditingAPIId] = useState(null);
   const [formData, setFormData] = useState({
     namaRouter: "",
     baseUrl: "",
@@ -147,6 +149,55 @@ export default function AiConfigPage() {
     }
   };
 
+  const handleOpenAddModal = () => {
+    setIsEditingAPI(false);
+    setEditingAPIId(null);
+    setFormData({
+      namaRouter: "",
+      baseUrl: "",
+      modelName: "",
+      apiKey: "",
+      typeAi: "LLM",
+      hargaInput1M: "",
+      hargaOutput1M: "",
+      maxBudget: "",
+      rpmLimit: "",
+    });
+    setTestResult(null);
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditModal = (router) => {
+    setIsEditingAPI(true);
+    setEditingAPIId(router._id || router.id);
+    setFormData({
+      namaRouter: router.namaRouter || "",
+      baseUrl: router.baseUrl || "",
+      modelName: router.modelName || "",
+      apiKey: router.apiKey || "",
+      typeAi: router.typeAi || "LLM",
+      hargaInput1M: router.hargaInput1M || "",
+      hargaOutput1M: router.hargaOutput1M || "",
+      maxBudget: router.maxBudget || "",
+      rpmLimit: router.rpmLimit || "",
+    });
+    setTestResult(null);
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteAPI = async (id) => {
+    if (window.confirm("Apakah Anda yakin ingin menghapus model API ini?")) {
+      try {
+        const res = await aiConfigService.deleteModel(id);
+        if (res.data.success) {
+          fetchData();
+        }
+      } catch (err) {
+        alert(err?.response?.data?.message || "Gagal menghapus model API");
+      }
+    }
+  };
+
   const handleSaveAPI = async () => {
     setIsSubmitting(true);
     try {
@@ -159,9 +210,15 @@ export default function AiConfigPage() {
         isActive: true,
       };
       
-      const res = await aiConfigService.createModel(payload);
+      let res;
+      if (isEditingAPI) {
+        res = await aiConfigService.updateModel(editingAPIId, payload);
+      } else {
+        res = await aiConfigService.createModel(payload);
+      }
+
       if (res.data.success) {
-        alert("API berhasil disimpan!");
+        alert(`API berhasil ${isEditingAPI ? "diupdate" : "disimpan"}!`);
         setIsModalOpen(false);
         fetchData();
         setFormData({
@@ -257,7 +314,7 @@ export default function AiConfigPage() {
             </p>
           </div>
           <button 
-            onClick={() => setIsModalOpen(true)}
+            onClick={handleOpenAddModal}
             className="bg-[#4a1a1a] hover:bg-[#2b1d19] text-white text-xs font-semibold px-4 py-2 rounded-md transition-colors" 
             style={{ fontFamily: "var(--font-plus-jakarta)" }}
           >
@@ -270,11 +327,20 @@ export default function AiConfigPage() {
             <div key={router._id || router.id} className="bg-white p-6 rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-[#f0e2d9]">
               <div className="flex justify-between items-center mb-5">
                 <h3 className="font-bold text-[#2b1d19] tracking-wide uppercase" style={{ fontFamily: "var(--font-plus-jakarta)" }}>{router.namaRouter}</h3>
-                <ToggleSwitch 
-                  checked={router.isActive} 
-                  disabled={togglingId === (router._id || router.id)}
-                  onChange={() => toggleRouter(router._id || router.id, router.isActive)} 
-                />
+                <div className="flex items-center gap-3">
+                  <button onClick={() => handleOpenEditModal(router)} className="text-[#4a1a1a] hover:text-[#8b6f66] transition-colors" title="Edit">
+                    <SquarePen className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => handleDeleteAPI(router._id || router.id)} className="text-[#ef4444] hover:text-[#b91c1c] transition-colors" title="Delete">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                  <div className="w-px h-4 bg-gray-200 mx-1"></div>
+                  <ToggleSwitch 
+                    checked={router.isActive} 
+                    disabled={togglingId === (router._id || router.id)}
+                    onChange={() => toggleRouter(router._id || router.id, router.isActive)} 
+                  />
+                </div>
               </div>
               
               <div className="space-y-4">
@@ -446,7 +512,7 @@ export default function AiConfigPage() {
           <div className="bg-white rounded-2xl w-full max-w-3xl shadow-xl max-h-[90vh] overflow-y-auto" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
             <div className="p-8">
               <div className="flex justify-between items-center mb-8">
-                <h2 className="text-2xl font-bold text-[#2b1d19]">Model API</h2>
+                <h2 className="text-2xl font-bold text-[#2b1d19]">{isEditingAPI ? "Edit Model API" : "Model API"}</h2>
                 <button 
                   onClick={() => setIsModalOpen(false)}
                   className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"

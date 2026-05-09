@@ -31,9 +31,6 @@ export default function TransaksiPage() {
           <h2 className="text-xl font-bold text-[#4a1a1a]" style={{ fontFamily: "var(--font-noto-serif)" }}>Payment Gateway Logs</h2>
           <p className="text-sm text-[#8b6f66] mt-1">Pantau riwayat transaksi, metode pembayaran, dan status order</p>
         </div>
-        <button className="bg-[#4a1a1a] hover:bg-[#3a1414] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
-          Tambah Paket
-        </button>
       </div>
 
       <div className="bg-white border border-[#e6d1c7] rounded-lg overflow-hidden shadow-sm">
@@ -62,9 +59,9 @@ export default function TransaksiPage() {
               {transactions.map((trx) => (
                 <tr key={trx.id} className="bg-white border-b border-[#e6d1c7] hover:bg-[#fafafa] transition-colors">
                   <td className="px-6 py-4 text-center">
-                    <input 
-                      type="checkbox" 
-                      className="w-4 h-4 text-[#4a1a1a] bg-gray-100 border-gray-300 rounded focus:ring-[#4a1a1a] focus:ring-2" 
+                    <input
+                      type="checkbox"
+                      className="w-4 h-4 text-[#4a1a1a] bg-gray-100 border-gray-300 rounded focus:ring-[#4a1a1a] focus:ring-2"
                     />
                   </td>
                   <td className="px-6 py-4 font-bold text-[#4a1a1a] text-center sm:text-left">

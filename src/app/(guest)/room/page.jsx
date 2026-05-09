@@ -67,7 +67,7 @@ export default function MeetOurCapster() {
         <section className="hidden md:block relative">
           <div className="absolute top-0 left-0 w-full z-0 overflow-hidden">
             <Image
-              src="/images/backgorund Capster.png"
+              src="/images/background-capster.webp"
               alt="Barbershop Illustration"
               width={1920}
               height={900}

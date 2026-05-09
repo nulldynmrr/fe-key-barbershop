@@ -13,6 +13,7 @@ import {
   Lightbulb,
 } from "lucide-react";
 import { packageService } from "@/services/packageService";
+import { aiConfigService } from "@/services/aiConfigService";
 
 const ToggleSwitch = ({ checked, onChange, disabled }) => {
   return (
@@ -39,6 +40,12 @@ const ToggleSwitch = ({ checked, onChange, disabled }) => {
 export default function LanggananPage() {
   const [packages, setPackages] = useState([]);
   const [activeModels, setActiveModels] = useState({ llm: [], image_gen: [] });
+  const [exchangeSettings, setExchangeSettings] = useState({
+    globalMultiplier: 1.35,
+    baseRateUsdIdr: 17332,
+    inflationBuffer: 0.05,
+  });
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -80,6 +87,7 @@ export default function LanggananPage() {
   useEffect(() => {
     fetchPackages();
     fetchActiveModels();
+    fetchExchangeSettings();
   }, []);
 
   const fetchPackages = async () => {
@@ -112,6 +120,17 @@ export default function LanggananPage() {
       }
     } catch (err) {
       console.error("Gagal memuat active models:", err);
+    }
+  };
+
+  const fetchExchangeSettings = async () => {
+    try {
+      const res = await aiConfigService.getExchangeSettings();
+      if (res.data && res.data.success && res.data.data) {
+        setExchangeSettings(res.data.data);
+      }
+    } catch (err) {
+      console.error("Gagal memuat exchange settings:", err);
     }
   };
 
@@ -383,7 +402,6 @@ export default function LanggananPage() {
           Tambah Paket
         </button>
       </div>
-
       {loading ? (
         <div className="flex justify-center py-12">
           <Loader2 className="w-8 h-8 animate-spin text-[#4a1a1a]" />
@@ -502,7 +520,6 @@ export default function LanggananPage() {
         </div>
       )}
 
-      {/* Modal Buat Harga Langganan */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div
@@ -833,6 +850,7 @@ export default function LanggananPage() {
                     )}
                   </div>
                 </div>
+
                 <div>
                   <label className="block text-sm font-semibold text-[#2b1d19] mb-2">
                     Type and Value
@@ -951,9 +969,7 @@ export default function LanggananPage() {
                   </div>
                 )}
 
-                {/* --- SUMMARY & INSIGHTS AREA --- */}
                 <div className="flex flex-col gap-4">
-                  {/* Box Analisis Profitabilitas (HPP) */}
                   <div className="bg-[#e2fae8] rounded-lg p-5">
                     <h4 className="font-bold text-[#14532d] text-sm mb-3 flex items-center gap-2">
                       Analisis Profitabilitas
@@ -980,7 +996,8 @@ export default function LanggananPage() {
                             {formData.estimasiModalApi.toLocaleString(
                               "id-ID",
                             )}{" "}
-                            x 1.35 Multiplier) + Rp4.500
+                            x {exchangeSettings.globalMultiplier} Multiplier) +
+                            Rp4.500
                           </span>
                         </span>
                         <span className="font-bold text-sm">
@@ -990,7 +1007,6 @@ export default function LanggananPage() {
                     </div>
                   </div>
 
-                  {/* INFO ESTIMASI KOIN IDEAL DIPINDAH KESINI */}
                   <div className="bg-blue-50/50 rounded-lg p-4 border border-blue-100">
                     {isCalculatingKoin ? (
                       <div className="flex items-center gap-2 text-gray-500 text-xs font-medium">

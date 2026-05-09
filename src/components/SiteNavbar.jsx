@@ -9,7 +9,7 @@ const defaultNavItems = [
   { label: "Home", href: "/home" },
   { label: "AI Feature", href: "/ai" },
   { label: "Services", href: "/service" },
-  { label: "Gallery", href: "/gallery" },
+  { label: "The Cut Room", href: "/room" },
 ];
 
 export default function SiteNavbar({

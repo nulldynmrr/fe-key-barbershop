@@ -1,38 +1,239 @@
 "use client";
 
-import React from "react";
-import { SquarePen, Trash2 } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { SquarePen, Trash2, X, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { packageService } from "@/services/packageService";
+
+const ToggleSwitch = ({ checked, onChange }) => {
+  return (
+    <button
+      type="button"
+      onClick={onChange}
+      className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+        checked ? "bg-[#86efac]" : "bg-[#fca5a5]"
+      }`}
+      role="switch"
+      aria-checked={checked}
+    >
+      <span
+        aria-hidden="true"
+        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+          checked ? "translate-x-4" : "translate-x-0"
+        }`}
+      />
+    </button>
+  );
+};
 
 export default function LanggananPage() {
-  const packages = [
-    {
-      id: 1,
-      name: "StarterPack",
-      type: "ONTIME",
-      coin: "100",
-      originalPrice: "Rp25.000",
-      price: "Rp19.000",
-      status: "AKTIF",
-    },
-    {
-      id: 2,
-      name: "Premium Weekly",
-      type: "Subscription",
-      coin: "-",
-      originalPrice: null,
-      price: "Rp29.000",
-      status: "AKTIF",
-    },
-    {
-      id: 3,
-      name: "Student Pack",
-      type: "Ontime",
-      coin: "20",
-      originalPrice: null,
-      price: "Rp5.000",
-      status: "AKTIF",
-    },
-  ];
+  const [packages, setPackages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Modal States
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+
+  const initialFormState = {
+    namaPaket: "",
+    jumlahKoin: "",
+    deskripsi: "",
+    featStandardScan: true,
+    featSymmetry: false,
+    featAdvMapping: false,
+    featVirtualTryOn: false,
+    featHistory: false,
+    featHairstyleTrend: false, // UI only
+    typeValue: "ONTIME",
+    durasi_value: "30",
+    durasi_unit: "HARI",
+    hppIdeal: 0,
+    estimasiModalApi: 0, // For display
+    hargaNominal: "",
+    promoAktif: false,
+    hargaDiskon: "",
+    diskonMulai: "",
+    diskonAkhir: "",
+  };
+
+  const [formData, setFormData] = useState(initialFormState);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCalculatingHpp, setIsCalculatingHpp] = useState(false);
+
+  useEffect(() => {
+    fetchPackages();
+  }, []);
+
+  const fetchPackages = async () => {
+    setLoading(true);
+    try {
+      const res = await packageService.getPackages(1, 100);
+      if (res.data.success) {
+        // Gabungkan ontime dan langganan untuk tabel
+        const combined = [
+          ...(res.data.data.topup_koin || []),
+          ...(res.data.data.langganan_premium || [])
+        ];
+        setPackages(combined);
+      }
+    } catch (err) {
+      console.error("Gagal memuat paket:", err);
+      setError("Gagal memuat daftar paket harga");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Kalkulasi HPP secara otomatis ketika jumlahKoin atau featVirtualTryOn berubah
+  useEffect(() => {
+    if (isModalOpen) {
+      const delayDebounce = setTimeout(() => {
+        calculateHPP();
+      }, 500);
+      return () => clearTimeout(delayDebounce);
+    }
+  }, [formData.jumlahKoin, formData.featVirtualTryOn, isModalOpen]);
+
+  const calculateHPP = async () => {
+    const koin = Number(formData.jumlahKoin);
+    if (!koin || koin <= 0) {
+      setFormData(prev => ({ ...prev, hppIdeal: 0, estimasiModalApi: 0 }));
+      return;
+    }
+    
+    setIsCalculatingHpp(true);
+    try {
+      const res = await packageService.calculateHpp({
+        jumlahKoin: koin,
+        featVirtualTryOn: formData.featVirtualTryOn
+      });
+      if (res.data.success) {
+        setFormData(prev => ({
+          ...prev,
+          hppIdeal: res.data.data.hppIdeal,
+          estimasiModalApi: res.data.data.estimasiModalApi
+        }));
+      }
+    } catch (err) {
+      console.error("Gagal menghitung HPP:", err);
+    } finally {
+      setIsCalculatingHpp(false);
+    }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleFeatureToggle = (feature) => {
+    setFormData(prev => ({
+      ...prev,
+      [feature]: !prev[feature]
+    }));
+  };
+
+  const openAddModal = () => {
+    setFormData(initialFormState);
+    setIsEditing(false);
+    setEditingId(null);
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (pkg) => {
+    // Karena getPackages mengembalikan format { id, nama, tipe, koin, durasi_text, harga_asli, harga_bayar, is_promo, berakhir_pada }
+    // Kita butuh data mentah. Untuk kesederhanaan, kita bisa edit beberapa field dasar 
+    // atau mengambil data detail paket jika ada endpoint (saat ini tidak ada endpoint GET /packages/:id).
+    // Jadi kita populate form dari data tabel semampunya.
+    
+    setFormData({
+      ...initialFormState,
+      namaPaket: pkg.nama,
+      typeValue: pkg.tipe,
+      jumlahKoin: pkg.koin,
+      hargaNominal: pkg.harga_asli,
+      promoAktif: pkg.is_promo,
+      hargaDiskon: pkg.is_promo ? pkg.harga_bayar : "",
+      // Kita set default karena tabel tidak mereturn boolean fiturnya
+      featStandardScan: true,
+    });
+    setEditingId(pkg.id);
+    setIsEditing(true);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Apakah Anda yakin ingin menghapus paket ini?")) {
+      try {
+        const res = await packageService.deletePackage(id);
+        if (res.data.success) {
+          fetchPackages();
+        }
+      } catch (err) {
+        alert(err?.response?.data?.message || "Gagal menghapus paket");
+      }
+    }
+  };
+
+  const handleSavePackage = async () => {
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        namaPaket: formData.namaPaket,
+        deskripsi: formData.deskripsi,
+        typeValue: formData.typeValue,
+        jumlahKoin: Number(formData.jumlahKoin),
+        featStandardScan: formData.featStandardScan,
+        featSymmetry: formData.featSymmetry,
+        featAdvMapping: formData.featAdvMapping,
+        featVirtualTryOn: formData.featVirtualTryOn,
+        featHistory: formData.featHistory,
+        hppIdeal: Number(formData.hppIdeal),
+        hargaNominal: Number(formData.hargaNominal),
+        promoAktif: formData.promoAktif,
+      };
+
+      if (formData.typeValue === "SUBSCRIPTION") {
+        payload.durasi_value = Number(formData.durasi_value);
+        payload.durasi_unit = formData.durasi_unit;
+      }
+
+      if (formData.promoAktif) {
+        payload.hargaDiskon = Number(formData.hargaDiskon);
+        // Convert to ISO string
+        payload.diskonMulai = formData.diskonMulai ? new Date(formData.diskonMulai).toISOString() : null;
+        payload.diskonAkhir = formData.diskonAkhir ? new Date(formData.diskonAkhir).toISOString() : null;
+      }
+
+      let res;
+      if (isEditing) {
+        res = await packageService.updatePackage(editingId, payload);
+      } else {
+        res = await packageService.createPackage(payload);
+      }
+
+      if (res.data.success) {
+        alert(`Paket berhasil ${isEditing ? "diupdate" : "disimpan"}!`);
+        setIsModalOpen(false);
+        fetchPackages();
+      } else {
+        alert(res.data.message || "Gagal menyimpan paket");
+      }
+    } catch (err) {
+      if (err?.response?.data?.errors) {
+        // Tampilkan error validasi zod pertama
+        alert(err.response.data.errors[0].message);
+      } else {
+        alert(err?.response?.data?.message || "Gagal menyimpan paket");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -41,88 +242,355 @@ export default function LanggananPage() {
           <h2 className="text-xl font-bold text-[#4a1a1a]" style={{ fontFamily: "var(--font-noto-serif)" }}>List Paket Harga</h2>
           <p className="text-sm text-[#8b6f66] mt-1">Atur harga paket, kuota koin, dan status langganan</p>
         </div>
-        <button className="bg-[#4a1a1a] hover:bg-[#3a1414] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+        <button 
+          onClick={openAddModal}
+          className="bg-[#4a1a1a] hover:bg-[#3a1414] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+        >
           Tambah Paket
         </button>
       </div>
 
-      <div className="bg-white border border-[#e6d1c7] rounded-lg overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="text-xs text-[#4a1a1a] border-b border-[#e6d1c7]">
-              <tr>
-                <th scope="col" className="px-6 py-4 font-bold w-12 text-center">
-                  <span className="sr-only">Checkbox</span>
-                </th>
-                <th scope="col" className="px-6 py-4 font-bold text-center sm:text-left">
-                  Nama Paket
-                </th>
-                <th scope="col" className="px-6 py-4 font-bold text-center">
-                  Tipe Paket
-                </th>
-                <th scope="col" className="px-6 py-4 font-bold text-center">
-                  Koin
-                </th>
-                <th scope="col" className="px-6 py-4 font-bold text-center">
-                  Harga
-                </th>
-                <th scope="col" className="px-6 py-4 font-bold text-center">
-                  Status
-                </th>
-                <th scope="col" className="px-6 py-4 font-bold text-center">
-                  Aksi
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {packages.map((pkg) => (
-                <tr key={pkg.id} className="bg-white border-b border-[#e6d1c7] hover:bg-[#fafafa] transition-colors">
-                  <td className="px-6 py-4 text-center">
-                    <input 
-                      type="checkbox" 
-                      className="w-4 h-4 text-[#4a1a1a] bg-gray-100 border-gray-300 rounded focus:ring-[#4a1a1a] focus:ring-2" 
-                    />
-                  </td>
-                  <td className="px-6 py-4 text-[#8b6f66] text-center sm:text-left">
-                    {pkg.name}
-                  </td>
-                  <td className="px-6 py-4 text-[#8b6f66] text-center">
-                    {pkg.type}
-                  </td>
-                  <td className="px-6 py-4 text-[#8b6f66] text-center">
-                    {pkg.coin}
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    {pkg.originalPrice && (
-                      <div className="text-xs text-[#ef4444] line-through mb-1">
-                        {pkg.originalPrice}
-                      </div>
-                    )}
-                    <div className="font-bold text-[#4a1a1a]">
-                      {pkg.price}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    <span className="bg-[#4ade80] text-white text-xs font-bold px-3 py-1 rounded-md">
-                      {pkg.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center justify-center gap-3">
-                      <button className="text-[#4a1a1a] hover:text-[#8b6f66] transition-colors" title="Edit">
-                        <SquarePen className="w-5 h-5" />
-                      </button>
-                      <button className="text-[#ef4444] hover:text-[#b91c1c] transition-colors" title="Delete">
-                        <Trash2 className="w-5 h-5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-[#4a1a1a]" />
         </div>
-      </div>
+      ) : error ? (
+        <div className="p-4 bg-red-50 text-red-600 rounded-md text-center">{error}</div>
+      ) : (
+        <div className="bg-white border border-[#e6d1c7] rounded-lg overflow-hidden shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="text-xs text-[#4a1a1a] border-b border-[#e6d1c7]">
+                <tr>
+                  <th scope="col" className="px-6 py-4 font-bold text-center sm:text-left">Nama Paket</th>
+                  <th scope="col" className="px-6 py-4 font-bold text-center">Tipe Paket</th>
+                  <th scope="col" className="px-6 py-4 font-bold text-center">Koin</th>
+                  <th scope="col" className="px-6 py-4 font-bold text-center">Durasi</th>
+                  <th scope="col" className="px-6 py-4 font-bold text-center">Harga</th>
+                  <th scope="col" className="px-6 py-4 font-bold text-center">Status Promo</th>
+                  <th scope="col" className="px-6 py-4 font-bold text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {packages.length > 0 ? packages.map((pkg) => (
+                  <tr key={pkg.id} className="bg-white border-b border-[#e6d1c7] hover:bg-[#fafafa] transition-colors">
+                    <td className="px-6 py-4 text-[#8b6f66] font-medium text-center sm:text-left">
+                      {pkg.nama}
+                    </td>
+                    <td className="px-6 py-4 text-[#8b6f66] text-center">
+                      <span className="bg-gray-100 px-2 py-1 rounded text-xs">{pkg.tipe}</span>
+                    </td>
+                    <td className="px-6 py-4 text-[#8b6f66] text-center">
+                      {pkg.koin}
+                    </td>
+                    <td className="px-6 py-4 text-[#8b6f66] text-center">
+                      {pkg.durasi_text}
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      {pkg.is_promo && (
+                        <div className="text-xs text-[#ef4444] line-through mb-1">
+                          Rp{pkg.harga_asli?.toLocaleString('id-ID')}
+                        </div>
+                      )}
+                      <div className="font-bold text-[#4a1a1a]">
+                        Rp{pkg.harga_bayar?.toLocaleString('id-ID')}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      {pkg.is_promo ? (
+                        <span className="bg-[#fef08a] text-yellow-800 text-xs font-bold px-3 py-1 rounded-md">PROMO</span>
+                      ) : (
+                        <span className="bg-gray-100 text-gray-500 text-xs font-bold px-3 py-1 rounded-md">NORMAL</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-center gap-3">
+                        <button onClick={() => openEditModal(pkg)} className="text-[#4a1a1a] hover:text-[#8b6f66] transition-colors" title="Edit">
+                          <SquarePen className="w-5 h-5" />
+                        </button>
+                        <button onClick={() => handleDelete(pkg.id)} className="text-[#ef4444] hover:text-[#b91c1c] transition-colors" title="Delete">
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )) : (
+                  <tr>
+                    <td colSpan="7" className="px-6 py-8 text-center text-gray-500">Belum ada paket yang tersedia</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Buat Harga Langganan */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-3xl shadow-xl max-h-[90vh] overflow-y-auto" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
+            <div className="p-8">
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="text-2xl font-bold text-[#2b1d19]">{isEditing ? "Edit Harga Langganan" : "Buat Harga Langganan"}</h2>
+                <button 
+                  onClick={() => setIsModalOpen(false)}
+                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-[#2b1d19] mb-2">Nama Paket</label>
+                    <input 
+                      type="text" 
+                      name="namaPaket"
+                      value={formData.namaPaket}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm"
+                      placeholder="Starter Pack"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-[#2b1d19] mb-2">Jumlah Koin</label>
+                    <input 
+                      type="number" 
+                      name="jumlahKoin"
+                      value={formData.jumlahKoin}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm"
+                      placeholder="100"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-[#2b1d19] mb-2">Deskripsi</label>
+                  <textarea 
+                    name="deskripsi"
+                    value={formData.deskripsi}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm min-h-[80px]"
+                    placeholder="Paket hemat untuk memulai analisis wajah Anda dengan kredit yang cukup"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-[#2b1d19] mb-2">Pilih Fitur sesuai kebutuhan</label>
+                  <div className="space-y-3">
+                    {/* Feature 1 */}
+                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                      <div>
+                        <p className="font-semibold text-sm text-[#2b1d19]">Standard Face Shape Detection</p>
+                        <p className="text-[10px] text-gray-500 mt-1">Analisis dasar untuk menentukan bentuk wajah user (seperti Oval, Kotak, atau Bulat).</p>
+                      </div>
+                      <ToggleSwitch checked={formData.featStandardScan} onChange={() => handleFeatureToggle('featStandardScan')} />
+                    </div>
+                    {/* Feature 2 */}
+                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                      <div>
+                        <p className="font-semibold text-sm text-[#2b1d19]">Facial Symmetry Scoring</p>
+                        <p className="text-[10px] text-gray-500 mt-1">Logika AI untuk menghitung dan menampilkan skor persentase simetri wajah user.</p>
+                      </div>
+                      <ToggleSwitch checked={formData.featSymmetry} onChange={() => handleFeatureToggle('featSymmetry')} />
+                    </div>
+                    {/* Feature 3 */}
+                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                      <div>
+                        <p className="font-semibold text-sm text-[#2b1d19]">Advanced Feature Mapping</p>
+                        <p className="text-[10px] text-gray-500 mt-1">Deteksi mendalam pada area dahi, rahang, dan tulang pipi untuk akurasi rekomendasi yang lebih tinggi.</p>
+                      </div>
+                      <ToggleSwitch checked={formData.featAdvMapping} onChange={() => handleFeatureToggle('featAdvMapping')} />
+                    </div>
+                    {/* Feature 4 */}
+                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                      <div>
+                        <p className="font-semibold text-sm text-[#2b1d19]">Virtual Try-on (AI Generation)</p>
+                        <p className="text-[10px] text-gray-500 mt-1">Fitur premium untuk melakukan in-painting gaya rambut ke foto user menggunakan model generatif.</p>
+                      </div>
+                      <ToggleSwitch checked={formData.featVirtualTryOn} onChange={() => handleFeatureToggle('featVirtualTryOn')} />
+                    </div>
+                    {/* Feature 5 */}
+                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                      <div>
+                        <p className="font-semibold text-sm text-[#2b1d19]">Extended History Storage</p>
+                        <p className="text-[10px] text-gray-500 mt-1">Penyimpanan data hasil analisis di database selamanya</p>
+                      </div>
+                      <ToggleSwitch checked={formData.featHistory} onChange={() => handleFeatureToggle('featHistory')} />
+                    </div>
+                    {/* Feature 6 - UI Only as per schema */}
+                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                      <div>
+                        <p className="font-semibold text-sm text-[#2b1d19]">Hairstyle Trend Analysis</p>
+                        <p className="text-[10px] text-gray-500 mt-1">Rekomendasi gaya rambut yang sedang tren namun tetap disesuaikan dengan struktur wajah unik milik user.</p>
+                      </div>
+                      <ToggleSwitch checked={formData.featHairstyleTrend} onChange={() => handleFeatureToggle('featHairstyleTrend')} />
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-[#2b1d19] mb-2">Type and Value</label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, typeValue: "ONTIME" })}
+                      className={`flex items-start gap-3 p-4 rounded-lg border transition-all ${
+                        formData.typeValue === "ONTIME" 
+                          ? "border-[#4a1a1a] shadow-sm bg-[#fafafa]" 
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      <div className="w-6 h-6 shrink-0 mt-0.5">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="currentColor"/><path d="M12 18C15.3137 18 18 15.3137 18 12C18 8.68629 15.3137 6 12 6C8.68629 6 6 8.68629 6 12C6 15.3137 8.68629 18 12 18Z" fill="white"/><path d="M12 16C14.2091 16 16 14.2091 16 12C16 9.79086 14.2091 8 12 8C9.79086 8 8 9.79086 8 12C8 14.2091 9.79086 16 12 16Z" fill="currentColor"/></svg>
+                      </div>
+                      <div className="text-left">
+                        <h4 className="font-bold text-[#2b1d19] text-sm">ONTIME</h4>
+                        <p className="text-xs text-gray-500 mt-1">Top-up Sekali Pakai</p>
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, typeValue: "SUBSCRIPTION" })}
+                      className={`flex items-start gap-3 p-4 rounded-lg border transition-all ${
+                        formData.typeValue === "SUBSCRIPTION" 
+                          ? "border-[#4a1a1a] shadow-sm bg-[#fafafa]" 
+                          : "border-gray-200 hover:border-gray-300"
+                      }`}
+                    >
+                      <div className="w-6 h-6 shrink-0 mt-0.5 text-[#2b1d19]">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                      </div>
+                      <div className="text-left">
+                        <h4 className="font-bold text-[#2b1d19] text-sm">SUBSCRIPTION</h4>
+                        <p className="text-xs text-gray-500 mt-1">Langganan Berkala</p>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                {formData.typeValue === "SUBSCRIPTION" && (
+                  <div>
+                    <label className="block text-sm font-semibold text-[#2b1d19] mb-2">Durasi (untuk Subscription)</label>
+                    <div className="flex gap-4">
+                      <input 
+                        type="number" 
+                        name="durasi_value"
+                        value={formData.durasi_value}
+                        onChange={handleInputChange}
+                        className="w-1/2 px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm"
+                        placeholder="30"
+                      />
+                      <select 
+                        name="durasi_unit"
+                        value={formData.durasi_unit}
+                        onChange={handleInputChange}
+                        className="w-1/2 px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm bg-white"
+                      >
+                        <option value="HARI">HARI</option>
+                        <option value="BULAN">BULAN</option>
+                        <option value="TAHUN">TAHUN</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+
+                {/* Box Analisis Profitabilitas */}
+                <div className="bg-[#e2fae8] rounded-lg p-5">
+                  <h4 className="font-bold text-[#14532d] text-sm mb-3 flex items-center gap-2">
+                    Analisis Profitabilitas
+                    {isCalculatingHpp && <Loader2 className="w-3 h-3 animate-spin" />}
+                  </h4>
+                  <div className="space-y-2 text-xs text-[#166534]">
+                    <div className="flex justify-between">
+                      <span>Estimasi HPP (API + Kurs Buffer)</span>
+                      <span className="font-bold">Rp {formData.estimasiModalApi.toLocaleString('id-ID')}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Estimasi Admin Fee (Doku)</span>
+                      <span className="font-bold">Rp 4.500 + 0,7%</span>
+                    </div>
+                    <div className="flex justify-between pt-2 mt-2 border-t border-[#bbf7d0]">
+                      <span className="font-bold">HPP Ideal <span className="font-normal text-[10px]">(Rp{formData.estimasiModalApi.toLocaleString('id-ID')} x 1.35 Multiplier) + Rp4.500</span></span>
+                      <span className="font-bold text-sm">Rp{formData.hppIdeal.toLocaleString('id-ID')}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold text-[#2b1d19] mb-2">Harga Nominal</label>
+                    <input 
+                      type="number" 
+                      name="hargaNominal"
+                      value={formData.hargaNominal}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm"
+                      placeholder="Rp25.000"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-[#2b1d19] mb-2">PROMO AKTIF</label>
+                    <div className="mt-2">
+                      <ToggleSwitch checked={formData.promoAktif} onChange={() => handleFeatureToggle('promoAktif')} />
+                    </div>
+                  </div>
+                </div>
+
+                {formData.promoAktif && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                      <label className="block text-sm font-semibold text-[#2b1d19] mb-2">Harga Diskon</label>
+                      <input 
+                        type="number" 
+                        name="hargaDiskon"
+                        value={formData.hargaDiskon}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm"
+                        placeholder="Rp23.000"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-[#2b1d19] mb-2">Diskon Mulai</label>
+                      <input 
+                        type="date" 
+                        name="diskonMulai"
+                        value={formData.diskonMulai}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-[#2b1d19] mb-2">Diskon Akhir</label>
+                      <input 
+                        type="date" 
+                        name="diskonAkhir"
+                        value={formData.diskonAkhir}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="pt-4">
+                  <button 
+                    onClick={handleSavePackage}
+                    disabled={isSubmitting}
+                    className="flex items-center justify-center gap-2 px-8 py-3 rounded-lg bg-[#4a1a1a] hover:bg-[#2b1d19] text-white text-sm font-semibold transition-colors disabled:opacity-70"
+                  >
+                    {isSubmitting && <Loader2 className="w-5 h-5 animate-spin" />}
+                    <span>Simpan Paket</span>
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

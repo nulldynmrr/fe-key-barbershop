@@ -103,8 +103,11 @@ const api = {
   patch: (url, data, headers = {}) =>
     request({ method: "patch", url, data, headers }),
 
-  delete: (url, data = null, headers = {}) =>
-    request({ method: "delete", url, data, headers }),
+  delete: (url, data = null, headers = {}) => {
+    const config = { method: "delete", url, headers };
+    if (data) config.data = data;
+    return request(config);
+  },
 };
 
 export default api;

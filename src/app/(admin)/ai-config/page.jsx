@@ -1,7 +1,18 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Globe, Wallet, Activity, Loader2, Bot, X, CheckCircle2, AlertCircle, SquarePen, Trash2 } from "lucide-react";
+import {
+  Globe,
+  Wallet,
+  Activity,
+  Loader2,
+  Bot,
+  X,
+  CheckCircle2,
+  AlertCircle,
+  SquarePen,
+  Trash2,
+} from "lucide-react";
 import { aiConfigService } from "@/services/aiConfigService";
 
 const ToggleSwitch = ({ checked, onChange, disabled }) => {
@@ -31,15 +42,14 @@ export default function AiConfigPage() {
   const [exchange, setExchange] = useState({
     globalMultiplier: 1.35,
     baseRateUsdIdr: 17332,
-    inflationBuffer: 0.05
+    inflationBuffer: 0.05,
   });
   const [logsData, setLogsData] = useState([]);
-  
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [togglingId, setTogglingId] = useState(null);
 
-  // Modal API States
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditingAPI, setIsEditingAPI] = useState(false);
   const [editingAPIId, setEditingAPIId] = useState(null);
@@ -49,8 +59,10 @@ export default function AiConfigPage() {
     modelName: "",
     apiKey: "",
     typeAi: "LLM",
+    pricingUnit: "1M_TOKENS",
     hargaInput1M: "",
     hargaOutput1M: "",
+    hargaPerImage: "",
     maxBudget: "",
     rpmLimit: "",
   });
@@ -58,12 +70,11 @@ export default function AiConfigPage() {
   const [isTesting, setIsTesting] = useState(false);
   const [testResult, setTestResult] = useState(null);
 
-  // Master Exchange Modal States
   const [isExchangeModalOpen, setIsExchangeModalOpen] = useState(false);
   const [exchangeForm, setExchangeForm] = useState({
     globalMultiplierDisplay: 35,
     baseRateUsdIdr: 17332,
-    inflationBufferDisplay: 5
+    inflationBufferDisplay: 5,
   });
   const [isExchangeSubmitting, setIsExchangeSubmitting] = useState(false);
 
@@ -78,17 +89,17 @@ export default function AiConfigPage() {
       const [modelsRes, exchangeRes, logsRes] = await Promise.all([
         aiConfigService.getModels(),
         aiConfigService.getExchangeSettings(),
-        aiConfigService.getLogs(1, 10)
+        aiConfigService.getLogs(1, 10),
       ]);
 
       if (modelsRes.data.success) {
         setRouters(modelsRes.data.data || []);
       }
-      
+
       if (exchangeRes.data.success && exchangeRes.data.data) {
         setExchange(exchangeRes.data.data);
       }
-      
+
       if (logsRes.data.success) {
         setLogsData(logsRes.data.data || []);
       }
@@ -106,9 +117,13 @@ export default function AiConfigPage() {
       const newStatus = !currentStatus;
       const res = await aiConfigService.toggleModelStatus(id, newStatus);
       if (res.data.success) {
-        setRouters(routers.map(router => 
-          router._id === id || router.id === id ? { ...router, isActive: newStatus } : router
-        ));
+        setRouters(
+          routers.map((router) =>
+            router._id === id || router.id === id
+              ? { ...router, isActive: newStatus }
+              : router,
+          ),
+        );
       }
     } catch (err) {
       console.error("Failed to toggle status:", err);
@@ -118,18 +133,20 @@ export default function AiConfigPage() {
     }
   };
 
-  // Modal Handlers
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleTestConnection = async () => {
     if (!formData.baseUrl || !formData.apiKey) {
-      setTestResult({ success: false, message: "Base URL dan API KEY harus diisi untuk test koneksi" });
+      setTestResult({
+        success: false,
+        message: "Base URL dan API KEY harus diisi untuk test koneksi",
+      });
       return;
     }
-    
+
     setIsTesting(true);
     setTestResult(null);
     try {
@@ -140,10 +157,16 @@ export default function AiConfigPage() {
       if (res.data.success) {
         setTestResult({ success: true, message: "Koneksi berhasil" });
       } else {
-        setTestResult({ success: false, message: res.data.message || "Koneksi gagal" });
+        setTestResult({
+          success: false,
+          message: res.data.message || "Koneksi gagal",
+        });
       }
     } catch (err) {
-      setTestResult({ success: false, message: err?.response?.data?.message || "Koneksi gagal" });
+      setTestResult({
+        success: false,
+        message: err?.response?.data?.message || "Koneksi gagal",
+      });
     } finally {
       setIsTesting(false);
     }
@@ -158,8 +181,10 @@ export default function AiConfigPage() {
       modelName: "",
       apiKey: "",
       typeAi: "LLM",
+      pricingUnit: "1M_TOKENS",
       hargaInput1M: "",
       hargaOutput1M: "",
+      hargaPerImage: "",
       maxBudget: "",
       rpmLimit: "",
     });
@@ -176,8 +201,12 @@ export default function AiConfigPage() {
       modelName: router.modelName || "",
       apiKey: router.apiKey || "",
       typeAi: router.typeAi || "LLM",
+      pricingUnit:
+        router.pricingUnit ||
+        (router.typeAi === "IMAGE_GEN" ? "IMAGE" : "1M_TOKENS"),
       hargaInput1M: router.hargaInput1M || "",
       hargaOutput1M: router.hargaOutput1M || "",
+      hargaPerImage: router.hargaPerImage || "",
       maxBudget: router.maxBudget || "",
       rpmLimit: router.rpmLimit || "",
     });
@@ -204,12 +233,17 @@ export default function AiConfigPage() {
       const payload = {
         ...formData,
         hargaInput1M: Number(formData.hargaInput1M) || 0,
-        hargaOutput1M: Number(formData.hargaOutput1M) || 0,
+        hargaOutput1M:
+          formData.typeAi === "LLM" ? Number(formData.hargaOutput1M) || 0 : 0,
+        hargaPerImage:
+          formData.typeAi === "IMAGE_GEN"
+            ? Number(formData.hargaPerImage) || 0
+            : 0,
         maxBudget: Number(formData.maxBudget) || 0,
         rpmLimit: Number(formData.rpmLimit) || 0,
         isActive: true,
       };
-      
+
       let res;
       if (isEditingAPI) {
         res = await aiConfigService.updateModel(editingAPIId, payload);
@@ -221,18 +255,6 @@ export default function AiConfigPage() {
         alert(`API berhasil ${isEditingAPI ? "diupdate" : "disimpan"}!`);
         setIsModalOpen(false);
         fetchData();
-        setFormData({
-          namaRouter: "",
-          baseUrl: "",
-          modelName: "",
-          apiKey: "",
-          typeAi: "LLM",
-          hargaInput1M: "",
-          hargaOutput1M: "",
-          maxBudget: "",
-          rpmLimit: "",
-        });
-        setTestResult(null);
       } else {
         alert(res.data.message || "Gagal menyimpan API");
       }
@@ -243,30 +265,32 @@ export default function AiConfigPage() {
     }
   };
 
-  // Master Exchange Handlers
   const handleOpenExchangeModal = () => {
     setExchangeForm({
-      globalMultiplierDisplay: Math.round((exchange.globalMultiplier - 1) * 100),
+      globalMultiplierDisplay: Math.round(
+        (exchange.globalMultiplier - 1) * 100,
+      ),
       baseRateUsdIdr: exchange.baseRateUsdIdr,
-      inflationBufferDisplay: Math.round(exchange.inflationBuffer * 100)
+      inflationBufferDisplay: Math.round(exchange.inflationBuffer * 100),
     });
     setIsExchangeModalOpen(true);
   };
 
   const handleExchangeInputChange = (e) => {
     const { name, value } = e.target;
-    setExchangeForm(prev => ({ ...prev, [name]: value }));
+    setExchangeForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSaveExchange = async () => {
     setIsExchangeSubmitting(true);
     try {
       const payload = {
-        globalMultiplier: 1 + (Number(exchangeForm.globalMultiplierDisplay) / 100),
+        globalMultiplier:
+          1 + Number(exchangeForm.globalMultiplierDisplay) / 100,
         baseRateUsdIdr: Number(exchangeForm.baseRateUsdIdr),
         inflationBuffer: Number(exchangeForm.inflationBufferDisplay) / 100,
       };
-      
+
       const res = await aiConfigService.updateExchangeSettings(payload);
       if (res.data.success) {
         alert("Master Exchange Setting berhasil diupdate!");
@@ -291,14 +315,11 @@ export default function AiConfigPage() {
   }
 
   if (error) {
-    return (
-      <div className="p-4 bg-red-50 text-red-600 rounded-md">
-        {error}
-      </div>
-    );
+    return <div className="p-4 bg-red-50 text-red-600 rounded-md">{error}</div>;
   }
 
-  const effectiveRate = exchange.baseRateUsdIdr * (1 + exchange.inflationBuffer);
+  const effectiveRate =
+    exchange.baseRateUsdIdr * (1 + exchange.inflationBuffer);
 
   return (
     <div className="space-y-12 pb-12 relative">
@@ -306,16 +327,22 @@ export default function AiConfigPage() {
       <section>
         <div className="flex justify-between items-start mb-6">
           <div>
-            <h2 className="text-xl font-bold text-[#4a1a1a]" style={{ fontFamily: "var(--font-noto-serif)" }}>
+            <h2
+              className="text-xl font-bold text-[#4a1a1a]"
+              style={{ fontFamily: "var(--font-noto-serif)" }}
+            >
               Konfigurasi Model Aktif
             </h2>
-            <p className="text-sm text-[#8b6f66] mt-1" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
+            <p
+              className="text-sm text-[#8b6f66] mt-1"
+              style={{ fontFamily: "var(--font-plus-jakarta)" }}
+            >
               Konfigurasikan dan kelola rute model AI serta koneksi API
             </p>
           </div>
-          <button 
+          <button
             onClick={handleOpenAddModal}
-            className="bg-[#4a1a1a] hover:bg-[#2b1d19] text-white text-xs font-semibold px-4 py-2 rounded-md transition-colors" 
+            className="bg-[#4a1a1a] hover:bg-[#2b1d19] text-white text-xs font-semibold px-4 py-2 rounded-md transition-colors"
             style={{ fontFamily: "var(--font-plus-jakarta)" }}
           >
             Tambah API
@@ -323,50 +350,80 @@ export default function AiConfigPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {routers.length > 0 ? routers.map((router) => (
-            <div key={router._id || router.id} className="bg-white p-6 rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-[#f0e2d9]">
-              <div className="flex justify-between items-center mb-5">
-                <h3 className="font-bold text-[#2b1d19] tracking-wide uppercase" style={{ fontFamily: "var(--font-plus-jakarta)" }}>{router.namaRouter}</h3>
-                <div className="flex items-center gap-3">
-                  <button onClick={() => handleOpenEditModal(router)} className="text-[#4a1a1a] hover:text-[#8b6f66] transition-colors" title="Edit">
-                    <SquarePen className="w-4 h-4" />
-                  </button>
-                  <button onClick={() => handleDeleteAPI(router._id || router.id)} className="text-[#ef4444] hover:text-[#b91c1c] transition-colors" title="Delete">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                  <div className="w-px h-4 bg-gray-200 mx-1"></div>
-                  <ToggleSwitch 
-                    checked={router.isActive} 
-                    disabled={togglingId === (router._id || router.id)}
-                    onChange={() => toggleRouter(router._id || router.id, router.isActive)} 
-                  />
+          {routers.length > 0 ? (
+            routers.map((router) => (
+              <div
+                key={router._id || router.id}
+                className="bg-white p-6 rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-[#f0e2d9]"
+              >
+                <div className="flex justify-between items-center mb-5">
+                  <h3
+                    className="font-bold text-[#2b1d19] tracking-wide uppercase"
+                    style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                  >
+                    {router.namaRouter}
+                  </h3>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => handleOpenEditModal(router)}
+                      className="text-[#4a1a1a] hover:text-[#8b6f66] transition-colors"
+                      title="Edit"
+                    >
+                      <SquarePen className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteAPI(router._id || router.id)}
+                      className="text-[#ef4444] hover:text-[#b91c1c] transition-colors"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                    <div className="w-px h-4 bg-gray-200 mx-1"></div>
+                    <ToggleSwitch
+                      checked={router.isActive}
+                      disabled={togglingId === (router._id || router.id)}
+                      onChange={() =>
+                        toggleRouter(router._id || router.id, router.isActive)
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label
+                      className="block text-[10px] font-bold text-[#2b1d19] uppercase tracking-wider mb-2"
+                      style={{ fontFamily: "var(--font-be-vietnam)" }}
+                    >
+                      Model
+                    </label>
+                    <input
+                      type="text"
+                      value={router.modelName}
+                      readOnly
+                      className="w-full text-sm text-[#524342] px-3 py-2 rounded border border-[#e6d1c7] bg-white focus:outline-none"
+                      style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                    />
+                  </div>
+                  <div>
+                    <label
+                      className="block text-[10px] font-bold text-[#2b1d19] uppercase tracking-wider mb-2"
+                      style={{ fontFamily: "var(--font-be-vietnam)" }}
+                    >
+                      API KEY
+                    </label>
+                    <input
+                      type="password"
+                      value={router.apiKey || "***************************"}
+                      readOnly
+                      className="w-full text-sm text-[#524342] px-3 py-2 rounded border border-[#e6d1c7] bg-white focus:outline-none"
+                      style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                    />
+                  </div>
                 </div>
               </div>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-[10px] font-bold text-[#2b1d19] uppercase tracking-wider mb-2" style={{ fontFamily: "var(--font-be-vietnam)" }}>Model</label>
-                  <input 
-                    type="text" 
-                    value={router.modelName}
-                    readOnly
-                    className="w-full text-sm text-[#524342] px-3 py-2 rounded border border-[#e6d1c7] bg-white focus:outline-none"
-                    style={{ fontFamily: "var(--font-plus-jakarta)" }}
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-[#2b1d19] uppercase tracking-wider mb-2" style={{ fontFamily: "var(--font-be-vietnam)" }}>API KEY</label>
-                  <input 
-                    type="password" 
-                    value={router.apiKey || "***************************"}
-                    readOnly
-                    className="w-full text-sm text-[#524342] px-3 py-2 rounded border border-[#e6d1c7] bg-white focus:outline-none"
-                    style={{ fontFamily: "var(--font-plus-jakarta)" }}
-                  />
-                </div>
-              </div>
-            </div>
-          )) : (
+            ))
+          ) : (
             <div className="col-span-3 text-center py-8 text-gray-500 text-sm">
               Belum ada model AI yang dikonfigurasi.
             </div>
@@ -378,16 +435,22 @@ export default function AiConfigPage() {
       <section>
         <div className="flex justify-between items-start mb-6">
           <div>
-            <h2 className="text-xl font-bold text-[#4a1a1a]" style={{ fontFamily: "var(--font-noto-serif)" }}>
+            <h2
+              className="text-xl font-bold text-[#4a1a1a]"
+              style={{ fontFamily: "var(--font-noto-serif)" }}
+            >
               Master Exchange Setting
             </h2>
-            <p className="text-sm text-[#8b6f66] mt-1" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
+            <p
+              className="text-sm text-[#8b6f66] mt-1"
+              style={{ fontFamily: "var(--font-plus-jakarta)" }}
+            >
               Kelola kurs mata uang, margin profit, dan buffer inflasi
             </p>
           </div>
-          <button 
+          <button
             onClick={handleOpenExchangeModal}
-            className="bg-[#4a1a1a] hover:bg-[#2b1d19] text-white text-xs font-semibold px-6 py-2 rounded-md transition-colors" 
+            className="bg-[#4a1a1a] hover:bg-[#2b1d19] text-white text-xs font-semibold px-6 py-2 rounded-md transition-colors"
             style={{ fontFamily: "var(--font-plus-jakarta)" }}
           >
             Edit
@@ -401,9 +464,20 @@ export default function AiConfigPage() {
               <Globe className="w-5 h-5 text-[#4a1a1a]" />
             </div>
             <div>
-              <p className="text-[10px] font-semibold text-[#8b6f66] mb-1" style={{ fontFamily: "var(--font-plus-jakarta)" }}>Global Multiplier</p>
-              <h3 className="text-2xl font-bold text-[#2b1d19]" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
-                {exchange.globalMultiplier} <span className="text-xs font-normal text-[#524342] ml-1">({(exchange.globalMultiplier - 1) * 100}%)</span>
+              <p
+                className="text-[10px] font-semibold text-[#8b6f66] mb-1"
+                style={{ fontFamily: "var(--font-plus-jakarta)" }}
+              >
+                Global Multiplier
+              </p>
+              <h3
+                className="text-2xl font-bold text-[#2b1d19]"
+                style={{ fontFamily: "var(--font-plus-jakarta)" }}
+              >
+                {exchange.globalMultiplier}{" "}
+                <span className="text-xs font-normal text-[#524342] ml-1">
+                  ({(exchange.globalMultiplier - 1) * 100}%)
+                </span>
               </h3>
             </div>
           </div>
@@ -414,11 +488,24 @@ export default function AiConfigPage() {
               <Wallet className="w-5 h-5 text-[#4a1a1a]" />
             </div>
             <div>
-              <p className="text-[10px] font-semibold text-[#8b6f66] mb-1" style={{ fontFamily: "var(--font-plus-jakarta)" }}>Base Rate (USD/IDR)</p>
-              <h3 className="text-2xl font-bold text-[#2b1d19] mb-1" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
-                Rp{exchange.baseRateUsdIdr?.toLocaleString('id-ID')}
+              <p
+                className="text-[10px] font-semibold text-[#8b6f66] mb-1"
+                style={{ fontFamily: "var(--font-plus-jakarta)" }}
+              >
+                Base Rate (USD/IDR)
+              </p>
+              <h3
+                className="text-2xl font-bold text-[#2b1d19] mb-1"
+                style={{ fontFamily: "var(--font-plus-jakarta)" }}
+              >
+                Rp{exchange.baseRateUsdIdr?.toLocaleString("id-ID")}
               </h3>
-              <p className="text-[9px] text-[#2b1d19] font-medium" style={{ fontFamily: "var(--font-plus-jakarta)" }}>Kurs Mentah, samakan di web router</p>
+              <p
+                className="text-[9px] text-[#2b1d19] font-medium"
+                style={{ fontFamily: "var(--font-plus-jakarta)" }}
+              >
+                Kurs Mentah, samakan di web router
+              </p>
             </div>
           </div>
 
@@ -428,13 +515,26 @@ export default function AiConfigPage() {
               <Activity className="w-5 h-5 text-[#4a1a1a]" />
             </div>
             <div>
-              <p className="text-[10px] font-semibold text-[#8b6f66] mb-1" style={{ fontFamily: "var(--font-plus-jakarta)" }}>Inflation Buffer</p>
-              <h3 className="text-2xl font-bold text-[#2b1d19] mb-1" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
+              <p
+                className="text-[10px] font-semibold text-[#8b6f66] mb-1"
+                style={{ fontFamily: "var(--font-plus-jakarta)" }}
+              >
+                Inflation Buffer
+              </p>
+              <h3
+                className="text-2xl font-bold text-[#2b1d19] mb-1"
+                style={{ fontFamily: "var(--font-plus-jakarta)" }}
+              >
                 {exchange.inflationBuffer * 100}%
               </h3>
-              <p className="text-[9px] font-medium" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
+              <p
+                className="text-[9px] font-medium"
+                style={{ fontFamily: "var(--font-plus-jakarta)" }}
+              >
                 <span className="text-[#2b1d19]">Effective Rate: </span>
-                <span className="text-[#b91c1c]">Rp {Math.round(effectiveRate).toLocaleString('id-ID')}</span>
+                <span className="text-[#b91c1c]">
+                  Rp {Math.round(effectiveRate).toLocaleString("id-ID")}
+                </span>
               </p>
             </div>
           </div>
@@ -444,10 +544,16 @@ export default function AiConfigPage() {
       {/* AI Usage Logs */}
       <section>
         <div className="mb-6">
-          <h2 className="text-xl font-bold text-[#4a1a1a]" style={{ fontFamily: "var(--font-noto-serif)" }}>
+          <h2
+            className="text-xl font-bold text-[#4a1a1a]"
+            style={{ fontFamily: "var(--font-noto-serif)" }}
+          >
             AI Usage Logs
           </h2>
-          <p className="text-sm text-[#8b6f66] mt-1" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
+          <p
+            className="text-sm text-[#8b6f66] mt-1"
+            style={{ fontFamily: "var(--font-plus-jakarta)" }}
+          >
             Monitor riwayat token, biaya modal, dan laba transaksi
           </p>
         </div>
@@ -458,44 +564,112 @@ export default function AiConfigPage() {
               <thead>
                 <tr className="border-b border-[#e6d1c7] bg-white">
                   <th className="py-4 pl-6 w-12">
-                    <input type="checkbox" className="rounded border-gray-300 text-[#4a1a1a] focus:ring-[#4a1a1a]" />
+                    <input
+                      type="checkbox"
+                      className="rounded border-gray-300 text-[#4a1a1a] focus:ring-[#4a1a1a]"
+                    />
                   </th>
-                  <th className="py-4 px-4 text-[11px] font-bold text-[#2b1d19] uppercase tracking-wider" style={{ fontFamily: "var(--font-plus-jakarta)" }}>Timestamp</th>
-                  <th className="py-4 px-4 text-[11px] font-bold text-[#2b1d19] uppercase tracking-wider" style={{ fontFamily: "var(--font-plus-jakarta)" }}>Email User</th>
-                  <th className="py-4 px-4 text-[11px] font-bold text-[#2b1d19] uppercase tracking-wider" style={{ fontFamily: "var(--font-plus-jakarta)" }}>Tokens (In/Out)</th>
-                  <th className="py-4 px-4 text-[11px] font-bold text-[#2b1d19] uppercase tracking-wider" style={{ fontFamily: "var(--font-plus-jakarta)" }}>Modal API ($)</th>
-                  <th className="py-4 px-4 text-[11px] font-bold text-[#2b1d19] uppercase tracking-wider" style={{ fontFamily: "var(--font-plus-jakarta)" }}>Charge User ($)</th>
-                  <th className="py-4 px-4 text-[11px] font-bold text-[#2b1d19] uppercase tracking-wider" style={{ fontFamily: "var(--font-plus-jakarta)" }}>Profit ($)</th>
+                  <th
+                    className="py-4 px-4 text-[11px] font-bold text-[#2b1d19] uppercase tracking-wider"
+                    style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                  >
+                    Timestamp
+                  </th>
+                  <th
+                    className="py-4 px-4 text-[11px] font-bold text-[#2b1d19] uppercase tracking-wider"
+                    style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                  >
+                    Email User
+                  </th>
+                  <th
+                    className="py-4 px-4 text-[11px] font-bold text-[#2b1d19] uppercase tracking-wider"
+                    style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                  >
+                    Tokens (In/Out)
+                  </th>
+                  <th
+                    className="py-4 px-4 text-[11px] font-bold text-[#2b1d19] uppercase tracking-wider"
+                    style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                  >
+                    Modal API ($)
+                  </th>
+                  <th
+                    className="py-4 px-4 text-[11px] font-bold text-[#2b1d19] uppercase tracking-wider"
+                    style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                  >
+                    Charge User ($)
+                  </th>
+                  <th
+                    className="py-4 px-4 text-[11px] font-bold text-[#2b1d19] uppercase tracking-wider"
+                    style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                  >
+                    Profit ($)
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {logsData.length > 0 ? logsData.map((row) => (
-                  <tr key={row._id || row.id} className="border-b border-[#f5ebe6] last:border-none hover:bg-[#fafafa] transition-colors">
-                    <td className="py-5 pl-6">
-                      <input type="checkbox" className="rounded border-gray-300 text-[#4a1a1a] focus:ring-[#4a1a1a]" />
-                    </td>
-                    <td className="py-5 px-4 text-xs text-[#2b1d19] font-medium" style={{ fontFamily: "var(--font-plus-jakarta)" }}>{new Date(row.createdAt).toLocaleString('id-ID')}</td>
-                    <td className="py-5 px-4 text-xs text-[#524342]" style={{ fontFamily: "var(--font-plus-jakarta)" }}>{row.userEmail || row.email}</td>
-                    <td className="py-5 px-4 text-xs text-[#524342]" style={{ fontFamily: "var(--font-plus-jakarta)" }}>{row.promptTokens} / {row.completionTokens}</td>
-                    <td className="py-5 px-4">
-                      <span className="inline-flex items-center px-3 py-1 rounded border border-[#e6d1c7] bg-white text-[10px] font-medium text-[#524342]" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
-                        ${row.modalApi || "0.00000"}
-                      </span>
-                    </td>
-                    <td className="py-5 px-4">
-                      <span className="inline-flex items-center px-3 py-1 rounded border border-[#e6d1c7] bg-white text-[10px] font-medium text-[#524342]" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
-                        ${row.chargeUser || "0.00000"}
-                      </span>
-                    </td>
-                    <td className="py-5 px-4">
-                      <span className="inline-flex items-center px-3 py-1 rounded border border-[#e6d1c7] bg-[#fdf2f0] text-[10px] font-semibold text-[#8b1a1a]" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
-                        +${row.profit || "0.00000"}
-                      </span>
-                    </td>
-                  </tr>
-                )) : (
+                {logsData.length > 0 ? (
+                  logsData.map((row) => (
+                    <tr
+                      key={row._id || row.id}
+                      className="border-b border-[#f5ebe6] last:border-none hover:bg-[#fafafa] transition-colors"
+                    >
+                      <td className="py-5 pl-6">
+                        <input
+                          type="checkbox"
+                          className="rounded border-gray-300 text-[#4a1a1a] focus:ring-[#4a1a1a]"
+                        />
+                      </td>
+                      <td
+                        className="py-5 px-4 text-xs text-[#2b1d19] font-medium"
+                        style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                      >
+                        {new Date(row.createdAt).toLocaleString("id-ID")}
+                      </td>
+                      <td
+                        className="py-5 px-4 text-xs text-[#524342]"
+                        style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                      >
+                        {row.userEmail || row.email}
+                      </td>
+                      <td
+                        className="py-5 px-4 text-xs text-[#524342]"
+                        style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                      >
+                        {row.promptTokens} / {row.completionTokens}
+                      </td>
+                      <td className="py-5 px-4">
+                        <span
+                          className="inline-flex items-center px-3 py-1 rounded border border-[#e6d1c7] bg-white text-[10px] font-medium text-[#524342]"
+                          style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                        >
+                          ${row.modalApi || "0.00000"}
+                        </span>
+                      </td>
+                      <td className="py-5 px-4">
+                        <span
+                          className="inline-flex items-center px-3 py-1 rounded border border-[#e6d1c7] bg-white text-[10px] font-medium text-[#524342]"
+                          style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                        >
+                          ${row.chargeUser || "0.00000"}
+                        </span>
+                      </td>
+                      <td className="py-5 px-4">
+                        <span
+                          className="inline-flex items-center px-3 py-1 rounded border border-[#e6d1c7] bg-[#fdf2f0] text-[10px] font-semibold text-[#8b1a1a]"
+                          style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                        >
+                          +${row.profit || "0.00000"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
                   <tr>
-                    <td colSpan="7" className="py-8 text-center text-gray-500 text-sm">
+                    <td
+                      colSpan="7"
+                      className="py-8 text-center text-gray-500 text-sm"
+                    >
                       Belum ada log penggunaan.
                     </td>
                   </tr>
@@ -506,14 +680,19 @@ export default function AiConfigPage() {
         </div>
       </section>
 
-      {/* Modal Tambah API */}
+      {/* Modal Tambah/Edit API */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl w-full max-w-3xl shadow-xl max-h-[90vh] overflow-y-auto" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
+          <div
+            className="bg-white rounded-2xl w-full max-w-3xl shadow-xl max-h-[90vh] overflow-y-auto"
+            style={{ fontFamily: "var(--font-plus-jakarta)" }}
+          >
             <div className="p-8">
               <div className="flex justify-between items-center mb-8">
-                <h2 className="text-2xl font-bold text-[#2b1d19]">{isEditingAPI ? "Edit Model API" : "Model API"}</h2>
-                <button 
+                <h2 className="text-2xl font-bold text-[#2b1d19]">
+                  {isEditingAPI ? "Edit Model API" : "Model API"}
+                </h2>
+                <button
                   onClick={() => setIsModalOpen(false)}
                   className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
                 >
@@ -522,11 +701,14 @@ export default function AiConfigPage() {
               </div>
 
               <div className="space-y-6">
+                {/* Input Basic (Nama Router & URL) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-semibold text-[#2b1d19] mb-2">Nama Router</label>
-                    <input 
-                      type="text" 
+                    <label className="block text-sm font-semibold text-[#2b1d19] mb-2">
+                      Nama Router
+                    </label>
+                    <input
+                      type="text"
                       name="namaRouter"
                       value={formData.namaRouter}
                       onChange={handleInputChange}
@@ -535,9 +717,11 @@ export default function AiConfigPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-[#2b1d19] mb-2">Base Url</label>
-                    <input 
-                      type="text" 
+                    <label className="block text-sm font-semibold text-[#2b1d19] mb-2">
+                      Base Url
+                    </label>
+                    <input
+                      type="text"
                       name="baseUrl"
                       value={formData.baseUrl}
                       onChange={handleInputChange}
@@ -548,9 +732,11 @@ export default function AiConfigPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-[#2b1d19] mb-2">Model</label>
-                  <input 
-                    type="text" 
+                  <label className="block text-sm font-semibold text-[#2b1d19] mb-2">
+                    Model
+                  </label>
+                  <input
+                    type="text"
                     name="modelName"
                     value={formData.modelName}
                     onChange={handleInputChange}
@@ -560,8 +746,10 @@ export default function AiConfigPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-[#2b1d19] mb-2">API KEY</label>
-                  <textarea 
+                  <label className="block text-sm font-semibold text-[#2b1d19] mb-2">
+                    API KEY
+                  </label>
+                  <textarea
                     name="apiKey"
                     value={formData.apiKey}
                     onChange={handleInputChange}
@@ -570,15 +758,24 @@ export default function AiConfigPage() {
                   />
                 </div>
 
+                {/* Pemilihan Tipe AI */}
                 <div>
-                  <label className="block text-sm font-semibold text-[#2b1d19] mb-2">Tipe AI</label>
+                  <label className="block text-sm font-semibold text-[#2b1d19] mb-2">
+                    Tipe AI
+                  </label>
                   <div className="grid grid-cols-2 gap-4">
                     <button
                       type="button"
-                      onClick={() => setFormData({ ...formData, typeAi: "LLM" })}
+                      onClick={() =>
+                        setFormData({
+                          ...formData,
+                          typeAi: "LLM",
+                          pricingUnit: "1M_TOKENS",
+                        })
+                      }
                       className={`px-4 py-3 rounded-lg border text-sm font-medium text-left transition-all ${
-                        formData.typeAi === "LLM" 
-                          ? "border-[#4a1a1a] bg-[#fafafa] text-[#2b1d19]" 
+                        formData.typeAi === "LLM"
+                          ? "border-[#4a1a1a] bg-[#fafafa] text-[#2b1d19]"
                           : "border-gray-200 text-gray-500 hover:border-gray-300"
                       }`}
                     >
@@ -586,10 +783,16 @@ export default function AiConfigPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setFormData({ ...formData, typeAi: "IMAGE_GEN" })}
+                      onClick={() =>
+                        setFormData({
+                          ...formData,
+                          typeAi: "IMAGE_GEN",
+                          pricingUnit: "IMAGE",
+                        })
+                      }
                       className={`px-4 py-3 rounded-lg border text-sm font-medium text-left transition-all ${
-                        formData.typeAi === "IMAGE_GEN" 
-                          ? "border-[#4a1a1a] bg-[#fafafa] text-[#2b1d19]" 
+                        formData.typeAi === "IMAGE_GEN"
+                          ? "border-[#4a1a1a] bg-[#fafafa] text-[#2b1d19]"
                           : "border-gray-200 text-gray-500 hover:border-gray-300"
                       }`}
                     >
@@ -598,13 +801,19 @@ export default function AiConfigPage() {
                   </div>
                 </div>
 
+                {/* Input Harga (Disesuaikan berdasarkan Tipe) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Harga Input (1M Tokens) - SELALU MUNCUL DI KEDUA TIPE AI */}
                   <div>
-                    <label className="block text-sm font-semibold text-[#2b1d19] mb-2">Harga Input</label>
+                    <label className="block text-sm font-semibold text-[#2b1d19] mb-2">
+                      Harga Input
+                    </label>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
-                      <input 
-                        type="number" 
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+                        $
+                      </span>
+                      <input
+                        type="number"
                         name="hargaInput1M"
                         value={formData.hargaInput1M}
                         onChange={handleInputChange}
@@ -612,34 +821,73 @@ export default function AiConfigPage() {
                         className="w-full pl-8 pr-20 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm"
                         placeholder="0.07"
                       />
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">/1M tokens</span>
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+                        /1M tokens
+                      </span>
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-[#2b1d19] mb-2">Harga Output</label>
-                    <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
-                      <input 
-                        type="number" 
-                        name="hargaOutput1M"
-                        value={formData.hargaOutput1M}
-                        onChange={handleInputChange}
-                        step="0.01"
-                        className="w-full pl-8 pr-20 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm"
-                        placeholder="0.30"
-                      />
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">/1M tokens</span>
+
+                  {/* Harga Output - BERUBAH TERGANTUNG TIPE AI */}
+                  {formData.typeAi === "LLM" ? (
+                    <div>
+                      <label className="block text-sm font-semibold text-[#2b1d19] mb-2">
+                        Harga Output
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+                          $
+                        </span>
+                        <input
+                          type="number"
+                          name="hargaOutput1M"
+                          value={formData.hargaOutput1M}
+                          onChange={handleInputChange}
+                          step="0.01"
+                          className="w-full pl-8 pr-20 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm"
+                          placeholder="0.30"
+                        />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+                          /1M tokens
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div>
+                      <label className="block text-sm font-semibold text-[#2b1d19] mb-2">
+                        Harga Output (Per Image)
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+                          $
+                        </span>
+                        <input
+                          type="number"
+                          name="hargaPerImage"
+                          value={formData.hargaPerImage}
+                          onChange={handleInputChange}
+                          step="0.01"
+                          className="w-full pl-8 pr-20 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm"
+                          placeholder="0.04"
+                        />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+                          /Image
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-semibold text-[#2b1d19] mb-2">Max Budget</label>
+                    <label className="block text-sm font-semibold text-[#2b1d19] mb-2">
+                      Max Budget
+                    </label>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
-                      <input 
-                        type="number" 
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+                        $
+                      </span>
+                      <input
+                        type="number"
                         name="maxBudget"
                         value={formData.maxBudget}
                         onChange={handleInputChange}
@@ -649,9 +897,11 @@ export default function AiConfigPage() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-[#2b1d19] mb-2">RPM Limit</label>
-                    <input 
-                      type="number" 
+                    <label className="block text-sm font-semibold text-[#2b1d19] mb-2">
+                      RPM Limit
+                    </label>
+                    <input
+                      type="number"
                       name="rpmLimit"
                       value={formData.rpmLimit}
                       onChange={handleInputChange}
@@ -661,34 +911,47 @@ export default function AiConfigPage() {
                   </div>
                 </div>
 
-                <p className="text-xs italic text-gray-500 mt-2">*Wajib harus sama sesuai di Website Router</p>
+                <p className="text-xs italic text-gray-500 mt-2">
+                  *Wajib harus sama sesuai di Website Router
+                </p>
 
                 {testResult && (
-                  <div className={`flex items-center gap-2 p-3 rounded-lg text-sm ${testResult.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                    {testResult.success ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+                  <div
+                    className={`flex items-center gap-2 p-3 rounded-lg text-sm ${testResult.success ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}
+                  >
+                    {testResult.success ? (
+                      <CheckCircle2 className="w-5 h-5" />
+                    ) : (
+                      <AlertCircle className="w-5 h-5" />
+                    )}
                     <span>{testResult.message}</span>
                   </div>
                 )}
 
                 <div className="flex flex-col sm:flex-row gap-4 pt-6">
-                  <button 
+                  <button
                     onClick={handleTestConnection}
                     disabled={isTesting}
                     className="flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[#274c35] hover:bg-[#1a3323] text-white text-sm font-semibold transition-colors disabled:opacity-70 flex-1 sm:flex-none"
                   >
-                    {isTesting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Bot className="w-5 h-5" />}
+                    {isTesting ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <Bot className="w-5 h-5" />
+                    )}
                     <span>Test Koneksi API</span>
                   </button>
-                  <button 
+                  <button
                     onClick={handleSaveAPI}
                     disabled={isSubmitting}
                     className="flex items-center justify-center gap-2 px-8 py-3 rounded-lg bg-[#4a1a1a] hover:bg-[#2b1d19] text-white text-sm font-semibold transition-colors disabled:opacity-70 flex-1 sm:flex-none"
                   >
-                    {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
+                    {isSubmitting ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : null}
                     <span>Simpan API</span>
                   </button>
                 </div>
-
               </div>
             </div>
           </div>
@@ -698,11 +961,16 @@ export default function AiConfigPage() {
       {/* Modal Edit Master Exchange */}
       {isExchangeModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
+          <div
+            className="bg-white rounded-2xl w-full max-w-2xl shadow-xl"
+            style={{ fontFamily: "var(--font-plus-jakarta)" }}
+          >
             <div className="p-8">
               <div className="flex justify-between items-center mb-8">
-                <h2 className="text-2xl font-bold text-[#2b1d19]">Master Exchange Setting</h2>
-                <button 
+                <h2 className="text-2xl font-bold text-[#2b1d19]">
+                  Master Exchange Setting
+                </h2>
+                <button
                   onClick={() => setIsExchangeModalOpen(false)}
                   className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
                 >
@@ -713,25 +981,33 @@ export default function AiConfigPage() {
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-semibold text-[#2b1d19] mb-2">Global Multiplier</label>
+                    <label className="block text-sm font-semibold text-[#2b1d19] mb-2">
+                      Global Multiplier
+                    </label>
                     <div className="relative">
-                      <input 
-                        type="number" 
+                      <input
+                        type="number"
                         name="globalMultiplierDisplay"
                         value={exchangeForm.globalMultiplierDisplay}
                         onChange={handleExchangeInputChange}
                         className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm"
                         placeholder="35"
                       />
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">%</span>
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+                        %
+                      </span>
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-[#2b1d19] mb-2">Base Rate (USD/IDR)</label>
+                    <label className="block text-sm font-semibold text-[#2b1d19] mb-2">
+                      Base Rate (USD/IDR)
+                    </label>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">Rp</span>
-                      <input 
-                        type="number" 
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+                        Rp
+                      </span>
+                      <input
+                        type="number"
                         name="baseRateUsdIdr"
                         value={exchangeForm.baseRateUsdIdr}
                         onChange={handleExchangeInputChange}
@@ -739,37 +1015,46 @@ export default function AiConfigPage() {
                         placeholder="17332"
                       />
                     </div>
-                    <p className="text-[10px] italic text-gray-400 mt-2">*Kurs Mentah, samakan di web router</p>
+                    <p className="text-[10px] italic text-gray-400 mt-2">
+                      *Kurs Mentah, samakan di web router
+                    </p>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-[#2b1d19] mb-2">Inflation Buffer</label>
+                  <label className="block text-sm font-semibold text-[#2b1d19] mb-2">
+                    Inflation Buffer
+                  </label>
                   <div className="relative">
-                    <input 
-                      type="number" 
+                    <input
+                      type="number"
                       name="inflationBufferDisplay"
                       value={exchangeForm.inflationBufferDisplay}
                       onChange={handleExchangeInputChange}
                       className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm"
                       placeholder="5"
                     />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">%</span>
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+                      %
+                    </span>
                   </div>
-                  <p className="text-[10px] italic text-gray-400 mt-2">*Inflasi Buffer samakan di web router</p>
+                  <p className="text-[10px] italic text-gray-400 mt-2">
+                    *Inflasi Buffer samakan di web router
+                  </p>
                 </div>
 
                 <div className="pt-6">
-                  <button 
+                  <button
                     onClick={handleSaveExchange}
                     disabled={isExchangeSubmitting}
                     className="flex items-center justify-center gap-2 px-8 py-3 rounded-lg bg-[#3a201b] hover:bg-[#2b1d19] text-white text-sm font-semibold transition-colors disabled:opacity-70"
                   >
-                    {isExchangeSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
+                    {isExchangeSubmitting ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : null}
                     <span>Simpan Master Exchange Setting</span>
                   </button>
                 </div>
-
               </div>
             </div>
           </div>

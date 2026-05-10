@@ -70,7 +70,7 @@ export default function MeetOurCapster() {
               src="/images/background-capster.webp"
               alt="Barbershop Illustration"
               width={1920}
-              height={2539}
+              height={2000}
               className="w-full h-auto max-w-full"
               priority
             />

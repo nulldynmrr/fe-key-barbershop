@@ -11,6 +11,16 @@ import {
   Settings2,
   CheckCircle2,
   Lightbulb,
+  Scan,
+  Flame,
+  Scale,
+  Map,
+  Activity,
+  AlertCircle,
+  Scissors,
+  Sparkles,
+  History,
+  TrendingUp,
 } from "lucide-react";
 import { packageService } from "@/services/packageService";
 import { aiConfigService } from "@/services/aiConfigService";
@@ -60,8 +70,12 @@ export default function LanggananPage() {
     llmModelId: "",
     imageModelId: "",
     featStandardScan: true,
+    featFaceHeatmap: false,
     featSymmetry: false,
     featAdvMapping: false,
+    featHairAnalysis: false,
+    featRiskAnalysis: false,
+    featBarberInstructions: false,
     featVirtualTryOn: false,
     featHistory: false,
     featHairstyleTrend: false,
@@ -148,6 +162,11 @@ export default function LanggananPage() {
     formData.featAdvMapping,
     formData.featHistory,
     formData.featHairstyleTrend,
+    formData.featFaceHeatmap,
+    formData.featHairAnalysis,
+    formData.featBarberInstructions,
+    formData.llmModelId,
+    formData.imageModelId,
   ]);
 
   const calculateKoinIdeal = async () => {
@@ -159,6 +178,12 @@ export default function LanggananPage() {
         featAdvMapping: formData.featAdvMapping,
         featHistory: formData.featHistory,
         featTrendAnalysis: formData.featHairstyleTrend,
+        featFaceHeatmap: formData.featFaceHeatmap,
+        featHairAnalysis: formData.featHairAnalysis,
+        featRiskAnalysis: formData.featRiskAnalysis,
+        featBarberInstructions: formData.featBarberInstructions,
+        llmModelId: formData.llmModelId,
+        imageModelId: formData.featVirtualTryOn ? formData.imageModelId : null,
       });
       if (res.data && res.data.success) {
         const responseData = res.data.data;
@@ -188,6 +213,14 @@ export default function LanggananPage() {
     formData.featVirtualTryOn,
     formData.llmModelId,
     formData.imageModelId,
+    formData.featSymmetry,
+    formData.featAdvMapping,
+    formData.featFaceHeatmap,
+    formData.featHairAnalysis,
+    formData.featRiskAnalysis,
+    formData.featBarberInstructions,
+    formData.featHistory,
+    formData.featHairstyleTrend,
     isModalOpen,
   ]);
 
@@ -208,9 +241,17 @@ export default function LanggananPage() {
     try {
       const res = await packageService.calculateHpp({
         jumlahKoin: koin,
-        featVirtualTryOn: formData.featVirtualTryOn,
         llmModelId: formData.llmModelId,
         imageModelId: formData.featVirtualTryOn ? formData.imageModelId : null,
+        featVirtualTryOn: formData.featVirtualTryOn,
+        featSymmetry: formData.featSymmetry,
+        featAdvMapping: formData.featAdvMapping,
+        featFaceHeatmap: formData.featFaceHeatmap,
+        featHairAnalysis: formData.featHairAnalysis,
+        featRiskAnalysis: formData.featRiskAnalysis,
+        featBarberInstructions: formData.featBarberInstructions,
+        featHistory: formData.featHistory,
+        featTrendAnalysis: formData.featHairstyleTrend,
       });
       if (res.data.success) {
         setFormData((prev) => ({
@@ -291,6 +332,15 @@ export default function LanggananPage() {
       llmModelId: pkg.llmModelId || defaultLlm,
       imageModelId: pkg.imageModelId || defaultImage,
       featStandardScan: true,
+      featFaceHeatmap: pkg.featFaceHeatmap || false,
+      featSymmetry: pkg.featSymmetry || false,
+      featAdvMapping: pkg.featAdvMapping || false,
+      featHairAnalysis: pkg.featHairAnalysis || false,
+      featRiskAnalysis: pkg.featRiskAnalysis || false,
+      featBarberInstructions: pkg.featBarberInstructions || false,
+      featVirtualTryOn: pkg.featVirtualTryOn || false,
+      featHistory: pkg.featHistory || false,
+      featHairstyleTrend: pkg.featHairstyleTrend || false,
     });
     setEditingId(pkg.id);
     setIsEditing(true);
@@ -332,10 +382,15 @@ export default function LanggananPage() {
         llmModelId: formData.llmModelId,
         imageModelId: formData.featVirtualTryOn ? formData.imageModelId : null,
         featStandardScan: formData.featStandardScan,
+        featFaceHeatmap: formData.featFaceHeatmap,
         featSymmetry: formData.featSymmetry,
         featAdvMapping: formData.featAdvMapping,
+        featHairAnalysis: formData.featHairAnalysis,
+        featRiskAnalysis: formData.featRiskAnalysis,
+        featBarberInstructions: formData.featBarberInstructions,
         featVirtualTryOn: formData.featVirtualTryOn,
         featHistory: formData.featHistory,
+        featHairstyleTrend: formData.featHairstyleTrend,
         hppIdeal: Number(formData.hppIdeal),
         hargaNominal: Number(formData.hargaNominal),
         promoAktif: formData.promoAktif,
@@ -583,62 +638,165 @@ export default function LanggananPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-[#2b1d19] mb-2">
+                  <label className="block text-sm font-semibold text-[#2b1d19] mb-3">
                     Pilih Fitur sesuai kebutuhan
                   </label>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                      <div>
-                        <p className="font-semibold text-sm text-[#2b1d19]">
-                          Standard Face Shape Detection
-                        </p>
-                        <p className="text-[10px] text-gray-500 mt-1">
-                          Analisis dasar untuk menentukan bentuk wajah user.
-                        </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-white shadow-sm">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 bg-[#fafafa] border border-gray-100 rounded-md shrink-0">
+                          <Scan className="w-4 h-4 text-[#4a1a1a]" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm text-[#2b1d19]">
+                            Standard Scan
+                          </p>
+                          <p className="text-[10px] text-gray-500 mt-1">
+                            Analisis dasar bentuk wajah user.
+                          </p>
+                        </div>
                       </div>
                       <ToggleSwitch
                         checked={formData.featStandardScan}
                         onChange={() => handleFeatureToggle("featStandardScan")}
                       />
                     </div>
-                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                      <div>
-                        <p className="font-semibold text-sm text-[#2b1d19]">
-                          Facial Symmetry Scoring
-                        </p>
-                        <p className="text-[10px] text-gray-500 mt-1">
-                          Logika AI untuk menghitung skor persentase simetri
-                          wajah.
-                        </p>
+
+                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-white shadow-sm">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 bg-[#fafafa] border border-gray-100 rounded-md shrink-0">
+                          <Flame className="w-4 h-4 text-[#4a1a1a]" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm text-[#2b1d19]">
+                            Face Heatmap
+                          </p>
+                          <p className="text-[10px] text-gray-500 mt-1">
+                            Pemetaan warna zona wajah.
+                          </p>
+                        </div>
+                      </div>
+                      <ToggleSwitch
+                        checked={formData.featFaceHeatmap}
+                        onChange={() => handleFeatureToggle("featFaceHeatmap")}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-white shadow-sm">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 bg-[#fafafa] border border-gray-100 rounded-md shrink-0">
+                          <Scale className="w-4 h-4 text-[#4a1a1a]" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm text-[#2b1d19]">
+                            Facial Symmetry
+                          </p>
+                          <p className="text-[10px] text-gray-500 mt-1">
+                            Menghitung persentase simetri wajah.
+                          </p>
+                        </div>
                       </div>
                       <ToggleSwitch
                         checked={formData.featSymmetry}
                         onChange={() => handleFeatureToggle("featSymmetry")}
                       />
                     </div>
-                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                      <div>
-                        <p className="font-semibold text-sm text-[#2b1d19]">
-                          Advanced Feature Mapping
-                        </p>
-                        <p className="text-[10px] text-gray-500 mt-1">
-                          Deteksi mendalam area dahi, rahang, dan pipi.
-                        </p>
+
+                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-white shadow-sm">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 bg-[#fafafa] border border-gray-100 rounded-md shrink-0">
+                          <Map className="w-4 h-4 text-[#4a1a1a]" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm text-[#2b1d19]">
+                            Adv. Feature Mapping
+                          </p>
+                          <p className="text-[10px] text-gray-500 mt-1">
+                            Deteksi area dahi, rahang, dan pipi.
+                          </p>
+                        </div>
                       </div>
                       <ToggleSwitch
                         checked={formData.featAdvMapping}
                         onChange={() => handleFeatureToggle("featAdvMapping")}
                       />
                     </div>
-                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                      <div>
-                        <p className="font-semibold text-sm text-[#2b1d19]">
-                          Virtual Try-on (AI Generation)
-                        </p>
-                        <p className="text-[10px] text-gray-500 mt-1">
-                          Fitur premium in-painting gaya rambut menggunakan
-                          Image Gen.
-                        </p>
+
+                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-white shadow-sm">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 bg-[#fafafa] border border-gray-100 rounded-md shrink-0">
+                          <Activity className="w-4 h-4 text-[#4a1a1a]" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm text-[#2b1d19]">
+                            Hair Analysis
+                          </p>
+                          <p className="text-[10px] text-gray-500 mt-1">
+                            Thickness, density & scalp health.
+                          </p>
+                        </div>
+                      </div>
+                      <ToggleSwitch
+                        checked={formData.featHairAnalysis}
+                        onChange={() => handleFeatureToggle("featHairAnalysis")}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-white shadow-sm">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 bg-[#fafafa] border border-gray-100 rounded-md shrink-0">
+                          <AlertCircle className="w-4 h-4 text-[#4a1a1a]" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm text-[#2b1d19]">
+                            Risk Analysis
+                          </p>
+                          <p className="text-[10px] text-gray-500 mt-1">
+                            Persentase risiko gaya rambut.
+                          </p>
+                        </div>
+                      </div>
+                      <ToggleSwitch
+                        checked={formData.featRiskAnalysis}
+                        onChange={() => handleFeatureToggle("featRiskAnalysis")}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-white shadow-sm">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 bg-[#fafafa] border border-gray-100 rounded-md shrink-0">
+                          <Scissors className="w-4 h-4 text-[#4a1a1a]" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm text-[#2b1d19]">
+                            Barber Instructions
+                          </p>
+                          <p className="text-[10px] text-gray-500 mt-1">
+                            Instruksi potongan detail.
+                          </p>
+                        </div>
+                      </div>
+                      <ToggleSwitch
+                        checked={formData.featBarberInstructions}
+                        onChange={() =>
+                          handleFeatureToggle("featBarberInstructions")
+                        }
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-white shadow-sm">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 bg-[#fafafa] border border-gray-100 rounded-md shrink-0">
+                          <Sparkles className="w-4 h-4 text-[#4a1a1a]" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm text-[#2b1d19]">
+                            Virtual Try-on
+                          </p>
+                          <p className="text-[10px] text-gray-500 mt-1">
+                            In-painting AI generasi rambut.
+                          </p>
+                        </div>
                       </div>
                       <ToggleSwitch
                         checked={formData.featVirtualTryOn}
@@ -646,28 +804,40 @@ export default function LanggananPage() {
                         disabled={activeModels.image_gen.length === 0}
                       />
                     </div>
-                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                      <div>
-                        <p className="font-semibold text-sm text-[#2b1d19]">
-                          Extended History Storage
-                        </p>
-                        <p className="text-[10px] text-gray-500 mt-1">
-                          Penyimpanan data hasil analisis di database selamanya.
-                        </p>
+
+                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-white shadow-sm">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 bg-[#fafafa] border border-gray-100 rounded-md shrink-0">
+                          <History className="w-4 h-4 text-[#4a1a1a]" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm text-[#2b1d19]">
+                            Extended History
+                          </p>
+                          <p className="text-[10px] text-gray-500 mt-1">
+                            Penyimpanan data analisis.
+                          </p>
+                        </div>
                       </div>
                       <ToggleSwitch
                         checked={formData.featHistory}
                         onChange={() => handleFeatureToggle("featHistory")}
                       />
                     </div>
-                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                      <div>
-                        <p className="font-semibold text-sm text-[#2b1d19]">
-                          Hairstyle Trend Analysis
-                        </p>
-                        <p className="text-[10px] text-gray-500 mt-1">
-                          Rekomendasi gaya rambut yang sedang tren.
-                        </p>
+
+                    <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-white shadow-sm">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 bg-[#fafafa] border border-gray-100 rounded-md shrink-0">
+                          <TrendingUp className="w-4 h-4 text-[#4a1a1a]" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm text-[#2b1d19]">
+                            Trend Analysis
+                          </p>
+                          <p className="text-[10px] text-gray-500 mt-1">
+                            Rekomendasi tren gaya rambut.
+                          </p>
+                        </div>
                       </div>
                       <ToggleSwitch
                         checked={formData.featHairstyleTrend}
@@ -1034,8 +1204,8 @@ export default function LanggananPage() {
                                 </p>
                                 <p className="text-[10px] text-blue-700 mt-0.5 leading-relaxed">
                                   Estimasi koin yang akan dipotong dari saldo
-                                  user 1x analisis
-                                  dengan kombinasi fitur di atas.
+                                  user 1x analisis dengan kombinasi fitur di
+                                  atas.
                                 </p>
                               </div>
                             </div>

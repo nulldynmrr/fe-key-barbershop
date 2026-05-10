@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Scissors, Sparkles, Heart, Palette, Check } from "lucide-react";
 import SiteFooter from "../../../components/SiteFooter";
 import SiteNavbar from "../../../components/SiteNavbar";
@@ -126,12 +127,13 @@ function PricingCard({ tier, title, credits, features, price, recommended }) {
         <p className="text-lg font-light" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
           {price}
         </p>
-        <button
-          className={`w-full px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] transition ${recommended ? "bg-[#f7f1ea] text-[#2b1d19] hover:bg-[#ede8e0]" : "border border-[#8b6f59] text-[#f7e7d8] hover:bg-[#5d1818]"}`}
+        <Link
+          href={`/payment?plan=${encodeURIComponent(title)}&price=${encodeURIComponent(price)}&tier=${encodeURIComponent(credits)}`}
+          className={`w-full px-4 py-3 text-xs font-semibold uppercase tracking-[0.2em] transition inline-block text-center ${recommended ? "bg-[#f7f1ea] text-[#2b1d19] hover:bg-[#ede8e0]" : "border border-[#8b6f59] text-[#f7e7d8] hover:bg-[#5d1818]"}`}
           style={{ fontFamily: "var(--font-be-vietnam)" }}
         >
           Buy Now
-        </button>
+        </Link>
       </div>
     </article>
   );

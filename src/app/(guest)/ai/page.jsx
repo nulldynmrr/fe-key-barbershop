@@ -1,13 +1,15 @@
 "use client";
 
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
-import { ScanFace, Sparkles, Upload, Camera } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState, useRef } from "react";
+import { ScanFace, Sparkles, Upload, Camera, Loader2 } from "lucide-react";
 import SeparatorKey from "../../../components/SeparatorKey";
 import SiteFooter from "../../../components/SiteFooter";
 import SiteNavbar from "../../../components/SiteNavbar";
-import AILoadingModal from "../../../components/AILoadingModal";
+import { aiScanService } from "../../../services/aiScanService";
+import { useToast } from "../../../contexts/ToastContext";
+import { saveUserAuth } from "../../../utils/request";
+import Cookies from "js-cookie";
 
 const stepItems = [
   {
@@ -37,7 +39,10 @@ function StepCard({ number, title, description, icon: Icon }) {
     <article className="flex flex-col items-center text-center">
       <div className="relative flex h-32 w-32 items-center justify-center rounded-full bg-[#4a1a1a] shadow-lg">
         <Icon className="h-12 w-12 text-[#fbf7f3]" />
-        <span className="absolute -top-2 -right-0.5 flex h-10 w-10 items-center justify-center rounded-full bg-[#FBF7F3] font-bold text-[#4A1A1A]" style={{ fontFamily: "var(--font-noto-serif)" }}>
+        <span
+          className="absolute -top-2 -right-0.5 flex h-10 w-10 items-center justify-center rounded-full bg-[#FBF7F3] font-bold text-[#4A1A1A]"
+          style={{ fontFamily: "var(--font-noto-serif)" }}
+        >
           {number}
         </span>
       </div>
@@ -53,57 +58,135 @@ function StepCard({ number, title, description, icon: Icon }) {
 
 export default function AiPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [isLoadingOpen, setIsLoadingOpen] = useState(false);
-  const [isPreviewDismissed, setIsPreviewDismissed] = useState(false);
-  const [mode, setMode] = useState("upload"); // "upload" or "camera"
-  const isPreviewLoading = searchParams.get("previewLoading") === "1";
-  const isModalOpen = isLoadingOpen || (isPreviewLoading && !isPreviewDismissed);
-
-  const handleUploadClick = () => {
-    setMode("upload");
-    setIsLoadingOpen(true);
-  };
+  const { showToast } = useToast();
+  const fileInputRef = useRef(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const handleCameraClick = () => {
-    setMode("camera");
-    setIsLoadingOpen(true);
+    router.push("/ai/camera");
   };
 
-  const handleLoadingComplete = () => {
-    if (isPreviewLoading) {
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const ensureAuth = async () => {
+    const token = Cookies.get("user_token");
+    if (!token) {
+      let deviceId = Cookies.get("device_cookie");
+      if (!deviceId) {
+        deviceId = "dev_" + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+        Cookies.set("device_cookie", deviceId, { expires: 365 });
+      }
+      const res = await aiScanService.guestLogin({ device_cookie: deviceId });
+      const { data } = res.data;
+      saveUserAuth(data.token, data.user);
+    }
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      showToast("Only JPG, PNG, or WEBP images are allowed.", "error");
       return;
     }
 
-    setIsLoadingOpen(false);
-    sessionStorage.setItem(
-      "aiResultAccess",
-      JSON.stringify({
-        grantedAt: Date.now(),
-        mode,
-      }),
-    );
-    router.push(`/ai/result?mode=${mode}`);
-  };
+    setIsAnalyzing(true);
 
-  const handleCloseModal = () => {
-    setIsLoadingOpen(false);
-    if (isPreviewLoading) {
-      setIsPreviewDismissed(true);
+    try {
+      await ensureAuth();
+
+      const featureRes = await aiScanService.getFeatures();
+      const featuresData = featureRes.data?.data || {};
+
+      const activeFeatures = Object.keys(featuresData).filter(
+        (key) => featuresData[key].available
+      );
+
+      // Save base64 image so the result page can display it (since backend doesn't store file)
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        try {
+          sessionStorage.setItem("aiOriginalImage", reader.result);
+          
+          const formData = new FormData();
+          formData.append("foto", file);
+          
+          if (activeFeatures.length === 0) {
+            formData.append("requestedFeatures", JSON.stringify(["STANDARD_SCAN"]));
+          } else {
+            formData.append("requestedFeatures", JSON.stringify(activeFeatures));
+          }
+
+          const analysisRes = await aiScanService.analyzeFace(formData);
+          sessionStorage.setItem("aiAnalysisResult", JSON.stringify(analysisRes.data?.data));
+
+          showToast("Analysis complete!", "success");
+          router.push("/ai/result?mode=upload");
+        } catch (err) {
+          console.error(err);
+          showToast(err.response?.data?.message || err.message || "Failed to analyze photo", "error");
+          setIsAnalyzing(false);
+          if (fileInputRef.current) fileInputRef.current.value = "";
+        }
+      };
+      reader.readAsDataURL(file);
+
+    } catch (err) {
+      console.error(err);
+      showToast(err.response?.data?.message || err.message || "Failed to analyze photo", "error");
+      setIsAnalyzing(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#FBF7F3] text-[#2B1D19] scroll-smooth">
-      <AILoadingModal isOpen={isModalOpen} onClose={handleCloseModal} onComplete={handleLoadingComplete} disableAutoProgress={isPreviewLoading} previewStep={1} />
       <SiteNavbar activeLabel="AI Feature" />
+
+      {isAnalyzing && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#2b1d19]/80 backdrop-blur-sm">
+          <ScanFace className="h-16 w-16 text-[#C59B8F] animate-pulse mb-6" />
+          <p className="text-[#F3E8DE] text-lg font-serif tracking-wider mb-3">Analyzing your photo...</p>
+          <div className="w-48 h-1 bg-white/20 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-[#C59B8F] rounded-full"
+              style={{ width: "60%", animation: "scanBar 1.8s ease-in-out infinite" }}
+            />
+          </div>
+          <p className="mt-4 text-xs text-white/40 uppercase tracking-[0.2em] animate-pulse">Running AI Model</p>
+          <style>{`
+            @keyframes scanBar {
+              0% { transform: translateX(-100%); }
+              100% { transform: translateX(250%); }
+            }
+          `}</style>
+        </div>
+      )}
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="hidden"
+        onChange={handleFileChange}
+      />
 
       <section className="relative mx-auto max-w-6xl px-6 pb-16 pt-16 lg:px-10">
         <div className="text-center">
-          <h1 className="text-4xl font-semibold leading-tight tracking-tight text-[#2b1d19] sm:text-5xl lg:text-6xl" style={{ fontFamily: "var(--font-playfair)" }}>
+          <h1
+            className="text-4xl font-semibold leading-tight tracking-tight text-[#2b1d19] sm:text-5xl lg:text-6xl"
+            style={{ fontFamily: "var(--font-playfair)" }}
+          >
             AI-Powered Hair Recommendation
           </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-[#6e5851]" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
+          <p
+            className="mx-auto mt-5 max-w-2xl text-base leading-8 text-[#6e5851]"
+            style={{ fontFamily: "var(--font-plus-jakarta)" }}
+          >
             Leverage our proprietary artisanal algorithm to find the cut that best complements your facial structure and personal style.
           </p>
         </div>
@@ -115,36 +198,48 @@ export default function AiPage() {
                 <Upload className="h-8 w-8 text-[#4a1a1a]" />
               </div>
 
-              <h2 className="mt-8 text-3xl leading-tight text-[#2b1d19] sm:text-4xl" style={{ fontFamily: "var(--font-noto-serif)" }}>
+              <h2
+                className="mt-8 text-3xl leading-tight text-[#2b1d19] sm:text-4xl"
+                style={{ fontFamily: "var(--font-noto-serif)" }}
+              >
                 Ready to find your ideal hairstyle?
               </h2>
 
               <div className="mt-6 flex flex-wrap justify-center gap-3">
                 {featurePills.map((pill) => (
-                  <span key={pill} className="rounded-full border border-[#e6d1c7] bg-[#ede8e0] px-4 py-2 text-xs uppercase tracking-[0.22em] text-[#6e5851]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
+                  <span
+                    key={pill}
+                    className="rounded-full border border-[#e6d1c7] bg-[#ede8e0] px-4 py-2 text-xs uppercase tracking-[0.22em] text-[#6e5851]"
+                    style={{ fontFamily: "var(--font-be-vietnam)" }}
+                  >
                     {pill}
                   </span>
                 ))}
               </div>
 
-              <div className="mt-7 flex items-center gap-2 text-[0.7rem] uppercase tracking-[0.34em] text-[#c57e7b]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
+              <div
+                className="mt-7 flex items-center gap-2 text-[0.7rem] uppercase tracking-[0.34em] text-[#c57e7b]"
+                style={{ fontFamily: "var(--font-be-vietnam)" }}
+              >
                 <Sparkles className="h-4 w-4" />
                 150 Credits
               </div>
 
-              <Link
-                href="#"
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleUploadClick();
-                }}
-                className="mt-8 inline-flex w-50% items-center justify-center bg-[#4a1a1a] px-6 py-4 text-xs font-semibold uppercase tracking-[0.3em] text-[#fbf7f3] transition hover:bg-[#2b1d19]"
+              <button
+                type="button"
+                onClick={handleUploadClick}
+                disabled={isAnalyzing}
+                className="mt-8 inline-flex items-center justify-center gap-2 bg-[#4a1a1a] px-6 py-4 text-xs font-semibold uppercase tracking-[0.3em] text-[#fbf7f3] transition hover:bg-[#2b1d19] disabled:opacity-60 disabled:cursor-not-allowed"
                 style={{ fontFamily: "var(--font-be-vietnam)" }}
               >
-                Upload my photo & get recommendations
-              </Link>
+                {isAnalyzing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                Upload my photo &amp; get recommendations
+              </button>
 
-              <p className="mt-4 text-[0.7rem] uppercase tracking-[0.34em] text-[#8b6f66]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
+              <p
+                className="mt-4 text-[0.7rem] uppercase tracking-[0.34em] text-[#8b6f66]"
+                style={{ fontFamily: "var(--font-be-vietnam)" }}
+              >
                 Privacy first: your photos are never stored on our servers.
               </p>
             </div>
@@ -152,7 +247,10 @@ export default function AiPage() {
 
           <div className="flex items-center gap-4">
             <div className="flex-1 border-t border-[#c57e7b]" />
-            <span className="text-xs uppercase tracking-[0.34em] text-[#8b6f66]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
+            <span
+              className="text-xs uppercase tracking-[0.34em] text-[#8b6f66]"
+              style={{ fontFamily: "var(--font-be-vietnam)" }}
+            >
               OR
             </span>
             <div className="flex-1 border-t border-[#c57e7b]" />
@@ -173,13 +271,22 @@ export default function AiPage() {
       <SeparatorKey />
       <section className="mx-auto max-w-7xl px-6 pb-14 pt-24 lg:px-10 lg:pt-32">
         <div className="text-center">
-          <p className="text-[0.72rem] uppercase tracking-[0.42em] text-[#c57e7b]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
+          <p
+            className="text-[0.72rem] uppercase tracking-[0.42em] text-[#c57e7b]"
+            style={{ fontFamily: "var(--font-be-vietnam)" }}
+          >
             Future men&apos;s grooming
           </p>
-          <h2 className="mt-3 text-4xl font-light text-[#4a1a1a] sm:text-5xl lg:text-6xl" style={{ fontFamily: "var(--font-playfair)" }}>
+          <h2
+            className="mt-3 text-4xl font-light text-[#4a1a1a] sm:text-5xl lg:text-6xl"
+            style={{ fontFamily: "var(--font-playfair)" }}
+          >
             How It Works
           </h2>
-          <p className="mx-auto mt-4 max-w-3xl text-base leading-8 text-[#6e5851]" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
+          <p
+            className="mx-auto mt-4 max-w-3xl text-base leading-8 text-[#6e5851]"
+            style={{ fontFamily: "var(--font-plus-jakarta)" }}
+          >
             Our AI-powered recommendation system in three simple steps.
           </p>
         </div>

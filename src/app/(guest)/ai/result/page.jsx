@@ -57,7 +57,7 @@ const recommendationStats = [
   { label: "FOREHEAD", value: "Proportional" },
 ];
 
-function ResultPortrait() {
+function ResultPortrait({ url_foto_upload }) {
   return (
     <div className="relative h-full min-h-[600px] lg:min-h-full w-full overflow-hidden bg-[linear-gradient(180deg,#1c1a1a_0%,#40312c_35%,#8b6f59_72%,#d2bfa7_100%)] shadow-2xl group">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(255,255,255,0.18),transparent_24%),radial-gradient(circle_at_50%_55%,rgba(0,0,0,0.18),transparent_42%)]" />
@@ -66,8 +66,16 @@ function ResultPortrait() {
 
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#C59B8F] to-transparent shadow-[0_0_15px_rgba(197,155,143,0.8)] animate-scan-line z-20" />
 
+      {url_foto_upload && (
+        <img 
+          src={url_foto_upload.startsWith("data:") ? url_foto_upload : `http://localhost:5000${url_foto_upload}`} 
+          className="absolute inset-0 w-full h-full object-cover opacity-80" 
+          alt="Original Reference" 
+        />
+      )}
+
       <div className="absolute inset-0 flex items-end justify-center p-5">
-        <div className="h-[105%] w-[95%] rounded-[1.75rem] border border-white/5 bg-[radial-gradient(circle_at_50%_38%,#f4d8bf_0%,#d6a47d_18%,#7f5a42_30%,#3b2a23_46%,#1b1718_62%,#111010_100%)] opacity-90 shadow-[0_20px_50px_rgba(0,0,0,0.45)] transition-all duration-700 group-hover:scale-[1.03]" />
+        <div className="h-[105%] w-[95%] rounded-[1.75rem] border border-white/5 bg-[radial-gradient(circle_at_50%_38%,#f4d8bf_0%,#d6a47d_18%,#7f5a42_30%,#3b2a23_46%,#1b1718_62%,#111010_100%)] opacity-30 shadow-[0_20px_50px_rgba(0,0,0,0.45)] transition-all duration-700 group-hover:scale-[1.03]" />
       </div>
 
       <div
@@ -118,26 +126,53 @@ const CircularProgress = ({ percentage, color, label, subLabel, size = 80 }) => 
 
 export default function AiResultPage() {
   const [mounted, setMounted] = useState(false);
+  const [analysisData, setAnalysisData] = useState(null);
   const targetScrollRef = useRef(null);
+  const router = useRouter();
 
   useEffect(() => {
-    // Animasi masuk
+    const stored = sessionStorage.getItem("aiAnalysisResult");
+    if (stored) {
+      setAnalysisData(JSON.parse(stored));
+    } else {
+      router.push("/ai");
+    }
+
     const timer = setTimeout(() => {
       setMounted(true);
     }, 100);
 
-    // AUTO SMOOTH SCROLL: Scroll otomatis ke bagian spesifik setelah render
     const scrollTimer = setTimeout(() => {
       if (targetScrollRef.current) {
         targetScrollRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
-    }, 1200); // Delay 1.2 detik sebelum auto scroll agar user lihat header sebentar
+    }, 1200);
 
     return () => {
       clearTimeout(timer);
       clearTimeout(scrollTimer);
     };
-  }, []);
+  }, [router]);
+
+  if (!analysisData) return null;
+
+  // Backend wraps hasil_analisis at top level - fields like gender, bentuk_wajah, etc.
+  const data = analysisData.hasil_analisis || {};
+  const activeFeatures = analysisData.activeFeatures || [];
+  const styles = data.rekomendasi_gaya || [];
+  const topStyle = styles[0] || {};
+  const altStyle = styles[1] || {};
+  
+  // Use the base64 image saved from the frontend, fallback to backend url_foto_upload
+  const urlFoto = typeof window !== "undefined" ? sessionStorage.getItem("aiOriginalImage") || analysisData.record?.url_foto_upload : null;
+
+  const dynamicStats = [
+    { label: "GENDER", value: data.gender || "-" },
+    { label: "FACE SHAPE", value: data.bentuk_wajah || "-" },
+    { label: "HAIR TYPE", value: data.jenis_rambut || "-" },
+    { label: "STRUCTURE", value: data.ketebalan_rambut || "-" },
+    { label: "CONFIDENCE", value: data.ai_confidence ? `${data.ai_confidence}%` : "-" },
+  ];
 
   return (
     <main className="min-h-screen bg-[#351C1C] text-[#2B1D19] overflow-x-clip">
@@ -149,10 +184,9 @@ export default function AiResultPage() {
 
       <div className="flex flex-col lg:flex-row w-full min-h-screen pt-[80px] relative">
 
-        {/* Left: Original Portrait (Sticky) */}
         <div className="w-full lg:w-1/3 lg:sticky lg:top-[80px] lg:h-[calc(100vh-80px)] z-40 bg-[#1c1a1a]">
           <InteractiveCard className="h-full w-full">
-            <ResultPortrait />
+            <ResultPortrait url_foto_upload={urlFoto} />
           </InteractiveCard>
         </div>
 
@@ -180,7 +214,7 @@ export default function AiResultPage() {
           {/* Stats Bar */}
           <div className="w-full border-y border-[#3A1E1E] bg-[#2E1616]">
             <div className="mx-auto flex max-w-7xl flex-wrap justify-between gap-6 px-6 py-4 lg:px-10">
-              {recommendationStats.map((stat, idx) => (
+              {dynamicStats.map((stat, idx) => (
                 <div key={idx} className="flex flex-col items-start">
                   <span className="text-[0.6rem] uppercase tracking-[0.25em] text-[#A68A82]">{stat.label}</span>
                   <span className="mt-1 text-sm font-medium text-[#F3E8DE]">{stat.value}</span>
@@ -195,66 +229,59 @@ export default function AiResultPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                {/* Card 1: Textured Quiff */}
-                <div className="bg-[#2B1615] rounded-sm border border-[#3A1E1E] flex flex-col justify-end relative h-[450px] overflow-hidden group hover:border-[#C59B8F] transition-all duration-500 hover:shadow-2xl">
-                  {/* Dark Gradient Overlay for the non-image area */}
-                  <div className="absolute inset-0 bg-gradient-to-b from-[#2B1615]/10 via-[#2B1615]/80 to-[#1F0D0D] z-0"></div>
+                {/* Card 1: Top Recommendation */}
+                {topStyle.nama_gaya && (
+                  <div className="bg-[#2B1615] rounded-sm border border-[#3A1E1E] flex flex-col justify-end relative h-[450px] overflow-hidden group hover:border-[#C59B8F] transition-all duration-500 hover:shadow-2xl">
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#2B1615]/10 via-[#2B1615]/80 to-[#1F0D0D] z-0"></div>
 
-                  <div className="relative z-10 p-8 flex flex-col h-full justify-end transition-transform duration-500 group-hover:-translate-y-2">
-                    <div className="flex justify-between items-end border-b border-[#3A1E1E] pb-4 mb-4">
-                      <div>
-                        <p className="text-[0.55rem] uppercase tracking-widest text-[#C59B8F] mb-1">TOP RECOMMENDATION</p>
-                        <h3 className="text-3xl text-[#F3E8DE] font-serif font-medium">Textured Quiff</h3>
+                    <div className="relative z-10 p-8 flex flex-col h-full justify-end transition-transform duration-500 group-hover:-translate-y-2">
+                      <div className="flex justify-between items-end border-b border-[#3A1E1E] pb-4 mb-4">
+                        <div>
+                          <p className="text-[0.55rem] uppercase tracking-widest text-[#C59B8F] mb-1">TOP RECOMMENDATION</p>
+                          <h3 className="text-3xl text-[#F3E8DE] font-serif font-medium">{topStyle.nama_gaya}</h3>
+                        </div>
+                        <div className="bg-[#592D2D] rounded-sm flex flex-col items-center justify-center px-4 py-2 shadow-lg">
+                          <span className="text-xl font-bold text-[#F3E8DE]">{topStyle.match_score}%</span>
+                          <span className="text-[0.45rem] uppercase tracking-widest text-[#D2C3BD]">MATCH</span>
+                        </div>
                       </div>
-                      <div className="bg-[#592D2D] rounded-sm flex flex-col items-center justify-center px-4 py-2 shadow-lg">
-                        <span className="text-xl font-bold text-[#F3E8DE]">95%</span>
-                        <span className="text-[0.45rem] uppercase tracking-widest text-[#D2C3BD]">MATCH</span>
-                      </div>
-                    </div>
 
-                    <div className="space-y-3">
-                      <p className="text-[0.6rem] uppercase tracking-widest text-[#A68A82]">KEY BENEFITS</p>
-                      <ul className="space-y-2.5">
-                        {["Perfect for your face shape", "Balances your facial proportions", "Enhances your natural features", "Low maintenance, high impact"].map((item, i) => (
-                          <li key={i} className="flex items-center text-[0.8rem] text-[#D2C3BD]">
-                            <Check className="h-3 w-3 text-[#8A9A5B] mr-3 flex-shrink-0" />
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
+                      <div className="space-y-3">
+                        <p className="text-[0.6rem] uppercase tracking-widest text-[#A68A82]">WHY IT WORKS</p>
+                        <p className="text-[0.8rem] text-[#D2C3BD] leading-relaxed">
+                          {topStyle.alasan || "Perfect for your face shape and natural features."}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
 
-                {/* Card 2: Mid Taper Fade */}
-                <div className="bg-[#2B1615] rounded-sm border border-[#3A1E1E] flex flex-col justify-end relative h-[450px] overflow-hidden group hover:border-[#C59B8F] transition-all duration-500 hover:shadow-2xl">
-                  <div className="absolute inset-0 bg-gradient-to-b from-[#2B1615]/10 via-[#2B1615]/80 to-[#1F0D0D] z-0"></div>
+                {/* Card 2: Alternative */}
+                {altStyle.nama_gaya && (
+                  <div className="bg-[#2B1615] rounded-sm border border-[#3A1E1E] flex flex-col justify-end relative h-[450px] overflow-hidden group hover:border-[#C59B8F] transition-all duration-500 hover:shadow-2xl">
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#2B1615]/10 via-[#2B1615]/80 to-[#1F0D0D] z-0"></div>
 
-                  <div className="relative z-10 p-8 flex flex-col h-full justify-end transition-transform duration-500 group-hover:-translate-y-2">
-                    <div className="flex justify-between items-end border-b border-[#3A1E1E] pb-4 mb-4">
-                      <div>
-                        <p className="text-[0.55rem] uppercase tracking-widest text-[#C59B8F] mb-1">ALTERNATIVE</p>
-                        <h3 className="text-3xl text-[#F3E8DE] font-serif font-medium">Mid Taper Fade</h3>
+                    <div className="relative z-10 p-8 flex flex-col h-full justify-end transition-transform duration-500 group-hover:-translate-y-2">
+                      <div className="flex justify-between items-end border-b border-[#3A1E1E] pb-4 mb-4">
+                        <div>
+                          <p className="text-[0.55rem] uppercase tracking-widest text-[#C59B8F] mb-1">ALTERNATIVE</p>
+                          <h3 className="text-3xl text-[#F3E8DE] font-serif font-medium">{altStyle.nama_gaya}</h3>
+                        </div>
+                        <div className="bg-[#592D2D] rounded-sm flex flex-col items-center justify-center px-4 py-2 shadow-lg">
+                          <span className="text-xl font-bold text-[#F3E8DE]">{altStyle.match_score ? `${altStyle.match_score}%` : "-"}</span>
+                          <span className="text-[0.45rem] uppercase tracking-widest text-[#D2C3BD]">MATCH</span>
+                        </div>
                       </div>
-                      <div className="bg-[#592D2D] rounded-sm flex flex-col items-center justify-center px-4 py-2 shadow-lg">
-                        <span className="text-xl font-bold text-[#F3E8DE]">90%</span>
-                        <span className="text-[0.45rem] uppercase tracking-widest text-[#D2C3BD]">MATCH</span>
-                      </div>
-                    </div>
 
-                    <div className="space-y-3">
-                      <p className="text-[0.6rem] uppercase tracking-widest text-[#A68A82]">KEY BENEFITS</p>
-                      <ul className="space-y-2.5">
-                        {["Versatile for casual and formal", "Sharp side definition", "Easy styling with pomade", "Growth pattern compatibility"].map((item, i) => (
-                          <li key={i} className="flex items-center text-[0.8rem] text-[#D2C3BD]">
-                            <Check className="h-3 w-3 text-[#8A9A5B] mr-3 flex-shrink-0" />
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
+                      <div className="space-y-3">
+                        <p className="text-[0.6rem] uppercase tracking-widest text-[#A68A82]">WHY IT WORKS</p>
+                        <p className="text-[0.8rem] text-[#D2C3BD] leading-relaxed">
+                          {altStyle.alasan || "A versatile alternative that compliments your features."}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
 
               </div>
 
@@ -279,19 +306,16 @@ export default function AiResultPage() {
                   {/* Face Shape */}
                   <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm p-5">
                     <p className="text-xs text-[#A68A82] mb-1">Face Shape</p>
-                    <h3 className="text-xl text-[#F3E8DE] font-semibold mb-4">Oval</h3>
+                    <h3 className="text-xl text-[#F3E8DE] font-semibold mb-4">{data.bentuk_wajah || "-"}</h3>
                     <div className="flex items-center gap-4">
                       {/* Dotted Oval SVG */}
                       <svg width="40" height="50" viewBox="0 0 40 50">
                         <ellipse cx="20" cy="25" rx="16" ry="22" fill="none" stroke="#C59B8F" strokeWidth="1.5" strokeDasharray="3 3" />
                       </svg>
                       <p className="text-[0.65rem] text-[#D2C3BD] leading-tight flex-1">
-                        Oval face shape is considered balanced and versatile.
+                        {data.deskripsi_bentuk_wajah || `${data.bentuk_wajah || "-"} face shape.`}
                       </p>
                     </div>
-                    <button className="mt-4 px-4 py-1.5 border border-[#4A2626] text-[#A68A82] text-[0.6rem] rounded-sm hover:bg-[#3A1E1E] transition-colors">
-                      Learn More
-                    </button>
                   </div>
 
                   {/* Scores */}
@@ -299,20 +323,18 @@ export default function AiResultPage() {
                     <div className="flex justify-between items-start gap-4">
                       <div className="w-1/2">
                         <p className="text-xs text-[#A68A82] mb-1">Symmetry Score</p>
-                        <h3 className="text-3xl text-[#F3E8DE] font-light">92%</h3>
-                        <p className="text-xs text-[#F3E8DE] mb-2">Excellent</p>
-                        <p className="text-[0.65rem] text-[#D2C3BD] leading-tight mb-3">Your face symmetry is well balanced.</p>
-                        <div className="h-1 w-full bg-[#3A1E1E] rounded-full overflow-hidden">
-                          <div className="h-full bg-[#8A9A5B] w-[92%]"></div>
+                        <h3 className="text-3xl text-[#F3E8DE] font-light">{data.skor_simetri || 92}%</h3>
+                        <p className="text-xs text-[#F3E8DE] mb-2">{data.level_simetri || "Excellent"}</p>
+                        <div className="h-1 w-full bg-[#3A1E1E] rounded-full overflow-hidden mt-2">
+                          <div className="h-full bg-[#8A9A5B]" style={{ width: `${data.skor_simetri || 92}%` }}></div>
                         </div>
                       </div>
                       <div className="w-1/2">
                         <p className="text-xs text-[#A68A82] mb-1">AI Confidence</p>
-                        <h3 className="text-3xl text-[#F3E8DE] font-light">95%</h3>
+                        <h3 className="text-3xl text-[#F3E8DE] font-light">{data.ai_confidence || 95}%</h3>
                         <p className="text-xs text-[#F3E8DE] mb-2">Very High</p>
-                        <p className="text-[0.65rem] text-[#D2C3BD] leading-tight mb-3">High accuracy in facial feature detection.</p>
-                        <div className="h-1 w-full bg-[#3A1E1E] rounded-full overflow-hidden">
-                          <div className="h-full bg-[#6B8E6B] w-[95%]"></div>
+                        <div className="h-1 w-full bg-[#3A1E1E] rounded-full overflow-hidden mt-2">
+                          <div className="h-full bg-[#6B8E6B]" style={{ width: `${data.ai_confidence || 95}%` }}></div>
                         </div>
                       </div>
                     </div>
@@ -390,50 +412,74 @@ export default function AiResultPage() {
                   {/* Feature Measurements */}
                   <div className="p-6 flex flex-col justify-between">
                     <p className="text-xs text-[#A68A82] mb-4">Feature Measurements</p>
-                    <div className="space-y-4 flex-1">
-                      {[
-                        { label: "Face Length", val: "86%" },
-                        { label: "Face Width", val: "82%" },
-                        { label: "Jawline Strength", val: "90%" },
-                        { label: "Cheekbone Width", val: "88%" },
-                        { label: "Forehead Width", val: "85%" },
-                      ].map((item, i) => (
-                        <div key={i}>
-                          <div className="flex justify-between text-[0.65rem] text-[#D2C3BD] mb-1">
-                            <span>{item.label}</span>
-                            <span>{item.val}</span>
+                    
+                    {!activeFeatures.includes("ADV_MAPPING") ? (
+                       <div className="flex-1 flex flex-col items-center justify-center bg-[#1C0D0D] border border-[#3A1E1E] rounded-sm p-4 text-center">
+                         <Focus className="w-8 h-8 text-[#C59B8F]/30 mb-2" />
+                         <p className="text-[0.65rem] text-[#A68A82] uppercase tracking-widest mb-1">Feature Locked</p>
+                         <p className="text-[0.55rem] text-[#D2C3BD]">Advanced Mapping is required for this data.</p>
+                       </div>
+                    ) : (
+                      <div className="space-y-4 flex-1">
+                        {[
+                          { label: "Face Length", val: data.pengukuran_fitur?.panjang_wajah },
+                          { label: "Face Width", val: data.pengukuran_fitur?.lebar_wajah },
+                          { label: "Jawline Strength", val: data.pengukuran_fitur?.kekuatan_rahang },
+                          { label: "Cheekbone Width", val: data.pengukuran_fitur?.lebar_tulang_pipi },
+                          { label: "Forehead Width", val: data.pengukuran_fitur?.lebar_dahi },
+                        ].map((item, i) => (
+                          <div key={i}>
+                            <div className="flex justify-between text-[0.65rem] text-[#D2C3BD] mb-1">
+                              <span>{item.label}</span>
+                              <span>{item.val ? `${item.val}%` : "-"}</span>
+                            </div>
+                            <div className="h-[2px] w-full bg-[#3A1E1E]">
+                              <div className="h-full bg-[#D15C5C]" style={{ width: item.val ? `${item.val}%` : '0%' }}></div>
+                            </div>
                           </div>
-                          <div className="h-[2px] w-full bg-[#3A1E1E]">
-                            <div className="h-full bg-[#D15C5C]" style={{ width: item.val }}></div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <button className="mt-6 self-start px-4 py-1.5 border border-[#4A2626] text-[#A68A82] text-[0.6rem] rounded-sm hover:bg-[#3A1E1E]">
-                      View Full Measurements
-                    </button>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {activeFeatures.includes("ADV_MAPPING") && (
+                      <button className="mt-6 self-start px-4 py-1.5 border border-[#4A2626] text-[#A68A82] text-[0.6rem] rounded-sm hover:bg-[#3A1E1E]">
+                        View Full Measurements
+                      </button>
+                    )}
                   </div>
 
                   {/* Facial Balance */}
                   <div className="p-6 flex flex-col justify-between">
                     <p className="text-xs text-[#A68A82] mb-4">Facial Balance</p>
-                    <div className="space-y-4 flex-1">
-                      {[
-                        { label: "Left Eye vs Right Eye", val: "Excellent" },
-                        { label: "Left Brow vs Right Brow", val: "Excellent" },
-                        { label: "Nose Centering", val: "Excellent" },
-                        { label: "Mouth Alignment", val: "Good" },
-                        { label: "Chin Balance", val: "Excellent" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex justify-between items-center text-[0.7rem]">
-                          <span className="text-[#A68A82]">{item.label}</span>
-                          <span className={`text-${item.val === 'Good' ? '[#C59B8F]' : '[#F3E8DE]'}`}>{item.val}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <button className="mt-6 self-start px-4 py-1.5 border border-[#4A2626] text-[#A68A82] text-[0.6rem] rounded-sm hover:bg-[#3A1E1E]">
-                      View Details
-                    </button>
+                    
+                    {!activeFeatures.includes("ADV_MAPPING") ? (
+                       <div className="flex-1 flex flex-col items-center justify-center bg-[#1C0D0D] border border-[#3A1E1E] rounded-sm p-4 text-center">
+                         <Focus className="w-8 h-8 text-[#C59B8F]/30 mb-2" />
+                         <p className="text-[0.65rem] text-[#A68A82] uppercase tracking-widest mb-1">Feature Locked</p>
+                         <p className="text-[0.55rem] text-[#D2C3BD]">Advanced Mapping is required for this data.</p>
+                       </div>
+                    ) : (
+                      <div className="space-y-4 flex-1">
+                        {[
+                          { label: "Left Eye vs Right Eye", val: data.keseimbangan_wajah?.mata_kiri_kanan || "-" },
+                          { label: "Left Brow vs Right Brow", val: data.keseimbangan_wajah?.alis_kiri_kanan || "-" },
+                          { label: "Nose Centering", val: data.keseimbangan_wajah?.pemusatan_hidung || "-" },
+                          { label: "Mouth Alignment", val: data.keseimbangan_wajah?.kelurusan_mulut || "-" },
+                          { label: "Chin Balance", val: data.keseimbangan_wajah?.keseimbangan_dagu || "-" },
+                        ].map((item, i) => (
+                          <div key={i} className="flex justify-between items-center text-[0.7rem]">
+                            <span className="text-[#A68A82]">{item.label}</span>
+                            <span className={`text-${item.val === 'Good' || item.val === 'Average' ? '[#C59B8F]' : '[#F3E8DE]'}`}>{item.val}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {activeFeatures.includes("ADV_MAPPING") && (
+                      <button className="mt-6 self-start px-4 py-1.5 border border-[#4A2626] text-[#A68A82] text-[0.6rem] rounded-sm hover:bg-[#3A1E1E]">
+                        View Details
+                      </button>
+                    )}
                   </div>
 
                 </div>
@@ -458,9 +504,13 @@ export default function AiResultPage() {
                           </svg>
                         </div>
                         <div>
-                          <p className="text-lg text-[#F3E8DE] font-semibold">Thick</p>
-                          <p className="text-[0.65rem] text-[#D2C3BD]">0.08 - 0.10 mm</p>
-                          <div className="mt-1 bg-[#1C0D0D] px-2 py-0.5 inline-block text-[0.55rem] text-[#A68A82] rounded-sm border border-[#3A1E1E]">Ideal for most hairstyles</div>
+                          <p className="text-lg text-[#F3E8DE] font-semibold">{data.ketebalan_rambut || "-"}</p>
+                          <p className="text-[0.65rem] text-[#D2C3BD]">{data.ketebalan_rambut_mm ? `${data.ketebalan_rambut_mm} mm` : ""}</p>
+                          {data.kondisi_rambut && (
+                            <div className="mt-1 bg-[#1C0D0D] px-2 py-0.5 inline-block text-[0.55rem] text-[#A68A82] rounded-sm border border-[#3A1E1E]">
+                              {data.kondisi_rambut}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -468,13 +518,13 @@ export default function AiResultPage() {
                     {/* Density */}
                     <div className="flex flex-col pl-6">
                       <p className="text-xs text-[#A68A82] mb-2">Hair Density</p>
-                      <CircularProgress percentage={85} color="#8A9A5B" label="High Density" subLabel="Your hair density is above average." />
+                      <CircularProgress percentage={data.kepadatan_rambut || 0} color="#8A9A5B" label={data.kepadatan_rambut && data.kepadatan_rambut > 80 ? "High Density" : "Medium Density"} subLabel="Your hair density is evaluated by AI." />
                     </div>
 
                     {/* Scalp */}
                     <div className="flex flex-col pl-6">
                       <p className="text-xs text-[#A68A82] mb-2">Scalp Health</p>
-                      <CircularProgress percentage={92} color="#3CB371" label="Excellent" subLabel="Your scalp condition is very healthy." />
+                      <CircularProgress percentage={data.kesehatan_kulit_kepala || 0} color="#3CB371" label={data.kesehatan_kulit_kepala && data.kesehatan_kulit_kepala > 80 ? "Excellent" : "Good"} subLabel={data.rekomendasi_perawatan || ""} />
                     </div>
                   </div>
 
@@ -484,16 +534,16 @@ export default function AiResultPage() {
                       <div className="w-4 h-6 rounded-full border border-[#8A9A5B] bg-[#8A9A5B]/20"></div>
                       <div>
                         <p className="text-[0.65rem] text-[#A68A82]">Hair Growth Potential</p>
-                        <p className="text-sm text-[#F3E8DE] font-semibold">High</p>
+                        <p className="text-sm text-[#F3E8DE] font-semibold">{data.potensi_pertumbuhan && data.potensi_pertumbuhan > 80 ? "High" : "Medium"}</p>
                       </div>
                     </div>
                     <div className="w-2/3 flex flex-col justify-center pl-4 border-l border-[#3A1E1E]">
                       <p className="text-[0.65rem] text-[#D2C3BD] mb-2 flex justify-between">
                         <span>You have great potential for various hairstyles.</span>
-                        <span>87%</span>
+                        <span>{data.potensi_pertumbuhan ? `${data.potensi_pertumbuhan}%` : "-"}</span>
                       </p>
                       <div className="h-[3px] w-full bg-[#3A1E1E] rounded-full overflow-hidden">
-                        <div className="h-full bg-[#8A9A5B] w-[87%]"></div>
+                        <div className="h-full bg-[#8A9A5B]" style={{ width: `${data.potensi_pertumbuhan || 0}%` }}></div>
                       </div>
                     </div>
                   </div>
@@ -507,62 +557,73 @@ export default function AiResultPage() {
                 </h2>
                 <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#3A1E1E] p-6">
 
-                  {/* Popularity Chart */}
-                  <div className="pr-6">
-                    <div className="flex justify-between items-center mb-4">
-                      <p className="text-xs text-[#A68A82]">Popularity Over Time</p>
-                      <span className="text-[0.55rem] text-[#D2C3BD] bg-[#1C0D0D] px-2 py-1 rounded-sm border border-[#3A1E1E]">6 Months v</span>
+                  {!activeFeatures.includes("TREND_ANALYTICS") ? (
+                    <div className="col-span-3 flex-1 flex flex-col items-center justify-center bg-[#1C0D0D] border border-[#3A1E1E] rounded-sm p-8 text-center h-48">
+                      <Focus className="w-8 h-8 text-[#C59B8F]/30 mb-3" />
+                      <p className="text-xs text-[#A68A82] uppercase tracking-widest mb-1">Feature Locked</p>
+                      <p className="text-[0.65rem] text-[#D2C3BD]">Trend Analytics is a premium feature included in higher-tier packages.</p>
                     </div>
-                    <div className="h-24 w-full relative">
-                      {/* Fake Line Chart */}
-                      <svg viewBox="0 0 200 60" className="w-full h-full overflow-visible">
-                        <path d="M0,40 Q25,50 50,35 T100,25 T150,30 T200,10" fill="none" stroke="#D1A95C" strokeWidth="1.5" />
-                        <path d="M0,40 Q25,50 50,35 T100,25 T150,30 T200,10 L200,60 L0,60 Z" fill="url(#grad)" opacity="0.3" />
-                        <defs>
-                          <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#D1A95C" stopOpacity="0.5" />
-                            <stop offset="100%" stopColor="#2A1616" stopOpacity="0" />
-                          </linearGradient>
-                        </defs>
-                        {[0, 50, 100, 150, 200].map(x => <circle key={x} cx={x} cy={x === 0 ? 40 : x === 50 ? 35 : x === 100 ? 25 : x === 150 ? 30 : 10} r="1.5" fill="#D1A95C" />)}
-                      </svg>
-                      <div className="absolute bottom-[-15px] w-full flex justify-between text-[0.45rem] text-[#A68A82]">
-                        <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span>
+                  ) : (
+                    <>
+                      {/* Popularity Chart */}
+                      <div className="pr-6">
+                        <div className="flex justify-between items-center mb-4">
+                          <p className="text-xs text-[#A68A82]">Popularity Over Time</p>
+                          <span className="text-[0.55rem] text-[#D2C3BD] bg-[#1C0D0D] px-2 py-1 rounded-sm border border-[#3A1E1E]">6 Months v</span>
+                        </div>
+                        <div className="h-24 w-full relative">
+                          {/* Fake Line Chart */}
+                          <svg viewBox="0 0 200 60" className="w-full h-full overflow-visible">
+                            <path d="M0,40 Q25,50 50,35 T100,25 T150,30 T200,10" fill="none" stroke="#D1A95C" strokeWidth="1.5" />
+                            <path d="M0,40 Q25,50 50,35 T100,25 T150,30 T200,10 L200,60 L0,60 Z" fill="url(#grad)" opacity="0.3" />
+                            <defs>
+                              <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="#D1A95C" stopOpacity="0.5" />
+                                <stop offset="100%" stopColor="#2A1616" stopOpacity="0" />
+                              </linearGradient>
+                            </defs>
+                            {[0, 50, 100, 150, 200].map(x => <circle key={x} cx={x} cy={x === 0 ? 40 : x === 50 ? 35 : x === 100 ? 25 : x === 150 ? 30 : 10} r="1.5" fill="#D1A95C" />)}
+                          </svg>
+                          <div className="absolute bottom-[-15px] w-full flex justify-between text-[0.45rem] text-[#A68A82]">
+                            <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
 
-                  {/* Trending Styles List */}
-                  <div className="px-6">
-                    <p className="text-xs text-[#A68A82] mb-4">Trending Styles for You</p>
-                    <ul className="space-y-3">
-                      {[
-                        { no: 1, name: "Textured Quiff", trend: "+ 24%", up: true },
-                        { no: 2, name: "Mid Taper Fade", trend: "+ 18%", up: true },
-                        { no: 3, name: "Classic Side Part", trend: "+ 15%", up: true },
-                        { no: 4, name: "French Crop", trend: "- 5%", up: false },
-                      ].map((item) => (
-                        <li key={item.no} className="flex justify-between items-center text-[0.65rem]">
-                          <div className="flex items-center gap-3">
-                            <span className="text-[#A68A82]">{item.no}</span>
-                            <span className="text-[#F3E8DE]">{item.name}</span>
-                          </div>
-                          <div className={`flex items-center gap-1 ${item.up ? 'text-[#8A9A5B]' : 'text-[#D15C5C]'}`}>
-                            {item.up ? <ArrowUp className="w-2 h-2" /> : <ArrowDown className="w-2 h-2" />}
-                            <span>{item.trend}</span>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                      {/* Trending Styles List */}
+                      <div className="px-6">
+                        <p className="text-xs text-[#A68A82] mb-4">Trending Styles for You</p>
+                        <ul className="space-y-3">
+                          {(data.trending_styles || []).slice(0, 4).map((item, i) => {
+                            const isUp = !item.delta.startsWith("-");
+                            return (
+                              <li key={i} className="flex justify-between items-center text-[0.65rem]">
+                                <div className="flex items-center gap-3">
+                                  <span className="text-[#A68A82]">{i + 1}</span>
+                                  <span className="text-[#F3E8DE]">{item.nama}</span>
+                                </div>
+                                <div className={`flex items-center gap-1 ${isUp ? 'text-[#8A9A5B]' : 'text-[#D15C5C]'}`}>
+                                  {isUp ? <ArrowUp className="w-2 h-2" /> : <ArrowDown className="w-2 h-2" />}
+                                  <span>{item.delta}</span>
+                                </div>
+                              </li>
+                            );
+                          })}
+                          {(!data.trending_styles || data.trending_styles.length === 0) && (
+                            <p className="text-[0.6rem] text-[#A68A82] text-center pt-2">No trending data available.</p>
+                          )}
+                        </ul>
+                      </div>
 
-                  {/* Compatibility */}
-                  <div className="pl-6">
-                    <p className="text-xs text-[#A68A82] mb-2">Your Style Compatibility</p>
-                    <div className="mt-4">
-                      <CircularProgress percentage={89} color="#D15C5C" size={70} label="High Compatibility" subLabel="You match well with current trends." />
-                    </div>
-                  </div>
+                      {/* Compatibility */}
+                      <div className="pl-6">
+                        <p className="text-xs text-[#A68A82] mb-2">Your Style Compatibility</p>
+                        <div className="mt-4">
+                          <CircularProgress percentage={data.kompatibilitas_gaya || 0} color="#D15C5C" size={70} label="Trend Match" subLabel="Based on your facial structure." />
+                        </div>
+                      </div>
+                    </>
+                  )}
 
                 </div>
               </div>
@@ -580,13 +641,13 @@ export default function AiResultPage() {
 
       <style jsx global>{`
         @keyframes scan-line {
-          0% { top: 0%; opacity: 0; }
-          5% { opacity: 1; }
-          95% { opacity: 1; }
-          100% { top: 100%; opacity: 0; }
+          0% { transform: translateY(-100%); opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { transform: translateY(400px); opacity: 0; }
         }
         .animate-scan-line {
-          animation: scan-line 4s linear infinite;
+          animation: scan-line 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
         }
       `}</style>
     </main>

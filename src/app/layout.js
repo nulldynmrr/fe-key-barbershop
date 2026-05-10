@@ -1,5 +1,5 @@
 import { Be_Vietnam_Pro, Inter, Noto_Serif, Playfair_Display, Plus_Jakarta_Sans } from "next/font/google";
-import GoogleAuthProviderWrapper from "@/components/GoogleAuthProvider";
+import Providers from "@/components/Providers";
 import "./globals.css";
 
 const inter = Inter({
@@ -38,9 +38,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.variable} ${playfair.variable} ${plusJakarta.variable} ${beVietnam.variable} ${notoSerif.variable} h-full antialiased`}>
       <body suppressHydrationWarning className="min-h-full flex flex-col font-sans text-gray-800 bg-[#FBF9F7]">
-        <GoogleAuthProviderWrapper>
+        <Providers>
           {children}
-        </GoogleAuthProviderWrapper>
+        </Providers>
       </body>
     </html>
   );

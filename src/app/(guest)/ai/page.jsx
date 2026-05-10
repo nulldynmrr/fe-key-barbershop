@@ -3,18 +3,11 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { ScanFace, Sparkles, Upload } from "lucide-react";
+import { ScanFace, Sparkles, Upload, Camera } from "lucide-react";
 import SeparatorKey from "../../../components/SeparatorKey";
 import SiteFooter from "../../../components/SiteFooter";
 import SiteNavbar from "../../../components/SiteNavbar";
 import AILoadingModal from "../../../components/AILoadingModal";
-
-const aiNavItems = [
-  { label: "Home", href: "/home" },
-  { label: "AI Feature", href: "#ai-feature", active: true },
-  { label: "Services", href: "#services" },
-  { label: "Gallery", href: "#gallery" },
-];
 
 const stepItems = [
   {
@@ -63,10 +56,17 @@ export default function AiPage() {
   const searchParams = useSearchParams();
   const [isLoadingOpen, setIsLoadingOpen] = useState(false);
   const [isPreviewDismissed, setIsPreviewDismissed] = useState(false);
+  const [mode, setMode] = useState("upload"); // "upload" or "camera"
   const isPreviewLoading = searchParams.get("previewLoading") === "1";
   const isModalOpen = isLoadingOpen || (isPreviewLoading && !isPreviewDismissed);
 
   const handleUploadClick = () => {
+    setMode("upload");
+    setIsLoadingOpen(true);
+  };
+
+  const handleCameraClick = () => {
+    setMode("camera");
     setIsLoadingOpen(true);
   };
 
@@ -80,9 +80,10 @@ export default function AiPage() {
       "aiResultAccess",
       JSON.stringify({
         grantedAt: Date.now(),
+        mode,
       }),
     );
-    router.push("/ai/result");
+    router.push(`/ai/result?mode=${mode}`);
   };
 
   const handleCloseModal = () => {
@@ -96,30 +97,6 @@ export default function AiPage() {
     <main className="min-h-screen overflow-x-hidden bg-[#FBF7F3] text-[#2B1D19] scroll-smooth">
       <AILoadingModal isOpen={isModalOpen} onClose={handleCloseModal} onComplete={handleLoadingComplete} disableAutoProgress={isPreviewLoading} previewStep={1} />
       <SiteNavbar activeLabel="AI Feature" />
-
-      <section className="mx-auto max-w-7xl px-6 pb-14 pt-24 lg:px-10 lg:pt-32">
-        <div className="text-center">
-          <p className="text-[0.72rem] uppercase tracking-[0.42em] text-[#c57e7b]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
-            Future men&apos;s grooming
-          </p>
-          <h2 className="mt-3 text-4xl font-light text-[#4a1a1a] sm:text-5xl lg:text-6xl" style={{ fontFamily: "var(--font-playfair)" }}>
-            How It Works
-          </h2>
-          <p className="mx-auto mt-4 max-w-3xl text-base leading-8 text-[#6e5851]" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
-            Our AI-powered recommendation system in three simple steps.
-          </p>
-        </div>
-
-        <div className="relative mt-16 flex flex-col items-center lg:flex-row lg:items-center lg:justify-center lg:gap-12">
-          <div className="grid grid-cols-1 gap-12 sm:grid-cols-3 lg:gap-16">
-            {stepItems.map((step) => (
-              <StepCard key={step.number} {...step} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <SeparatorKey />
 
       <section className="relative mx-auto max-w-6xl px-6 pb-16 pt-16 lg:px-10">
         <div className="text-center">
@@ -183,11 +160,36 @@ export default function AiPage() {
 
           <button
             type="button"
-            className="flex items-center justify-center border-2 border-[#8b6f66] px-6 py-10 text-xs font-semibold uppercase tracking-[0.3em] text-[#8b6f66] transition hover:bg-[#f7f1ea]"
+            onClick={handleCameraClick}
+            className="flex items-center justify-center gap-3 border-2 border-[#8b6f66] px-6 py-10 text-xs font-semibold uppercase tracking-[0.3em] text-[#8b6f66] transition hover:bg-[#f7f1ea]"
             style={{ fontFamily: "var(--font-be-vietnam)" }}
           >
+            <Camera className="h-5 w-5" />
             Use camera instead
           </button>
+        </div>
+      </section>
+
+      <SeparatorKey />
+      <section className="mx-auto max-w-7xl px-6 pb-14 pt-24 lg:px-10 lg:pt-32">
+        <div className="text-center">
+          <p className="text-[0.72rem] uppercase tracking-[0.42em] text-[#c57e7b]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
+            Future men&apos;s grooming
+          </p>
+          <h2 className="mt-3 text-4xl font-light text-[#4a1a1a] sm:text-5xl lg:text-6xl" style={{ fontFamily: "var(--font-playfair)" }}>
+            How It Works
+          </h2>
+          <p className="mx-auto mt-4 max-w-3xl text-base leading-8 text-[#6e5851]" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
+            Our AI-powered recommendation system in three simple steps.
+          </p>
+        </div>
+
+        <div className="relative mt-16 flex flex-col items-center lg:flex-row lg:items-center lg:justify-center lg:gap-12">
+          <div className="grid grid-cols-1 gap-12 sm:grid-cols-3 lg:gap-16">
+            {stepItems.map((step) => (
+              <StepCard key={step.number} {...step} />
+            ))}
+          </div>
         </div>
       </section>
 

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { Home, Cpu, Tags, Users, ReceiptText, Bell } from "lucide-react";
+import { ToastProvider } from "@/contexts/ToastContext";
 
 export default function AdminLayout({ children }) {
   const pathname = usePathname();
@@ -18,7 +19,8 @@ export default function AdminLayout({ children }) {
   ];
 
   return (
-    <div className="flex h-screen bg-[#fafafa] font-sans">
+    <ToastProvider>
+      <div className="flex h-screen bg-[#fafafa] font-sans">
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-[#e6d1c7] flex flex-col flex-shrink-0">
         <div className="flex items-center justify-center h-20 px-6 mb-4">
@@ -113,5 +115,6 @@ export default function AdminLayout({ children }) {
         <div className="flex-1 overflow-y-auto p-8 pt-0">{children}</div>
       </main>
     </div>
+    </ToastProvider>
   );
 }

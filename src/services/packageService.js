@@ -10,4 +10,6 @@ export const packageService = {
   getActiveModels: () => api.get("/ai-config/models/active"),
   calculateIdealKoin: (data) =>
     api.post("/ai-config/calculate-ideal-koin", data),
+  togglePackageStatus: (id, status) =>
+    api.put(`/packages/${id}/toggle-status`, { status }),
 };

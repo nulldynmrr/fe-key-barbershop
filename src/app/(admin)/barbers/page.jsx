@@ -12,8 +12,10 @@ import {
 } from "lucide-react";
 import { barberService } from "@/services/barberService";
 import Image from "next/image";
+import { useToast } from "@/contexts/ToastContext";
 
 export default function BarbersPage() {
+  const { showToast } = useToast();
   const [barbers, setBarbers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -75,7 +77,7 @@ export default function BarbersPage() {
 
   const handleSaveBarber = async () => {
     if (!formData.nama_kapster) {
-      alert("Nama Kapster wajib diisi");
+      showToast("Nama Kapster wajib diisi", "error");
       return;
     }
 
@@ -91,16 +93,16 @@ export default function BarbersPage() {
 
       const res = await barberService.createBarber(formPayload);
       if (res.data.success) {
-        alert("Kapster berhasil ditambahkan!");
+        showToast("Kapster berhasil ditambahkan!", "success");
         setIsModalOpen(false);
         fetchBarbers();
       } else {
-        alert(res.data.message || "Gagal menambahkan kapster");
+        showToast(res.data.message || "Gagal menambahkan kapster", "error");
       }
     } catch (err) {
-      alert(
-        err?.response?.data?.message ||
-          "Terjadi kesalahan saat menambahkan kapster",
+      showToast(
+        err?.response?.data?.message || "Terjadi kesalahan saat menambahkan kapster",
+        "error"
       );
     } finally {
       setIsSubmitting(false);

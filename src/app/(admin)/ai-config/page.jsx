@@ -14,6 +14,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { aiConfigService } from "@/services/aiConfigService";
+import { useToast } from "@/contexts/ToastContext";
 
 const ToggleSwitch = ({ checked, onChange, disabled }) => {
   return (
@@ -38,6 +39,7 @@ const ToggleSwitch = ({ checked, onChange, disabled }) => {
 };
 
 export default function AiConfigPage() {
+  const { showToast, showConfirm } = useToast();
   const [routers, setRouters] = useState([]);
   const [exchange, setExchange] = useState({
     globalMultiplier: 1.35,
@@ -127,7 +129,7 @@ export default function AiConfigPage() {
       }
     } catch (err) {
       console.error("Failed to toggle status:", err);
-      alert("Gagal mengubah status router");
+      showToast("Gagal mengubah status router", "error");
     } finally {
       setTogglingId(null);
     }
@@ -215,16 +217,21 @@ export default function AiConfigPage() {
   };
 
   const handleDeleteAPI = async (id) => {
-    if (window.confirm("Apakah Anda yakin ingin menghapus model API ini?")) {
-      try {
-        const res = await aiConfigService.deleteModel(id);
-        if (res.data.success) {
-          fetchData();
+    showConfirm(
+      "Hapus API Model",
+      "Apakah Anda yakin ingin menghapus model API ini?",
+      async () => {
+        try {
+          const res = await aiConfigService.deleteModel(id);
+          if (res.data.success) {
+            showToast("Model API berhasil dihapus!", "success");
+            fetchData();
+          }
+        } catch (err) {
+          showToast(err?.response?.data?.message || "Gagal menghapus model API", "error");
         }
-      } catch (err) {
-        alert(err?.response?.data?.message || "Gagal menghapus model API");
       }
-    }
+    );
   };
 
   const handleSaveAPI = async () => {
@@ -252,14 +259,14 @@ export default function AiConfigPage() {
       }
 
       if (res.data.success) {
-        alert(`API berhasil ${isEditingAPI ? "diupdate" : "disimpan"}!`);
+        showToast(`API berhasil ${isEditingAPI ? "diupdate" : "disimpan"}!`, "success");
         setIsModalOpen(false);
         fetchData();
       } else {
-        alert(res.data.message || "Gagal menyimpan API");
+        showToast(res.data.message || "Gagal menyimpan API", "error");
       }
     } catch (err) {
-      alert(err?.response?.data?.message || "Gagal menyimpan API");
+      showToast(err?.response?.data?.message || "Gagal menyimpan API", "error");
     } finally {
       setIsSubmitting(false);
     }
@@ -293,14 +300,14 @@ export default function AiConfigPage() {
 
       const res = await aiConfigService.updateExchangeSettings(payload);
       if (res.data.success) {
-        alert("Master Exchange Setting berhasil diupdate!");
+        showToast("Master Exchange Setting berhasil diupdate!", "success");
         setIsExchangeModalOpen(false);
         fetchData();
       } else {
-        alert(res.data.message || "Gagal menyimpan setting");
+        showToast(res.data.message || "Gagal menyimpan setting", "error");
       }
     } catch (err) {
-      alert(err?.response?.data?.message || "Gagal menyimpan setting");
+      showToast(err?.response?.data?.message || "Gagal menyimpan setting", "error");
     } finally {
       setIsExchangeSubmitting(false);
     }
@@ -358,10 +365,16 @@ export default function AiConfigPage() {
               >
                 <div className="flex justify-between items-center mb-5">
                   <h3
-                    className="font-bold text-[#2b1d19] tracking-wide uppercase"
+                    className="font-bold text-[#2b1d19] tracking-wide uppercase flex items-center gap-2"
                     style={{ fontFamily: "var(--font-plus-jakarta)" }}
                   >
                     {router.namaRouter}
+                    {router.isWarning && (
+                      <span className="bg-red-100 text-red-600 text-[9px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3" />
+                        LIMIT &lt; 20%
+                      </span>
+                    )}
                   </h3>
                   <div className="flex items-center gap-3">
                     <button

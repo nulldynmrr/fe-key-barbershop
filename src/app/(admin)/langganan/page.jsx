@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 import { packageService } from "@/services/packageService";
 import { aiConfigService } from "@/services/aiConfigService";
+import { MinimalDatePicker } from "@/components/ui/MinimalDatePicker";
+import { useToast } from "@/contexts/ToastContext";
 
 const ToggleSwitch = ({ checked, onChange, disabled }) => {
   return (
@@ -48,6 +50,7 @@ const ToggleSwitch = ({ checked, onChange, disabled }) => {
 };
 
 export default function LanggananPage() {
+  const { showToast, showConfirm } = useToast();
   const [packages, setPackages] = useState([]);
   const [activeModels, setActiveModels] = useState({ llm: [], image_gen: [] });
   const [exchangeSettings, setExchangeSettings] = useState({
@@ -84,6 +87,9 @@ export default function LanggananPage() {
     durasi_unit: "HARI",
     hppIdeal: 0,
     estimasiModalApi: 0,
+    estimasiAksi: 0,
+    estimasiTokenPerAksi: 0,
+    hppBreakdown: null,
     hargaNominal: "",
     promoAktif: false,
     hargaDiskon: "",
@@ -97,6 +103,7 @@ export default function LanggananPage() {
 
   const [isCalculatingKoin, setIsCalculatingKoin] = useState(false);
   const [estimasiKoinIdeal, setEstimasiKoinIdeal] = useState(0);
+  const [showHppDetail, setShowHppDetail] = useState(false);
 
   useEffect(() => {
     fetchPackages();
@@ -221,6 +228,7 @@ export default function LanggananPage() {
     formData.featBarberInstructions,
     formData.featHistory,
     formData.featHairstyleTrend,
+    formData.typeValue,
     isModalOpen,
   ]);
 
@@ -252,12 +260,14 @@ export default function LanggananPage() {
         featBarberInstructions: formData.featBarberInstructions,
         featHistory: formData.featHistory,
         featTrendAnalysis: formData.featHairstyleTrend,
+        typeValue: formData.typeValue,
       });
       if (res.data.success) {
         setFormData((prev) => ({
           ...prev,
           hppIdeal: res.data.data.hppIdeal,
           estimasiModalApi: res.data.data.estimasiModalApi,
+          hppBreakdown: res.data.data.breakdown,
         }));
       }
     } catch (err) {
@@ -348,26 +358,32 @@ export default function LanggananPage() {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Apakah Anda yakin ingin menghapus paket ini?")) {
-      try {
-        const res = await packageService.deletePackage(id);
-        if (res.data.success) {
-          fetchPackages();
+    showConfirm(
+      "Hapus Paket",
+      "Apakah Anda yakin ingin menghapus paket ini?",
+      async () => {
+        try {
+          const res = await packageService.deletePackage(id);
+          if (res.data.success) {
+            showToast("Paket berhasil dihapus!", "success");
+            fetchPackages();
+          }
+        } catch (err) {
+          showToast(err?.response?.data?.message || "Gagal menghapus paket", "error");
         }
-      } catch (err) {
-        alert(err?.response?.data?.message || "Gagal menghapus paket");
       }
-    }
+    );
   };
 
   const handleSavePackage = async () => {
     if (!formData.llmModelId) {
-      alert("PENTING: Anda wajib memilih Model AI Wajah (LLM).");
+      showToast("PENTING: Anda wajib memilih Model AI Wajah (LLM).", "error");
       return;
     }
     if (formData.featVirtualTryOn && !formData.imageModelId) {
-      alert(
+      showToast(
         "PENTING: Fitur Virtual Try-On aktif. Anda wajib memilih Model Image Gen!",
+        "error"
       );
       return;
     }
@@ -419,17 +435,17 @@ export default function LanggananPage() {
       }
 
       if (res.data.success) {
-        alert(`Paket berhasil ${isEditing ? "diupdate" : "disimpan"}!`);
+        showToast(`Paket berhasil ${isEditing ? "diupdate" : "disimpan"}!`, "success");
         setIsModalOpen(false);
         fetchPackages();
       } else {
-        alert(res.data.message || "Gagal menyimpan paket");
+        showToast(res.data.message || "Gagal menyimpan paket", "error");
       }
     } catch (err) {
       if (err?.response?.data?.errors) {
-        alert(err.response.data.errors[0].message);
+        showToast(err.response.data.errors[0].message, "error");
       } else {
-        alert(err?.response?.data?.message || "Gagal menyimpan paket");
+        showToast(err?.response?.data?.message || "Gagal menyimpan paket", "error");
       }
     } finally {
       setIsSubmitting(false);
@@ -493,6 +509,9 @@ export default function LanggananPage() {
                     Status Promo
                   </th>
                   <th scope="col" className="px-6 py-4 font-bold text-center">
+                    Status Paket
+                  </th>
+                  <th scope="col" className="px-6 py-4 font-bold text-center">
                     Aksi
                   </th>
                 </tr>
@@ -538,6 +557,19 @@ export default function LanggananPage() {
                             NORMAL
                           </span>
                         )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          {pkg.status === "AKTIF" ? (
+                            <span className="bg-[#bbf7d0] text-[#166534] text-[10px] font-bold px-2 py-1 rounded-md flex items-center justify-center w-fit mx-auto gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#166534]"></span> AKTIF
+                            </span>
+                          ) : (
+                            <span className="bg-[#fecaca] text-[#991b1b] text-[10px] font-bold px-2 py-1 rounded-md flex items-center justify-center w-fit mx-auto gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#991b1b]"></span> NONAKTIF
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-center gap-3">
@@ -1148,12 +1180,45 @@ export default function LanggananPage() {
                       )}
                     </h4>
                     <div className="space-y-2 text-xs text-[#166534]">
-                      <div className="flex justify-between">
-                        <span>Estimasi HPP (API + Kurs Buffer)</span>
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold">Estimasi HPP (Modal API + Kurs)</span>
+                          {formData.hppBreakdown && (
+                            <button
+                              type="button"
+                              onClick={() => setShowHppDetail(!showHppDetail)}
+                              className="text-[10px] text-[#166534] bg-[#bbf7d0] px-2 py-0.5 rounded hover:bg-[#86efac] transition-colors"
+                            >
+                              {showHppDetail ? "Hide Detail" : "More Detail"}
+                            </button>
+                          )}
+                        </div>
                         <span className="font-bold">
                           Rp {formData.estimasiModalApi.toLocaleString("id-ID")}
                         </span>
                       </div>
+                      
+                      {formData.hppBreakdown && showHppDetail && (
+                        <div className="pl-3 pr-1 py-1 space-y-1 mb-2 border-l-2 border-[#86efac] text-[10px] text-[#166534]/80">
+                          <div className="flex justify-between">
+                            <span>• LLM Cost</span>
+                            <span>Rp {formData.hppBreakdown.llmCost.toLocaleString("id-ID")}</span>
+                          </div>
+                          {formData.hppBreakdown.imageCost > 0 && (
+                            <div className="flex justify-between">
+                              <span>• Image Gen Cost</span>
+                              <span>Rp {formData.hppBreakdown.imageCost.toLocaleString("id-ID")}</span>
+                            </div>
+                          )}
+                          {formData.hppBreakdown.storageCost > 0 && (
+                            <div className="flex justify-between">
+                              <span>• Storage & History</span>
+                              <span>Rp {formData.hppBreakdown.storageCost.toLocaleString("id-ID")}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       <div className="flex justify-between">
                         <span>Estimasi Admin Fee (Doku)</span>
                         <span className="font-bold">Rp 4.500 + 0,7%</span>
@@ -1166,8 +1231,11 @@ export default function LanggananPage() {
                             {formData.estimasiModalApi.toLocaleString(
                               "id-ID",
                             )}{" "}
-                            x {exchangeSettings.globalMultiplier} Multiplier) +
-                            Rp4.500
+                            x{" "}
+                            {formData.typeValue === "SUBSCRIPTION"
+                              ? (exchangeSettings.globalMultiplier * 0.85).toFixed(2)
+                              : exchangeSettings.globalMultiplier}{" "}
+                            Multiplier) + Rp4.500
                           </span>
                         </span>
                         <span className="font-bold text-sm">
@@ -1271,24 +1339,23 @@ export default function LanggananPage() {
                       <label className="block text-sm font-semibold text-[#2b1d19] mb-2">
                         Diskon Mulai
                       </label>
-                      <input
-                        type="date"
+                      <MinimalDatePicker
                         name="diskonMulai"
                         value={formData.diskonMulai}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm"
+                        placeholder="Pilih Tanggal Mulai"
                       />
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-[#2b1d19] mb-2">
                         Diskon Akhir
                       </label>
-                      <input
-                        type="date"
+                      <MinimalDatePicker
                         name="diskonAkhir"
                         value={formData.diskonAkhir}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm"
+                        placeholder="Pilih Tanggal Akhir"
+                        minDate={formData.diskonMulai}
                       />
                     </div>
                   </div>

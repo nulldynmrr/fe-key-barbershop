@@ -104,14 +104,17 @@ export default function LoginPage() {
 
       <div className="w-full max-w-md bg-[#ffffff] p-8 sm:p-12 rounded-[8px] shadow-[0_20px_60px_-15px_rgba(74,26,26,0.05)] relative z-10 text-[#2B1D19]">
         <div className="flex flex-col items-center mb-8">
-          <div className="w-16 h-16 relative mb-5 flex justify-center">
-            <Image
-              src="/images/logo.png"
-              alt="Key Barber Logo"
-              width={64}
-              height={64}
-              className="object-contain"
-            />
+          <div className="flex items-center gap-4 mb-6 w-full">
+            <div className="h-px grow bg-[#e6d1c7]"></div>
+            <div className="w-10 h-10 relative">
+              <Image
+                src="/images/key.png"
+                alt="Key Logo"
+                fill
+                className="object-contain"
+              />
+            </div>
+            <div className="h-px grow bg-[#e6d1c7]"></div>
           </div>
           <h1
             className="text-[#4a1a1a] text-lg tracking-[0.15em] uppercase mb-1"
@@ -225,7 +228,7 @@ export default function LoginPage() {
                 Password
               </label>
               <Link
-                href="#"
+                href="/forgot-password"
                 className="text-[10px] font-normal text-[#c57e7b] hover:text-[#4a1a1a] tracking-[0.2em] uppercase transition-colors"
                 style={{ fontFamily: "var(--font-be-vietnam)" }}
               >

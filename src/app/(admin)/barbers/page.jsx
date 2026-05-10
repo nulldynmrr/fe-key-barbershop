@@ -9,6 +9,8 @@ import {
   User,
   Briefcase,
   Award,
+  Edit2,
+  Trash2,
 } from "lucide-react";
 import { barberService } from "@/services/barberService";
 import Image from "next/image";
@@ -22,6 +24,7 @@ export default function BarbersPage() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingId, setEditingId] = useState(null);
 
   const [formData, setFormData] = useState({
     nama_kapster: "",
@@ -69,10 +72,38 @@ export default function BarbersPage() {
   };
 
   const openAddModal = () => {
+    setEditingId(null);
     setFormData({ nama_kapster: "", spesialisasi: "", pengalaman: "" });
     setImageFile(null);
     setImagePreview(null);
     setIsModalOpen(true);
+  };
+
+  const openEditModal = (barber) => {
+    setEditingId(barber.id);
+    setFormData({
+      nama_kapster: barber.nama_kapster || "",
+      spesialisasi: barber.spesialisasi || "",
+      pengalaman: barber.pengalaman || "",
+    });
+    setImageFile(null);
+    setImagePreview(barber.url_foto_upload ? getImageUrl(barber.url_foto_upload) : null);
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteBarber = async (id) => {
+    if (!window.confirm("Apakah Anda yakin ingin menghapus kapster ini?")) return;
+    try {
+      const res = await barberService.deleteBarber(id);
+      if (res.data.success) {
+        alert("Kapster berhasil dihapus!");
+        fetchBarbers();
+      } else {
+        alert(res.data.message || "Gagal menghapus kapster");
+      }
+    } catch (err) {
+      alert(err?.response?.data?.message || "Terjadi kesalahan saat menghapus kapster");
+    }
   };
 
   const handleSaveBarber = async () => {
@@ -91,17 +122,24 @@ export default function BarbersPage() {
         formPayload.append("image", imageFile);
       }
 
-      const res = await barberService.createBarber(formPayload);
+      let res;
+      if (editingId) {
+        res = await barberService.updateBarber(editingId, formPayload);
+      } else {
+        res = await barberService.createBarber(formPayload);
+      }
+
       if (res.data.success) {
-        showToast("Kapster berhasil ditambahkan!", "success");
+        showToast(`Kapster berhasil ${editingId ? 'diperbarui' : 'ditambahkan'}!`, "success");
         setIsModalOpen(false);
         fetchBarbers();
       } else {
-        showToast(res.data.message || "Gagal menambahkan kapster", "error");
+        showToast(res.data.message || `Gagal ${editingId ? 'memperbarui' : 'menambahkan'} kapster`, "error");
       }
     } catch (err) {
       showToast(
-        err?.response?.data?.message || "Terjadi kesalahan saat menambahkan kapster",
+        err?.response?.data?.message ||
+          `Terjadi kesalahan saat ${editingId ? 'memperbarui' : 'menambahkan'} kapster`,
         "error"
       );
     } finally {
@@ -170,6 +208,22 @@ export default function BarbersPage() {
                       <User className="w-16 h-16 text-[#e6d1c7]" />
                     </div>
                   )}
+                  <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                    <button
+                      onClick={() => openEditModal(barber)}
+                      className="p-2 bg-white/90 hover:bg-white text-[#4a1a1a] rounded-full shadow-sm backdrop-blur-sm transition-all"
+                      title="Edit"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteBarber(barber.id)}
+                      className="p-2 bg-white/90 hover:bg-red-50 text-red-600 rounded-full shadow-sm backdrop-blur-sm transition-all"
+                      title="Hapus"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-60"></div>
                   <div className="absolute bottom-0 left-0 p-4 w-full">
                     <h3
@@ -251,7 +305,7 @@ export default function BarbersPage() {
             <div className="p-8">
               <div className="flex justify-between items-center mb-8">
                 <h2 className="text-2xl font-bold text-[#2b1d19]">
-                  Tambah Kapster Baru
+                  {editingId ? "Edit Kapster" : "Tambah Kapster Baru"}
                 </h2>
                 <button
                   onClick={() => setIsModalOpen(false)}
@@ -352,7 +406,7 @@ export default function BarbersPage() {
                     {isSubmitting ? (
                       <Loader2 className="w-5 h-5 animate-spin" />
                     ) : null}
-                    <span>Simpan Kapster Baru</span>
+                    <span>{editingId ? "Simpan Perubahan" : "Simpan Kapster Baru"}</span>
                   </button>
                 </div>
               </div>

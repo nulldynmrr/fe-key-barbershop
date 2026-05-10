@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Clock3, Mail, MapPinned, Phone, Scissors, Sparkles, Wine } from "lucide-react";
+import { Clock3, Mail, MapPinned, Phone, Scissors, Sparkles, Shield } from "lucide-react";
 import SeparatorKey from "../../../components/SeparatorKey";
 import SiteFooter from "@/components/SiteFooter";
 import SiteNavbar from "@/components/SiteNavbar";
@@ -72,7 +72,7 @@ function SectionCard({ title, description, className = "", titleClassName = "", 
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#FBF7F3] text-[#2B1D19] scroll-smooth">
+    <main className="min-h-screen overflow-x-hidden bg-white text-[#2B1D19] scroll-smooth">
       <section id="home" className="relative isolate overflow-hidden">
         <div className="absolute inset-0">
           <Image src="/images/figma/home/hero-background-3dbeae.png" alt="Key Barber interior" fill priority sizes="100vw" className="object-cover object-center opacity-90" />
@@ -122,91 +122,145 @@ export default function HomePage() {
 
       <SeparatorKey />
 
-      <section id="about" className="relative isolate mx-auto max-w-7xl px-6 py-10 pt-0 lg:px-10 lg:pb-14">
-        <div className="pointer-events-none absolute inset-y-0 h-[85vh] left-1/2 z-0 w-screen -translate-x-1/2 bg-[linear-gradient(180deg,rgba(254,248,243,0.65)_70%,rgba(0,0,0,0.1)_100%)]" />
+      {/* Grid Features Section */}
+      <div className="bg-gradient-to-b from-white to-[#E1D5C9]">
+        <section className="relative isolate mx-auto max-w-7xl px-6 py-10 lg:px-10 lg:pb-14">
+          <div className="relative z-10 grid gap-8 lg:grid-cols-[0.65fr_0.35fr]">
+            <article className="relative row-span-2 min-h-128 overflow-hidden border border-[#e6d1c7] bg-[#ede8e0]">
+              <Image
+                src="/images/figma/home/artisanal-precision.png"
+                alt="Artisanal Precision"
+                fill
+                sizes="(min-width: 1024px) 52vw, 100vw"
+                className="object-cover object-center opacity-85"
+              />
+              <div className="absolute inset-0 bg-[linear-gradient(360deg,rgba(74,26,26,0.82)_0%,rgba(74,26,26,0.42)_34%,rgba(74,26,26,0.06)_62%,rgba(74,26,26,0)_100%)]" />
+              <div className="absolute inset-x-0 bottom-0 p-8 md:p-12">
+                <p className="text-sm uppercase tracking-[0.42em] text-[#f3ded6]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
+                  The Technique
+                </p>
+                <h3 className="mt-3 text-3xl text-white sm:text-4xl" style={{ fontFamily: "var(--font-noto-serif)" }}>
+                  Artisanal Precision
+                </h3>
+                <p className="mt-4 max-w-xl text-base leading-7 text-[#f7e7e1]" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
+                  Every cut is a collaboration between technique and individuality, guided by experience, refined through detail.
+                </p>
+              </div>
+            </article>
+            <SectionCard
+              className="border border-[#e6d1c7] bg-[#ede8e0] px-9 py-12 text-center flex flex-col justify-center"
+              title="The Calm"
+              titleClassName="text-[#4a1a1a]"
+              description="A space designed for comfort, where every detail is crafted to give you a relaxing and refined grooming experience."
+              descriptionClassName="text-[#8B4513]"
+              childrenFirst={true}
+            >
+              <Shield className="mx-auto mb-4 h-10 w-10 text-[#8B4513]" strokeWidth={1.5} />
+            </SectionCard>
 
-        <div className="relative z-10 grid gap-8 lg:grid-cols-[0.4fr_0.6fr]">
-          <div className="relative flex flex-col justify-center">
-            <div className="absolute -left-12 bg-gradient-to-b from-[#000000]/50 to-[#d8c8bc]/5 bg-clip-text text-[230px] font-black leading-none select-none text-transparent opacity-15" style={{ fontFamily: "var(--font-noto-serif)" }}>
-              01
-            </div>
-            <div className="relative z-10">
-              <p className="text-[0.72rem] uppercase tracking-[0.42em] text-[#8b6f66]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
-                About Key Barber
-              </p>
-              <h2 className="mt-3 text-3xl text-[#4a1a1a] sm:text-5xl" style={{ fontFamily: "var(--font-playfair)" }}>
-                About Key Barber
-              </h2>
-            </div>
+            <SectionCard
+              className="border border-[#4a1a1a] bg-[#4a1a1a] px-9 py-12 text-left text-[#fbf7f3] shadow-[0_28px_60px_rgba(74,26,26,0.28)] flex flex-col justify-center"
+              title="AI Stylist"
+              titleClassName="text-[#fbf7f3]"
+              description="Our intelligent system analyzes your facial structure and hair characteristics to recommend the most suitable hairstyle for you."
+              descriptionClassName="text-[#f3ded6]"
+            >
+              <Link
+                href="/user/ai-analyze"
+                className="mt-8 inline-flex items-center gap-2 border-b border-white/30 pb-1 text-[0.72rem] uppercase tracking-[0.38em] text-[#fbf7f3] transition hover:border-white/70"
+                style={{ fontFamily: "var(--font-be-vietnam)" }}
+              >
+                Discover your look
+              </Link>
+            </SectionCard>
           </div>
-          <article className="relative overflow-hidden p-8 md:p-10">
-            <div className="relative z-10">
-              <p className="max-w-xl text-lg italic leading-8 text-[#5f463d]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
-                A legacy of craftsmanship refined through modern precision
-              </p>
-              <p className="mt-6 max-w-2xl text-base leading-7 text-[#6e5851]" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
-                Founded in Bandung, Key Barber is built on the belief that a haircut is more than a routine, it is a reflection of self-respect. Designed for men who value precision, comfort, and timeless style, we blend classic barbering
-                techniques with a modern sensibility to create a look that is uniquely yours.
-              </p>
+        </section>
+      </div>
 
-              <div className="mt-10 grid gap-4 sm:grid-cols-3">
-                {stats.map((stat) => (
-                  <StatCard key={stat.label} value={stat.value} label={stat.label} />
-                ))}
+      <div className="bg-[#E1D5C9]">
+        {/* Banner Section */}
+        <section className="relative isolate mx-auto max-w-7xl px-6 py-4 pb-10 lg:px-10 lg:pb-14">
+          <div className="w-full mb-8 relative flex items-center justify-center rounded-sm overflow-hidden">
+            <Image
+              src="/images/figma/home/keybarber-intro.png"
+              alt="Key Barber Intro"
+              width={1200}
+              height={600}
+              className="w-full h-auto object-contain"
+              priority
+            />
+          </div>
+        </section>
+
+        <SeparatorKey />
+
+        {/* About Section */}
+        <section id="about" className="relative isolate mx-auto max-w-7xl px-6 py-10 lg:px-10 lg:pb-24 mt-4">
+          <div className="relative z-10 grid gap-12 lg:grid-cols-[0.3fr_0.7fr] items-center">
+            <div className="relative flex flex-col justify-center">
+              <div className="absolute -left-16 -top-16 w-64 h-64 pointer-events-none opacity-20">
+                <Image src="/images/figma/home/key-icon.png" alt="Key Barber Background" fill className="object-contain" />
+              </div>
+              <div className="relative z-10 pl-4 sm:pl-8">
+                <h2 className="text-[#4a1a1a] flex flex-col">
+                  <span className="text-3xl mb-1" style={{ fontFamily: "var(--font-playfair)" }}>About</span>
+                  <span className="text-5xl sm:text-6xl font-bold" style={{ fontFamily: "var(--font-playfair)" }}>Key Barber</span>
+                </h2>
+              </div>
+            </div>
+            <article className="relative overflow-hidden p-4 sm:p-8 md:p-0">
+              <div className="relative z-10">
+                <p className="max-w-xl text-lg italic leading-8 text-[#5f463d]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
+                  A legacy of craftsmanship refined through modern precision
+                </p>
+                <p className="mt-6 max-w-2xl text-base leading-7 text-[#6e5851]" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
+                  Founded in Bandung, Key Barber is built on the belief that a haircut is more than a routine, it is a reflection of self-respect. Designed for men who value precision, comfort, and timeless style, we blend classic barbering
+                  techniques with a modern sensibility to create a look that is uniquely yours.
+                </p>
+
+                <div className="mt-10 grid gap-4 grid-cols-2 sm:grid-cols-3">
+                  {stats.map((stat) => (
+                    <StatCard key={stat.label} value={stat.value} label={stat.label} />
+                  ))}
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        {/* Our Media Social Section */}
+        <section className="relative isolate mx-auto max-w-7xl px-6 py-10 lg:px-10 lg:pb-32 overflow-hidden">
+          <div className="grid gap-12 lg:grid-cols-[0.55fr_0.45fr] items-center">
+            {/* Left: 3 Overlapping Cards */}
+            <div className="relative h-[450px] sm:h-[550px] w-full flex items-center justify-center">
+              <div className="absolute left-0 sm:left-[5%] z-10 w-48 sm:w-64 aspect-[3/4] transition transform -rotate-6 origin-bottom-right hover:scale-105 hover:-rotate-3 hover:z-30 duration-300">
+                <Image src="/images/figma/home/card1.png" alt="Card 1" fill className="object-contain" />
+              </div>
+
+              <div className="absolute right-0 sm:right-[5%] z-10 w-48 sm:w-64 aspect-[3/4] transition transform rotate-6 origin-bottom-left hover:scale-105 hover:rotate-3 hover:z-30 duration-300">
+                <Image src="/images/figma/home/card3.png" alt="Card 3" fill className="object-contain" />
+              </div>
+
+              <div className="absolute z-20 w-52 sm:w-72 aspect-[3/4] transition transform rotate-2 hover:scale-105 hover:rotate-0 hover:z-30 duration-300">
+                <Image src="/images/figma/home/card2.png" alt="Card 2" fill className="object-contain" />
               </div>
             </div>
 
-            <div className="pointer-events-none absolute -right-6 -top-8 h-44 w-44 rounded-full bg-[#4a1a1a]/6 blur-3xl" />
-          </article>
-        </div>
-
-        <div className="relative z-10 col-span-2">
-          <SeparatorKey />
-        </div>
-        <div className="relative z-10 grid gap-8 lg:grid-cols-[0.65fr_0.35fr]">
-          <article className="relative row-span-2 min-h-128 overflow-hidden border border-[#e6d1c7] bg-[#ede8e0]">
-            <Image src="/images/figma/home/feature-room-59f9db.png" alt="Barbershop interior" fill sizes="(min-width: 1024px) 52vw, 100vw" className="object-cover object-center opacity-85" />
-            <div className="absolute inset-0 bg-[linear-gradient(360deg,rgba(74,26,26,0.82)_0%,rgba(74,26,26,0.42)_34%,rgba(74,26,26,0.06)_62%,rgba(74,26,26,0)_100%)]" />
-            <div className="absolute inset-x-0 bottom-0 p-8 md:p-12">
-              <p className="text-sm uppercase tracking-[0.42em] text-[#f3ded6]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
-                The Technique
-              </p>
-              <h3 className="mt-3 text-3xl text-white sm:text-4xl" style={{ fontFamily: "var(--font-noto-serif)" }}>
-                Artisanal Precision
-              </h3>
-              <p className="mt-4 max-w-xl text-base leading-7 text-[#f7e7e1]" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
-                Every cut is a collaboration between technique and individuality, guided by experience, refined through detail.
+            {/* Right: Text Content */}
+            <div className="flex flex-col justify-center px-4 sm:px-8">
+              <h2 className="text-[#4a1a1a] flex items-center gap-4 text-4xl sm:text-5xl font-bold" style={{ fontFamily: "var(--font-playfair)" }}>
+                Our Media Social
+                <div className="h-12 w-4 sm:h-14 sm:w-5 relative shrink-0">
+                  <Image src="/images/figma/home/key-icon.png" alt="Key Icon" fill className="object-contain opacity-80" />
+                </div>
+              </h2>
+              <p className="mt-6 max-w-md text-sm sm:text-base italic leading-7 text-[#5f463d]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
+                A legacy of craftsmanship refined through modern precision
               </p>
             </div>
-          </article>
-          <SectionCard
-            className="border border-[#e6d1c7] bg-[#ede8e0] px-9 py-5 text-center"
-            title="The Calm"
-            titleClassName="text-[#4a1a1a]"
-            description="A space designed for comfort, where every detail is crafted to give you a relaxing and refined grooming experience."
-            descriptionClassName="text-[#8B4513]"
-            childrenFirst={true}
-          >
-            <Wine className="mx-auto mb-4 h-10 w-10 text-[#8B4513]" />
-          </SectionCard>
-
-          <SectionCard
-            className="border border-[#4a1a1a] bg-[#4a1a1a] px-9 py-5 text-left text-[#fbf7f3] shadow-[0_28px_60px_rgba(74,26,26,0.28)]"
-            title="AI Stylist"
-            titleClassName="text-[#fbf7f3]"
-            description="Our intelligent system analyzes your facial structure and hair characteristics to recommend the most suitable hairstyle for you."
-            descriptionClassName="text-[#f3ded6]"
-          >
-            <Link
-              href="/user/ai-analyze"
-              className="mt-8 inline-flex items-center gap-2 border-b border-white/30 pb-1 text-[0.72rem] uppercase tracking-[0.38em] text-[#fbf7f3] transition hover:border-white/70"
-              style={{ fontFamily: "var(--font-be-vietnam)" }}
-            >
-              Discover your look
-            </Link>
-          </SectionCard>
-        </div>
-      </section>
+          </div>
+        </section>
+      </div>
 
       <SiteFooter />
     </main>

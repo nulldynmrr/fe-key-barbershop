@@ -112,7 +112,11 @@ export default function AiCameraPage() {
       formData.append("foto", blob, "face-scan.jpg");
       
       if (activeFeatures.length === 0) {
-        formData.append("requestedFeatures", JSON.stringify(["STANDARD_SCAN"]));
+        // Default to ALL globally active features for guests instead of just STANDARD_SCAN
+        const allGloballyActive = Object.keys(featuresData).filter(
+          (key) => featuresData[key].globallyActive
+        );
+        formData.append("requestedFeatures", JSON.stringify(allGloballyActive.length > 0 ? allGloballyActive : ["STANDARD_SCAN"]));
       } else {
         formData.append("requestedFeatures", JSON.stringify(activeFeatures));
       }

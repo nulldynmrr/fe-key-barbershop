@@ -48,7 +48,7 @@ export default function LoginPage() {
           return;
         }
 
-        saveUserAuth(data.token, data.data);
+        saveUserAuth(data.token, data.user);
         router.push("/home");
       } catch (err) {
         const msg = err?.response?.data?.message;
@@ -83,7 +83,7 @@ export default function LoginPage() {
         return;
       }
 
-      saveUserAuth(data.token, data.data);
+      saveUserAuth(data.token, data.user);
       router.push("/home");
     } catch (err) {
       const msg = err?.response?.data?.message;

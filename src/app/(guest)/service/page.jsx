@@ -95,16 +95,16 @@ function PricingCard({ pkg }) {
     }
   };
   const allFeatures = [
-    { key: "featStandardScan", label: "Standard Face Shape Detection" },
-    { key: "featSymmetry", label: "Facial Symmetry Scoring" },
-    { key: "featAdvMapping", label: "Advanced Feature Mapping" },
-    { key: "featFaceHeatmap", label: "Face Heatmap Analysis" },
-    { key: "featHairAnalysis", label: "Hair & Scalp Analysis" },
-    { key: "featRiskAnalysis", label: "Risk Analysis Scoring" },
+    { key: "featStandardScan", label: "Standard Scan" },
+    { key: "featFaceHeatmap", label: "Face Heatmap" },
+    { key: "featSymmetry", label: "Facial Symmetry" },
+    { key: "featAdvMapping", label: "Adv. Feature Mapping" },
+    { key: "featHairAnalysis", label: "Hair Analysis" },
+    { key: "featRiskAnalysis", label: "Risk Analysis" },
     { key: "featBarberInstructions", label: "Barber Instructions" },
-    { key: "featVirtualTryOn", label: "Virtual Try-on Generation" },
-    { key: "featHistory", label: "Extended History Storage" },
-    { key: "featTrendAnalysis", label: "Hairstyle Trend Analysis" },
+    { key: "featVirtualTryOn", label: "Virtual Try-On" },
+    { key: "featHistory", label: "Extended History" },
+    { key: "featTrendAnalysis", label: "Trend Analysis" },
   ];
 
   const isFeatureActive = (val) =>
@@ -225,7 +225,6 @@ export default function ServicesPage() {
     <main className="min-h-screen overflow-x-hidden bg-[#4A1A1A] text-[#f7f1ea] scroll-smooth">
       <SiteNavbar activeLabel="Services" />
       <div className="bg-radial from-black/0 to-black/40">
-        {/* Header Section */}
         <section className="mx-auto max-w-7xl px-6 pb-20 pt-24 lg:px-10 lg:pt-32">
           <div className="text-center">
             <p className="text-xl uppercase tracking-[0.5em] text-[#C57E7B]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
@@ -238,8 +237,6 @@ export default function ServicesPage() {
         </section>
 
         <SeparatorKey></SeparatorKey>
-
-        {/* Services Grid (Salon Services) */}
         <section className="mx-auto max-w-6xl px-6 pb-20 lg:px-10">
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {services.map((service, idx) => (
@@ -248,7 +245,6 @@ export default function ServicesPage() {
           </div>
         </section>
 
-        {/* AI Enhanced Section (Pricing API Integration) */}
         <section className="mx-auto max-w-6xl px-6 pb-20 lg:px-10">
           <div className="text-center">
             <p className="text-xl uppercase tracking-[0.5em] text-[#C57E7B]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
@@ -262,7 +258,6 @@ export default function ServicesPage() {
             </p>
           </div>
 
-          {/* Pricing Cards Rendering */}
           <div className="mt-16">
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-12">

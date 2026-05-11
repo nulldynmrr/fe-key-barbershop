@@ -20,7 +20,7 @@ const getToken = () => {
 
 const request = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
-  timeout: 60000,
+  timeout: 180000, // 3 menit
   headers: {
     "Content-Type": "application/json",
   },

@@ -80,6 +80,7 @@ export default function LanggananPage() {
     featRiskAnalysis: false,
     featBarberInstructions: false,
     featVirtualTryOn: false,
+    virtualTryOnLimit: 1,
     featHistory: false,
     featHairstyleTrend: false,
     typeValue: "ONTIME",
@@ -172,6 +173,7 @@ export default function LanggananPage() {
     formData.featFaceHeatmap,
     formData.featHairAnalysis,
     formData.featBarberInstructions,
+    formData.virtualTryOnLimit,
     formData.llmModelId,
     formData.imageModelId,
   ]);
@@ -228,6 +230,7 @@ export default function LanggananPage() {
     formData.featBarberInstructions,
     formData.featHistory,
     formData.featHairstyleTrend,
+    formData.virtualTryOnLimit,
     formData.typeValue,
     isModalOpen,
   ]);
@@ -252,6 +255,7 @@ export default function LanggananPage() {
         llmModelId: formData.llmModelId,
         imageModelId: formData.featVirtualTryOn ? formData.imageModelId : null,
         featVirtualTryOn: formData.featVirtualTryOn,
+        virtualTryOnLimit: formData.virtualTryOnLimit,
         featSymmetry: formData.featSymmetry,
         featAdvMapping: formData.featAdvMapping,
         featFaceHeatmap: formData.featFaceHeatmap,
@@ -349,6 +353,7 @@ export default function LanggananPage() {
       featRiskAnalysis: pkg.featRiskAnalysis || false,
       featBarberInstructions: pkg.featBarberInstructions || false,
       featVirtualTryOn: pkg.featVirtualTryOn || false,
+      virtualTryOnLimit: pkg.virtualTryOnLimit || 1,
       featHistory: pkg.featHistory || false,
       featHairstyleTrend: pkg.featHairstyleTrend || false,
     });
@@ -405,6 +410,7 @@ export default function LanggananPage() {
         featRiskAnalysis: formData.featRiskAnalysis,
         featBarberInstructions: formData.featBarberInstructions,
         featVirtualTryOn: formData.featVirtualTryOn,
+        virtualTryOnLimit: Number(formData.virtualTryOnLimit),
         featHistory: formData.featHistory,
         featHairstyleTrend: formData.featHairstyleTrend,
         hppIdeal: Number(formData.hppIdeal),
@@ -836,6 +842,36 @@ export default function LanggananPage() {
                         disabled={activeModels.image_gen.length === 0}
                       />
                     </div>
+                    
+                    {formData.featVirtualTryOn && (
+                      <div className="flex items-center justify-between p-4 border border-indigo-200 rounded-lg bg-indigo-50/50 shadow-sm col-span-1 md:col-span-2">
+                        <div className="flex items-start gap-3">
+                          <div className="p-2 bg-indigo-100 border border-indigo-200 rounded-md shrink-0">
+                            <Sparkles className="w-4 h-4 text-indigo-700" />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-sm text-indigo-900">
+                              Limit Generate Gambar
+                            </p>
+                            <p className="text-[10px] text-indigo-700/70 mt-1">
+                              Jumlah rekomendasi gaya yang akan digenerate gambarnya (1-5).
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="range"
+                            name="virtualTryOnLimit"
+                            min="1"
+                            max="5"
+                            value={formData.virtualTryOnLimit}
+                            onChange={handleInputChange}
+                            className="w-24 accent-indigo-600"
+                          />
+                          <span className="font-bold text-indigo-900 w-4 text-center">{formData.virtualTryOnLimit}</span>
+                        </div>
+                      </div>
+                    )}
 
                     <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg bg-white shadow-sm">
                       <div className="flex items-start gap-3">

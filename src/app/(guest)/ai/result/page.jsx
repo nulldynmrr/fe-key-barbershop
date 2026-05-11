@@ -43,7 +43,7 @@ function InteractiveCard({ children, className = "", delay = "0ms" }) {
         transitionDelay: delay
       }}
     >
-      <div style={{ transform: "translateZ(20px)" }}>
+      <div style={{ transform: "translateZ(20px)" }} className="h-full w-full">
         {children}
       </div>
     </div>
@@ -55,42 +55,47 @@ function InteractiveCard({ children, className = "", delay = "0ms" }) {
 function ResultPortrait({ url_foto_upload, ai_image_url }) {
   return (
     <div className="relative h-full min-h-[600px] lg:min-h-full w-full overflow-hidden bg-[linear-gradient(180deg,#1c1a1a_0%,#40312c_35%,#8b6f59_72%,#d2bfa7_100%)] shadow-2xl group">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,rgba(255,255,255,0.18),transparent_24%),radial-gradient(circle_at_50%_55%,rgba(0,0,0,0.18),transparent_42%)]" />
-      <div className="absolute inset-x-0 top-0 h-28 bg-[linear-gradient(180deg,rgba(0,0,0,0.56),transparent)]" />
-      <div className="absolute inset-x-0 bottom-0 h-32 bg-[linear-gradient(0deg,rgba(46,17,17,0.8),transparent)]" />
+      <div className="absolute inset-x-0 top-0 h-28 bg-[linear-gradient(180deg,rgba(0,0,0,0.56),transparent)] z-[5]" />
+      <div className="absolute inset-x-0 bottom-0 h-32 bg-[linear-gradient(0deg,rgba(46,17,17,0.8),transparent)] z-[5]" />
 
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#C59B8F] to-transparent shadow-[0_0_15px_rgba(197,155,143,0.8)] animate-scan-line z-20" />
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#C59B8F] to-transparent shadow-[0_0_15px_rgba(197,155,143,0.8)] animate-scan-line z-[15]" />
 
-      {(ai_image_url || url_foto_upload) ? (
+      {url_foto_upload && (
         <img 
-          src={(ai_image_url || url_foto_upload).startsWith("data:") || (ai_image_url || url_foto_upload).startsWith("http") ? (ai_image_url || url_foto_upload) : `${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1").replace("/api/v1", "")}${ai_image_url || url_foto_upload}`} 
-          className="absolute inset-0 w-full h-full object-cover opacity-80 transition-opacity duration-500" 
-          alt={ai_image_url ? "AI Generated Style" : "Original Reference"} 
+          src={url_foto_upload.startsWith("data:") || url_foto_upload.startsWith("http") ? url_foto_upload : `${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1").replace("/api/v1", "")}${url_foto_upload}`} 
+          className="absolute inset-0 w-full h-full object-cover z-[1]" 
+          alt="Original Reference" 
         />
-      ) : null}
+      )}
 
       {ai_image_url && (
-        <div className="absolute bottom-6 left-6 z-30">
-          <div className="bg-black/60 px-4 py-2 text-[0.65rem] uppercase tracking-[0.3em] text-[#f3e8de] backdrop-blur-md border border-white/10 w-fit">
-            AI Enhanced
+        <img 
+          src={ai_image_url.startsWith("data:") || ai_image_url.startsWith("http") ? ai_image_url : `${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1").replace("/api/v1", "")}${ai_image_url}`} 
+          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700 group-hover:opacity-0 z-[2]" 
+          alt="AI Generated Style" 
+        />
+      )}
+
+      {ai_image_url && (
+        <div className="absolute bottom-6 left-6 z-[30] transition-opacity duration-700 group-hover:opacity-0">
+          <div className="bg-[#D15C5C]/90 px-4 py-2 text-[0.65rem] uppercase tracking-[0.3em] text-[#f3e8de] backdrop-blur-md border border-white/20 w-fit shadow-lg flex items-center gap-2">
+            <Sparkles className="w-3 h-3" />
+            AI Enhanced (Hover to Compare)
           </div>
         </div>
       )}
 
-      <div className="absolute inset-0 flex items-end justify-center p-5 pointer-events-none">
-        <div className="h-[105%] w-[95%] rounded-[1.75rem] border border-white/5 bg-[radial-gradient(circle_at_50%_38%,#f4d8bf_0%,#d6a47d_18%,#7f5a42_30%,#3b2a23_46%,#1b1718_62%,#111010_100%)] opacity-30 shadow-[0_20px_50px_rgba(0,0,0,0.45)] transition-all duration-700 group-hover:scale-[1.03]" />
+      <div className={`absolute bottom-6 left-6 z-[25] transition-opacity duration-700 ${ai_image_url ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
+        <div className="bg-black/80 px-4 py-2 text-[0.65rem] uppercase tracking-[0.3em] text-[#f3e8de] backdrop-blur-md border border-white/10 w-fit shadow-lg flex items-center gap-2">
+          <Focus className="w-3 h-3" />
+          Original Reference
+        </div>
       </div>
 
-      <div
-        className="absolute bottom-6 left-6 bg-black/60 px-4 py-2 text-[0.65rem] uppercase tracking-[0.3em] text-[#f3e8de] backdrop-blur-md border border-white/10 z-30"
-      >
-        Original Reference
-      </div>
-
-      <div className="absolute top-10 left-10 w-12 h-12 border-t-2 border-l-2 border-white/20 z-10" />
-      <div className="absolute top-10 right-10 w-12 h-12 border-t-2 border-r-2 border-white/20 z-10" />
-      <div className="absolute bottom-10 left-10 w-12 h-12 border-b-2 border-l-2 border-white/20 z-10" />
-      <div className="absolute bottom-10 right-10 w-12 h-12 border-b-2 border-r-2 border-white/20 z-10" />
+      <div className="absolute top-10 left-10 w-12 h-12 border-t-2 border-l-2 border-white/20 z-[3]" />
+      <div className="absolute top-10 right-10 w-12 h-12 border-t-2 border-r-2 border-white/20 z-[3]" />
+      <div className="absolute bottom-10 left-10 w-12 h-12 border-b-2 border-l-2 border-white/20 z-[3]" />
+      <div className="absolute bottom-10 right-10 w-12 h-12 border-b-2 border-r-2 border-white/20 z-[3]" />
     </div>
   );
 }
@@ -132,6 +137,7 @@ export default function AiResultPage() {
   const [originalImage, setOriginalImage] = useState(null);
   const [historyItems, setHistoryItems] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [selectedStyleIndex, setSelectedStyleIndex] = useState(0);
   const targetScrollRef = useRef(null);
   const router = useRouter();
 
@@ -204,15 +210,19 @@ export default function AiResultPage() {
   const topStyle = styles[0] || {};
   const altStyle = styles[1] || {};
 
-  let aiImageUrl = null;
+  let aiImageUrls = [];
   if (analysisData.record?.url_hasil_img) {
     try {
       const parsedUrls = typeof analysisData.record.url_hasil_img === 'string'
         ? JSON.parse(analysisData.record.url_hasil_img)
         : analysisData.record.url_hasil_img;
-      if (Array.isArray(parsedUrls) && parsedUrls.length > 0) aiImageUrl = parsedUrls[0];
+      if (Array.isArray(parsedUrls)) {
+        aiImageUrls = parsedUrls;
+      }
     } catch (e) { /* ignore */ }
   }
+
+  const aiImageUrl = aiImageUrls.length > selectedStyleIndex ? aiImageUrls[selectedStyleIndex] : (aiImageUrls.length > 0 ? aiImageUrls[0] : null);
 
   const dynamicStats = [
     { label: "GENDER", value: data.gender || "-" },
@@ -280,63 +290,84 @@ export default function AiResultPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                {topStyle.nama_gaya && (
-                  <div className="bg-[#2B1615] rounded-sm border border-[#3A1E1E] flex flex-col justify-end relative h-[450px] overflow-hidden group hover:border-[#C59B8F] transition-all duration-500 hover:shadow-2xl">
-                    <div className="absolute inset-0 bg-gradient-to-b from-[#2B1615]/10 via-[#2B1615]/80 to-[#1F0D0D] z-0"></div>
+                {styles.slice(0, 5).map((style, idx) => {
+                  const hasImage = idx < aiImageUrls.length;
+                  const isSelected = selectedStyleIndex === idx;
 
-                    <div className="relative z-10 p-8 flex flex-col h-full justify-end transition-transform duration-500 group-hover:-translate-y-2">
-                      <div className="flex justify-between items-end border-b border-[#3A1E1E] pb-4 mb-4">
-                        <div>
-                          <p className="text-[0.55rem] uppercase tracking-widest text-[#C59B8F] mb-1">TOP RECOMMENDATION</p>
-                          <h3 className="text-3xl text-[#F3E8DE] font-serif font-medium">{topStyle.nama_gaya}</h3>
-                        </div>
-                        <div className="bg-[#592D2D] rounded-sm flex flex-col items-center justify-center px-4 py-2 shadow-lg">
-                          <span className="text-xl font-bold text-[#F3E8DE]">{topStyle.match_score}%</span>
-                          <span className="text-[0.45rem] uppercase tracking-widest text-[#D2C3BD]">MATCH</span>
-                        </div>
-                      </div>
+                  return (
+                    <div 
+                      key={idx} 
+                      onClick={() => {
+                        if (hasImage) {
+                          setSelectedStyleIndex(idx);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
+                      }}
+                      className={`bg-[#2B1615] rounded-sm border ${isSelected ? 'border-[#C59B8F] shadow-[0_0_15px_rgba(197,155,143,0.3)]' : 'border-[#3A1E1E]'} flex flex-col justify-end relative h-[350px] md:h-[450px] overflow-hidden group hover:border-[#C59B8F] transition-all duration-500 hover:shadow-2xl ${hasImage ? 'cursor-pointer' : 'cursor-default opacity-90'}`}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-b from-[#2B1615]/10 via-[#2B1615]/80 to-[#1F0D0D] z-0"></div>
 
-                      <div className="space-y-3">
-                        <p className="text-[0.6rem] uppercase tracking-widest text-[#A68A82]">WHY IT WORKS</p>
-                        <p className="text-[0.8rem] text-[#D2C3BD] leading-relaxed">
-                          {topStyle.alasan || "Perfect for your face shape and natural features."}
-                        </p>
+                      <div className="relative z-10 p-6 md:p-8 flex flex-col h-full justify-end transition-transform duration-500 group-hover:-translate-y-2">
+                        <div className="flex justify-between items-end border-b border-[#3A1E1E] pb-4 mb-4">
+                          <div>
+                            <p className="text-[0.55rem] uppercase tracking-widest text-[#C59B8F] mb-1">
+                              {idx === 0 ? "TOP RECOMMENDATION" : `RECOMMENDATION #${idx + 1}`}
+                            </p>
+                            <h3 className="text-2xl md:text-3xl text-[#F3E8DE] font-serif font-medium">{style.nama_gaya}</h3>
+                          </div>
+                          <div className="bg-[#592D2D] rounded-sm flex flex-col items-center justify-center px-4 py-2 shadow-lg">
+                            <span className="text-xl font-bold text-[#F3E8DE]">{style.match_score ? `${style.match_score}%` : "-"}</span>
+                            <span className="text-[0.45rem] uppercase tracking-widest text-[#D2C3BD]">MATCH</span>
+                          </div>
+                        </div>
+
+                        <div className="space-y-3">
+                          <p className="text-[0.6rem] uppercase tracking-widest text-[#A68A82]">WHY IT WORKS</p>
+                          <p className="text-[0.7rem] md:text-[0.8rem] text-[#D2C3BD] leading-relaxed line-clamp-3">
+                            {style.alasan || "Perfect for your face shape and natural features."}
+                          </p>
+                        </div>
+
+                        <div className="mt-4 pt-4 border-t border-[#3A1E1E]/50 flex justify-between items-center">
+                          {hasImage ? (
+                            <div className="flex items-center gap-2 text-[#8A9A5B]">
+                              <Sparkles className="w-4 h-4" />
+                              <span className="text-[0.65rem] font-bold tracking-wider uppercase">Premium Image Available</span>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2 text-[#A68A82]/60">
+                              <span className="text-[0.6rem] tracking-wider uppercase">Text Recommendation Only</span>
+                            </div>
+                          )}
+
+                          {hasImage && !isSelected && (
+                            <span className="text-[0.6rem] bg-[#C59B8F] text-[#2B1615] px-3 py-1 rounded-sm font-bold uppercase tracking-wider">
+                              View Image
+                            </span>
+                          )}
+                          {hasImage && isSelected && (
+                            <span className="text-[0.6rem] border border-[#C59B8F] text-[#C59B8F] px-3 py-1 rounded-sm font-bold uppercase tracking-wider">
+                              Viewing
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
-
-                {altStyle.nama_gaya && (
-                  <div className="bg-[#2B1615] rounded-sm border border-[#3A1E1E] flex flex-col justify-end relative h-[450px] overflow-hidden group hover:border-[#C59B8F] transition-all duration-500 hover:shadow-2xl">
-                    <div className="absolute inset-0 bg-gradient-to-b from-[#2B1615]/10 via-[#2B1615]/80 to-[#1F0D0D] z-0"></div>
-
-                    <div className="relative z-10 p-8 flex flex-col h-full justify-end transition-transform duration-500 group-hover:-translate-y-2">
-                      <div className="flex justify-between items-end border-b border-[#3A1E1E] pb-4 mb-4">
-                        <div>
-                          <p className="text-[0.55rem] uppercase tracking-widest text-[#C59B8F] mb-1">ALTERNATIVE</p>
-                          <h3 className="text-3xl text-[#F3E8DE] font-serif font-medium">{altStyle.nama_gaya}</h3>
-                        </div>
-                        <div className="bg-[#592D2D] rounded-sm flex flex-col items-center justify-center px-4 py-2 shadow-lg">
-                          <span className="text-xl font-bold text-[#F3E8DE]">{altStyle.match_score ? `${altStyle.match_score}%` : "-"}</span>
-                          <span className="text-[0.45rem] uppercase tracking-widest text-[#D2C3BD]">MATCH</span>
-                        </div>
-                      </div>
-
-                      <div className="space-y-3">
-                        <p className="text-[0.6rem] uppercase tracking-widest text-[#A68A82]">WHY IT WORKS</p>
-                        <p className="text-[0.8rem] text-[#D2C3BD] leading-relaxed">
-                          {altStyle.alasan || "A versatile alternative that compliments your features."}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                  );
+                })}
 
               </div>
 
               <div className="flex flex-col items-center pt-4 pb-8 space-y-4">
                 {activeFeatures.includes("VIRTUAL_TRY_ON") ? (
-                  <button className="bg-[#D9D0C6] px-8 py-3 text-xs font-bold tracking-widest text-[#2B1D19] transition-all hover:scale-105 rounded-sm">
+                  <button 
+                    onClick={() => {
+                      const nextIndex = (selectedStyleIndex + 1) % aiImageUrls.length;
+                      setSelectedStyleIndex(nextIndex);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="bg-[#D9D0C6] px-8 py-3 text-xs font-bold tracking-widest text-[#2B1D19] transition-all hover:scale-105 rounded-sm"
+                  >
                     TRY NEXT STYLE (VIRTUAL TRY-ON)
                   </button>
                 ) : (

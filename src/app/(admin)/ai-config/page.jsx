@@ -12,6 +12,8 @@ import {
   AlertCircle,
   SquarePen,
   Trash2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { aiConfigService } from "@/services/aiConfigService";
 import { useToast } from "@/contexts/ToastContext";
@@ -47,6 +49,13 @@ export default function AiConfigPage() {
     inflationBuffer: 0.05,
   });
   const [logsData, setLogsData] = useState([]);
+  const [logsPagination, setLogsPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    limit: 10,
+  });
+  const [isLogsLoading, setIsLogsLoading] = useState(false);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -104,12 +113,43 @@ export default function AiConfigPage() {
 
       if (logsRes.data.success) {
         setLogsData(logsRes.data.data || []);
+        if (logsRes.data.meta) {
+          setLogsPagination({
+            currentPage: logsRes.data.meta.page,
+            totalPages: logsRes.data.meta.totalPages,
+            totalItems: logsRes.data.meta.total,
+            limit: logsRes.data.meta.limit,
+          });
+        }
       }
     } catch (err) {
       console.error("Failed to fetch AI Config data:", err);
       setError("Gagal memuat data konfigurasi AI");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchLogs = async (page = 1) => {
+    setIsLogsLoading(true);
+    try {
+      const res = await aiConfigService.getLogs(page, logsPagination.limit);
+      if (res.data.success) {
+        setLogsData(res.data.data || []);
+        if (res.data.meta) {
+          setLogsPagination({
+            currentPage: res.data.meta.page,
+            totalPages: res.data.meta.totalPages,
+            totalItems: res.data.meta.total,
+            limit: res.data.meta.limit,
+          });
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch logs:", err);
+      showToast("Gagal memuat log penggunaan", "error");
+    } finally {
+      setIsLogsLoading(false);
     }
   };
 
@@ -598,6 +638,12 @@ export default function AiConfigPage() {
                     className="py-4 px-4 text-[11px] font-bold text-[#2b1d19] uppercase tracking-wider"
                     style={{ fontFamily: "var(--font-plus-jakarta)" }}
                   >
+                    Membership
+                  </th>
+                  <th
+                    className="py-4 px-4 text-[11px] font-bold text-[#2b1d19] uppercase tracking-wider"
+                    style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                  >
                     Tokens (In/Out)
                   </th>
                   <th
@@ -645,6 +691,18 @@ export default function AiConfigPage() {
                       >
                         {row.userEmail || row.email}
                       </td>
+                      <td className="py-5 px-4">
+                        <span
+                          className={`px-3 py-1 rounded-md text-[10px] font-bold border ${
+                            row.userStatus !== "FREE"
+                              ? "bg-[#fdf2f0] border-[#e6d1c7] text-[#4a1a1a]"
+                              : "bg-white border-gray-100 text-[#8b6f66]"
+                          }`}
+                          style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                        >
+                          {row.userStatus || "FREE"}
+                        </span>
+                      </td>
                       <td
                         className="py-5 px-4 text-xs text-[#524342]"
                         style={{ fontFamily: "var(--font-plus-jakarta)" }}
@@ -690,6 +748,90 @@ export default function AiConfigPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination UI */}
+          {logsPagination.totalPages > 1 && (
+            <div className="px-6 py-4 border-t border-[#f0e2d9] bg-[#fafafa] flex items-center justify-between">
+              <p
+                className="text-xs text-[#8b6f66]"
+                style={{ fontFamily: "var(--font-plus-jakarta)" }}
+              >
+                Menampilkan{" "}
+                <span className="font-bold text-[#2b1d19]">
+                  {(logsPagination.currentPage - 1) * logsPagination.limit + 1}
+                </span>{" "}
+                sampai{" "}
+                <span className="font-bold text-[#2b1d19]">
+                  {Math.min(
+                    logsPagination.currentPage * logsPagination.limit,
+                    logsPagination.totalItems,
+                  )}
+                </span>{" "}
+                dari{" "}
+                <span className="font-bold text-[#2b1d19]">
+                  {logsPagination.totalItems}
+                </span>{" "}
+                log
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => fetchLogs(logsPagination.currentPage - 1)}
+                  disabled={logsPagination.currentPage === 1 || isLogsLoading}
+                  className="p-1.5 rounded-md border border-[#e6d1c7] bg-white text-[#4a1a1a] hover:bg-[#fdf2f0] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <div className="flex items-center gap-1">
+                  {[...Array(logsPagination.totalPages)].map((_, idx) => {
+                    const pageNum = idx + 1;
+                    // Tampilkan halaman pertama, terakhir, dan sekitar halaman aktif
+                    if (
+                      pageNum === 1 ||
+                      pageNum === logsPagination.totalPages ||
+                      (pageNum >= logsPagination.currentPage - 1 &&
+                        pageNum <= logsPagination.currentPage + 1)
+                    ) {
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => fetchLogs(pageNum)}
+                          disabled={isLogsLoading}
+                          className={`min-w-[28px] h-7 text-[11px] font-bold rounded-md border transition-all ${
+                            logsPagination.currentPage === pageNum
+                              ? "bg-[#4a1a1a] border-[#4a1a1a] text-white"
+                              : "bg-white border-[#e6d1c7] text-[#8b6f66] hover:border-[#4a1a1a] hover:text-[#4a1a1a]"
+                          }`}
+                          style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    } else if (
+                      pageNum === 2 ||
+                      pageNum === logsPagination.totalPages - 1
+                    ) {
+                      return (
+                        <span key={pageNum} className="text-[#8b6f66] px-1">
+                          ...
+                        </span>
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
+                <button
+                  onClick={() => fetchLogs(logsPagination.currentPage + 1)}
+                  disabled={
+                    logsPagination.currentPage === logsPagination.totalPages ||
+                    isLogsLoading
+                  }
+                  className="p-1.5 rounded-md border border-[#e6d1c7] bg-white text-[#4a1a1a] hover:bg-[#fdf2f0] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 

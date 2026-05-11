@@ -62,21 +62,36 @@ const EmptyState = ({ label }) => (
 
 export default function DashboardPage() {
   const [dashboardData, setDashboardData] = useState(null);
+  const [recentAnalysisPage, setRecentAnalysisPage] = useState(1);
+  const [isRecentAnalysisLoading, setIsRecentAnalysisLoading] = useState(false);
+
+  const fetchDashboardData = async (page = 1) => {
+    if (page === 1) setDashboardData(null); // Full reset for main charts only on initial load
+    setIsRecentAnalysisLoading(true);
+    try {
+      const response = await api.get(`/dashboard/main?page=${page}&limit=10`);
+      if (response?.data?.success) {
+        if (page === 1) {
+          setDashboardData(response.data.data);
+        } else {
+          // Only update the table part if it's a pagination request
+          setDashboardData(prev => ({
+            ...prev,
+            recentAnalysis: response.data.data.recentAnalysis,
+            recentAnalysisMeta: response.data.data.recentAnalysisMeta
+          }));
+        }
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsRecentAnalysisLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const response = await api.get("/dashboard/main");
-        if (response?.data?.success) {
-          setDashboardData(response.data.data);
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    };
-
-    fetchDashboardData();
-  }, []);
+    fetchDashboardData(recentAnalysisPage);
+  }, [recentAnalysisPage]);
 
   const summaryData = [
     {
@@ -86,9 +101,12 @@ export default function DashboardPage() {
           "id-ID",
         ) ?? "0",
       change: dashboardData
-        ? `${dashboardData.summaryCards.users.trendDirection === "up" ? "+" : "-"}${dashboardData.summaryCards.users.trendPercentage}%`
+        ? (parseFloat(dashboardData.summaryCards.users.trendPercentage) < 0.1 || dashboardData.summaryCards.users.trendDirection === "down")
+          ? "Tidak ada perubahan" 
+          : `+${Math.abs(dashboardData.summaryCards.users.trendPercentage)}%`
         : "0%",
       isPositive: dashboardData?.summaryCards.users.trendDirection === "up",
+      isNoChange: !dashboardData || parseFloat(dashboardData.summaryCards.users.trendPercentage) < 0.1 || dashboardData.summaryCards.users.trendDirection === "down",
       image: "/images/figma/admin-dashboard/total-users.png",
       trendLabel: dashboardData?.summaryCards.users.trendLabel ?? "-",
     },
@@ -102,10 +120,13 @@ export default function DashboardPage() {
           }).format(dashboardData.summaryCards.pendapatan.currentValue)
         : "Rp0",
       change: dashboardData
-        ? `${dashboardData.summaryCards.pendapatan.trendDirection === "up" ? "+" : "-"}${dashboardData.summaryCards.pendapatan.trendPercentage}%`
+        ? (parseFloat(dashboardData.summaryCards.pendapatan.trendPercentage) < 0.1 || dashboardData.summaryCards.pendapatan.trendDirection === "down")
+          ? "Tidak ada perubahan" 
+          : `+${Math.abs(dashboardData.summaryCards.pendapatan.trendPercentage)}%`
         : "0%",
       isPositive:
         dashboardData?.summaryCards.pendapatan.trendDirection === "up",
+      isNoChange: !dashboardData || parseFloat(dashboardData.summaryCards.pendapatan.trendPercentage) < 0.1 || dashboardData.summaryCards.pendapatan.trendDirection === "down",
       image: "/images/figma/admin-dashboard/total-pendapatan.png",
       trendLabel: dashboardData?.summaryCards.pendapatan.trendLabel ?? "-",
     },
@@ -119,10 +140,13 @@ export default function DashboardPage() {
           }).format(dashboardData.summaryCards.pengeluaranAi.currentValue)
         : "Rp0",
       change: dashboardData
-        ? `${dashboardData.summaryCards.pengeluaranAi.trendDirection === "up" ? "+" : "-"}${dashboardData.summaryCards.pengeluaranAi.trendPercentage}%`
+        ? (parseFloat(dashboardData.summaryCards.pengeluaranAi.trendPercentage) < 0.1 || dashboardData.summaryCards.pengeluaranAi.trendDirection === "down")
+          ? "Tidak ada perubahan" 
+          : `+${Math.abs(dashboardData.summaryCards.pengeluaranAi.trendPercentage)}%`
         : "0%",
       isPositive:
         dashboardData?.summaryCards.pengeluaranAi.trendDirection === "up",
+      isNoChange: !dashboardData || parseFloat(dashboardData.summaryCards.pengeluaranAi.trendPercentage) < 0.1 || dashboardData.summaryCards.pengeluaranAi.trendDirection === "down",
       image: "/images/figma/admin-dashboard/pengeluaran-ai.png",
       trendLabel: dashboardData?.summaryCards.pengeluaranAi.trendLabel ?? "-",
     },
@@ -135,9 +159,12 @@ export default function DashboardPage() {
           }).format(dashboardData.summaryCards.sisaToken.currentValue)
         : "0",
       change: dashboardData
-        ? `${dashboardData.summaryCards.sisaToken.trendDirection === "up" ? "+" : "-"}${dashboardData.summaryCards.sisaToken.trendPercentage}%`
+        ? (parseFloat(dashboardData.summaryCards.sisaToken.trendPercentage) < 0.1 || dashboardData.summaryCards.sisaToken.trendDirection === "down")
+          ? "Tidak ada perubahan" 
+          : `+${Math.abs(dashboardData.summaryCards.sisaToken.trendPercentage)}%`
         : "0%",
       isPositive: dashboardData?.summaryCards.sisaToken.trendDirection === "up",
+      isNoChange: !dashboardData || parseFloat(dashboardData.summaryCards.sisaToken.trendPercentage) < 0.1 || dashboardData.summaryCards.sisaToken.trendDirection === "down",
       image: "/images/figma/admin-dashboard/sisa-token.png",
       badge: dashboardData?.summaryCards.sisaToken.isCritical
         ? "Token sedikit lagi"
@@ -239,7 +266,7 @@ export default function DashboardPage() {
                 style={{ fontFamily: "var(--font-plus-jakarta)" }}
               >
                 <span
-                  className={`font-bold ${item.isPositive ? "text-green-600" : "text-red-500"}`}
+                  className={`font-bold ${item.isNoChange ? "text-gray-400" : item.isPositive ? "text-green-600" : "text-red-500"}`}
                 >
                   {item.change}
                 </span>{" "}
@@ -291,6 +318,7 @@ export default function DashboardPage() {
                       dy={10}
                     />
                     <YAxis
+                      width={65}
                       axisLine={false}
                       tickLine={false}
                       tick={{
@@ -306,7 +334,15 @@ export default function DashboardPage() {
                       }}
                     />
                     <Tooltip cursor={{ fill: "transparent" }} />
-                    <Bar dataKey="value" shape={<CustomBar />} barSize={40} />
+                    <Bar
+                      dataKey="total"
+                      shape={
+                        <CustomBar
+                          max={Math.max(...chartData.map((d) => d.total), 1)}
+                        />
+                      }
+                      barSize={40}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -392,13 +428,9 @@ export default function DashboardPage() {
                         <td className="py-4">
                           <span
                             className={`px-4 py-1 text-[10px] font-bold rounded-md border ${
-                              row.status === "PREMIUM"
-                                ? "bg-white border-[#e6d1c7] text-[#8b6f66]"
-                                : row.status === "GUEST"
-                                  ? "bg-white border-[#e6d1c7] text-[#8b6f66]"
-                                  : row.status === "VIP"
-                                    ? "bg-white border-[#e6d1c7] text-[#8b6f66]"
-                                    : ""
+                              row.status !== "FREE"
+                                ? "bg-[#fdf2f0] border-[#e6d1c7] text-[#4a1a1a]"
+                                : "bg-white border-gray-100 text-[#8b6f66]"
                             }`}
                             style={{ fontFamily: "var(--font-be-vietnam)" }}
                           >
@@ -409,6 +441,33 @@ export default function DashboardPage() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+
+            {dashboardData?.recentAnalysisMeta && dashboardData.recentAnalysisMeta.totalPages > 1 && (
+              <div className="mt-6 flex items-center justify-between border-t border-[#f5ebe6] pt-4">
+                <p className="text-[10px] text-[#8b6f66]">
+                  Menampilkan {dashboardData.recentAnalysis.length} dari {dashboardData.recentAnalysisMeta.total} data
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setRecentAnalysisPage(prev => Math.max(1, prev - 1))}
+                    disabled={recentAnalysisPage === 1 || isRecentAnalysisLoading}
+                    className="p-1.5 rounded-lg border border-[#f0e2d9] text-[#8b6f66] disabled:opacity-30 hover:bg-[#fafafa] transition-all"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <div className="flex items-center px-3 text-[11px] font-bold text-[#2b1d19]">
+                    {recentAnalysisPage} / {dashboardData.recentAnalysisMeta.totalPages}
+                  </div>
+                  <button
+                    onClick={() => setRecentAnalysisPage(prev => Math.min(dashboardData.recentAnalysisMeta.totalPages, prev + 1))}
+                    disabled={recentAnalysisPage === dashboardData.recentAnalysisMeta.totalPages || isRecentAnalysisLoading}
+                    className="p-1.5 rounded-lg border border-[#f0e2d9] text-[#8b6f66] disabled:opacity-30 hover:bg-[#fafafa] transition-all"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             )}
           </div>

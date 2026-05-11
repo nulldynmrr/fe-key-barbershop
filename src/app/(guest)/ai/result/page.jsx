@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Check, ArrowUp, ArrowDown, Focus, Sparkles } from "lucide-react";
+import { Check, ArrowUp, ArrowDown, Focus, Sparkles, User, Info, Scissors, ShieldCheck, BarChart3, Clock } from "lucide-react";
 import SiteFooter from "@/components/SiteFooter";
 import SiteNavbar from "@/components/SiteNavbar";
 import { aiScanService } from "@/services/aiScanService";
@@ -50,8 +50,6 @@ function InteractiveCard({ children, className = "", delay = "0ms" }) {
   );
 }
 
-
-
 function ResultPortrait({ url_foto_upload, ai_image_url }) {
   return (
     <div className="relative h-full min-h-[600px] lg:min-h-full w-full overflow-hidden bg-[linear-gradient(180deg,#1c1a1a_0%,#40312c_35%,#8b6f59_72%,#d2bfa7_100%)] shadow-2xl group">
@@ -61,18 +59,18 @@ function ResultPortrait({ url_foto_upload, ai_image_url }) {
       <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#C59B8F] to-transparent shadow-[0_0_15px_rgba(197,155,143,0.8)] animate-scan-line z-[15]" />
 
       {url_foto_upload && (
-        <img 
-          src={url_foto_upload.startsWith("data:") || url_foto_upload.startsWith("http") ? url_foto_upload : `${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1").replace("/api/v1", "")}${url_foto_upload}`} 
-          className="absolute inset-0 w-full h-full object-cover z-[1]" 
-          alt="Original Reference" 
+        <img
+          src={url_foto_upload.startsWith("data:") || url_foto_upload.startsWith("http") ? url_foto_upload : `${(process.env.NEXT_PUBLIC_API_URL).replace("/api/v1", "")}${url_foto_upload}`}
+          className="absolute inset-0 w-full h-full object-cover z-[1]"
+          alt="Original Reference"
         />
       )}
 
       {ai_image_url && (
-        <img 
-          src={ai_image_url.startsWith("data:") || ai_image_url.startsWith("http") ? ai_image_url : `${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1").replace("/api/v1", "")}${ai_image_url}`} 
-          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700 group-hover:opacity-0 z-[2]" 
-          alt="AI Generated Style" 
+        <img
+          src={ai_image_url.startsWith("data:") || ai_image_url.startsWith("http") ? ai_image_url : `${(process.env.NEXT_PUBLIC_API_URL).replace("/api/v1", "")}${ai_image_url}`}
+          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700 group-hover:opacity-0 z-[2]"
+          alt="AI Generated Style"
         />
       )}
 
@@ -106,7 +104,7 @@ const CircularProgress = ({ percentage, color, label, subLabel, size = 80 }) => 
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-4 group/progress">
       <div className="relative" style={{ width: size, height: size }}>
         <svg className="w-full h-full transform -rotate-90" viewBox={`0 0 ${size} ${size}`}>
           <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#3A1E1E" strokeWidth="4" />
@@ -114,11 +112,11 @@ const CircularProgress = ({ percentage, color, label, subLabel, size = 80 }) => 
             cx={size / 2} cy={size / 2} r={radius}
             fill="none" stroke={color} strokeWidth="4"
             strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
-            className="transition-all duration-[2s] ease-out"
+            className="transition-all duration-[2.5s] ease-out delay-300"
           />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-sm font-semibold text-[#F3E8DE]">{percentage}%</span>
+          <span className="text-sm font-semibold text-[#F3E8DE] group-hover/progress:scale-110 transition-transform duration-300">{percentage}%</span>
         </div>
       </div>
       {(label || subLabel) && (
@@ -131,6 +129,12 @@ const CircularProgress = ({ percentage, color, label, subLabel, size = 80 }) => 
   );
 };
 
+const getHeatColor = (val) => {
+  if (val === "High Suitability") return { color: "#FF4500", opacity: 0.46, label: "High", glow: "rgba(255,69,0,0.6)" };
+  if (val === "Mid Suitability") return { color: "#FFD700", opacity: 0.40, label: "Mid", glow: "rgba(255,215,0,0.5)" };
+  return { color: "#1C6B8A", opacity: 0.38, label: "Low", glow: "rgba(28,107,138,0.5)" };
+};
+
 export default function AiResultPage() {
   const [mounted, setMounted] = useState(false);
   const [analysisData, setAnalysisData] = useState(null);
@@ -138,6 +142,7 @@ export default function AiResultPage() {
   const [historyItems, setHistoryItems] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [selectedStyleIndex, setSelectedStyleIndex] = useState(0);
+  const [hoveredZone, setHoveredZone] = useState(null);
   const targetScrollRef = useRef(null);
   const router = useRouter();
 
@@ -166,9 +171,7 @@ export default function AiResultPage() {
       router.push("/ai");
     }
 
-    const timer = setTimeout(() => {
-      setMounted(true);
-    }, 100);
+    const timer = setTimeout(() => setMounted(true), 100);
 
     const scrollTimer = setTimeout(() => {
       if (targetScrollRef.current) {
@@ -207,8 +210,6 @@ export default function AiResultPage() {
   const data = analysisData.hasil_analisis || {};
   const activeFeatures = analysisData.active_features || analysisData.activeFeatures || [];
   const styles = data.rekomendasi_gaya || [];
-  const topStyle = styles[0] || {};
-  const altStyle = styles[1] || {};
 
   let aiImageUrls = [];
   if (analysisData.record?.url_hasil_img) {
@@ -219,7 +220,7 @@ export default function AiResultPage() {
       if (Array.isArray(parsedUrls)) {
         aiImageUrls = parsedUrls;
       }
-    } catch (e) { /* ignore */ }
+    } catch (e) { }
   }
 
   const aiImageUrl = aiImageUrls.length > selectedStyleIndex ? aiImageUrls[selectedStyleIndex] : (aiImageUrls.length > 0 ? aiImageUrls[0] : null);
@@ -232,12 +233,46 @@ export default function AiResultPage() {
     { label: "CONFIDENCE", value: `${clamp(data.ai_confidence)}%` },
   ];
 
-  console.log("=== Image Debugging ===");
-  console.log("Original Image:", typeof originalImage === "string" ? originalImage.substring(0, 50) + "..." : originalImage);
-  console.log("AI Image URL:", aiImageUrl);
-  console.log("Backend record url_foto_upload:", analysisData.record?.url_foto_upload);
-  console.log("Backend record url_hasil_img:", analysisData.record?.url_hasil_img);
-  console.log("=======================");
+
+  const heatmapImgSrc = originalImage
+    ? (originalImage.startsWith("data:") || originalImage.startsWith("http")
+      ? originalImage
+      : `${(process.env.NEXT_PUBLIC_API_URL).replace("/api/v1", "")}${originalImage}`)
+    : null;
+
+
+  const heatZones = [
+    {
+      id: "dahi",
+      label: "Dahi",
+      val: data.heatmap_wajah?.dahi,
+      ellipses: [{ cx: 50, cy: 45, rx: 18, ry: 9 }],
+    },
+    {
+      id: "pipi",
+      label: "Pipi",
+      val: data.heatmap_wajah?.pipi,
+      ellipses: [
+        { cx: 34, cy: 78, rx: 12, ry: 13 },
+        { cx: 66, cy: 78, rx: 12, ry: 13 },
+      ],
+    },
+    {
+      id: "rahang",
+      label: "Rahang",
+      val: data.heatmap_wajah?.rahang,
+      ellipses: [
+        { cx: 33, cy: 96, rx: 10, ry: 8 },
+        { cx: 67, cy: 96, rx: 10, ry: 8 },
+      ],
+    },
+    {
+      id: "dagu",
+      label: "Dagu",
+      val: data.heatmap_wajah?.dagu,
+      ellipses: [{ cx: 50, cy: 106, rx: 12, ry: 7 }],
+    },
+  ];
 
   return (
     <main className="min-h-screen bg-[#351C1C] text-[#2B1D19] overflow-x-clip">
@@ -276,7 +311,7 @@ export default function AiResultPage() {
           <div className="w-full border-y border-[#3A1E1E] bg-[#2E1616]">
             <div className="mx-auto flex max-w-7xl flex-wrap justify-between gap-6 px-6 py-4 lg:px-10">
               {dynamicStats.map((stat, idx) => (
-                <div key={idx} className="flex flex-col items-start">
+                <div key={idx} className={`flex flex-col items-start transition-all duration-700 delay-[${idx * 150}ms] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
                   <span className="text-[0.6rem] uppercase tracking-[0.25em] text-[#A68A82]">{stat.label}</span>
                   <span className="mt-1 text-sm font-medium text-[#F3E8DE]">{stat.value}</span>
                 </div>
@@ -286,88 +321,95 @@ export default function AiResultPage() {
 
           <div className="px-6 py-12 lg:px-12 xl:px-16 flex flex-col space-y-12">
 
-            <div ref={targetScrollRef} className="pt-4 flex flex-col space-y-6 scroll-mt-24">
-
+            <div ref={targetScrollRef} className="pt-4 flex flex-col space-y-8 scroll-mt-24">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                {styles.slice(0, 5).map((style, idx) => {
+                {styles.slice(0, 2).map((style, idx) => {
                   const hasImage = idx < aiImageUrls.length;
                   const isSelected = selectedStyleIndex === idx;
 
                   return (
-                    <div 
-                      key={idx} 
+                    <div
+                      key={idx}
                       onClick={() => {
                         if (hasImage) {
                           setSelectedStyleIndex(idx);
                           window.scrollTo({ top: 0, behavior: 'smooth' });
                         }
                       }}
-                      className={`bg-[#2B1615] rounded-sm border ${isSelected ? 'border-[#C59B8F] shadow-[0_0_15px_rgba(197,155,143,0.3)]' : 'border-[#3A1E1E]'} flex flex-col justify-end relative h-[350px] md:h-[450px] overflow-hidden group hover:border-[#C59B8F] transition-all duration-500 hover:shadow-2xl ${hasImage ? 'cursor-pointer' : 'cursor-default opacity-90'}`}
+                      className={`bg-[#2B1615] rounded-sm border ${isSelected ? 'border-[#C59B8F] shadow-[0_0_20px_rgba(197,155,143,0.3)]' : 'border-[#3A1E1E]'} flex flex-col justify-end relative h-[400px] md:h-[500px] overflow-hidden group hover:border-[#C59B8F] transition-all duration-700 ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} ${hasImage ? 'cursor-pointer' : 'cursor-default opacity-90'}`}
                     >
-                      <div className="absolute inset-0 bg-gradient-to-b from-[#2B1615]/10 via-[#2B1615]/80 to-[#1F0D0D] z-0"></div>
-
-                      <div className="relative z-10 p-6 md:p-8 flex flex-col h-full justify-end transition-transform duration-500 group-hover:-translate-y-2">
-                        <div className="flex justify-between items-end border-b border-[#3A1E1E] pb-4 mb-4">
+                      <div className="absolute inset-0 bg-gradient-to-b from-[#2B1615]/20 via-[#2B1615]/80 to-[#1F0D0D] z-0"></div>
+                      <div className="relative z-10 p-8 flex flex-col h-full justify-end transition-transform duration-700 group-hover:-translate-y-2">
+                        <div className="flex justify-between items-end border-b border-[#3A1E1E] pb-5 mb-5">
                           <div>
-                            <p className="text-[0.55rem] uppercase tracking-widest text-[#C59B8F] mb-1">
-                              {idx === 0 ? "TOP RECOMMENDATION" : `RECOMMENDATION #${idx + 1}`}
+                            <p className="text-[0.6rem] uppercase tracking-widest text-[#C59B8F] mb-1 font-bold">
+                              {idx === 0 ? "TOP RECOMMENDATION" : "RECOMMENDATION #2"}
                             </p>
                             <h3 className="text-2xl md:text-3xl text-[#F3E8DE] font-serif font-medium">{style.nama_gaya}</h3>
                           </div>
-                          <div className="bg-[#592D2D] rounded-sm flex flex-col items-center justify-center px-4 py-2 shadow-lg">
+                          <div className="bg-[#592D2D] rounded-sm flex flex-col items-center justify-center px-4 py-2 shadow-lg group-hover:scale-110 transition-transform duration-500">
                             <span className="text-xl font-bold text-[#F3E8DE]">{style.match_score ? `${style.match_score}%` : "-"}</span>
                             <span className="text-[0.45rem] uppercase tracking-widest text-[#D2C3BD]">MATCH</span>
                           </div>
                         </div>
 
                         <div className="space-y-3">
-                          <p className="text-[0.6rem] uppercase tracking-widest text-[#A68A82]">WHY IT WORKS</p>
-                          <p className="text-[0.7rem] md:text-[0.8rem] text-[#D2C3BD] leading-relaxed line-clamp-3">
+                          <p className="text-[0.6rem] uppercase tracking-widest text-[#A68A82] font-semibold">WHY IT WORKS</p>
+                          <p className="text-[0.75rem] md:text-[0.85rem] text-[#D2C3BD] leading-relaxed line-clamp-3">
                             {style.alasan || "Perfect for your face shape and natural features."}
                           </p>
                         </div>
 
-                        <div className="mt-4 pt-4 border-t border-[#3A1E1E]/50 flex justify-between items-center">
-                          {hasImage ? (
-                            <div className="flex items-center gap-2 text-[#8A9A5B]">
-                              <Sparkles className="w-4 h-4" />
-                              <span className="text-[0.65rem] font-bold tracking-wider uppercase">Premium Image Available</span>
-                            </div>
+                        <div className="mt-5 pt-5 border-t border-[#3A1E1E]/50 flex justify-between items-center">
+                          <div className="flex items-center gap-2 text-[#8A9A5B]">
+                            <Sparkles className="w-4 h-4 animate-pulse" />
+                            <span className="text-[0.65rem] font-bold tracking-wider uppercase">Premium Image Available</span>
+                          </div>
+                          {isSelected ? (
+                            <span className="text-[0.6rem] border border-[#C59B8F] text-[#C59B8F] px-4 py-1.5 rounded-sm font-bold uppercase tracking-wider bg-[#C59B8F]/10">Viewing</span>
                           ) : (
-                            <div className="flex items-center gap-2 text-[#A68A82]/60">
-                              <span className="text-[0.6rem] tracking-wider uppercase">Text Recommendation Only</span>
-                            </div>
-                          )}
-
-                          {hasImage && !isSelected && (
-                            <span className="text-[0.6rem] bg-[#C59B8F] text-[#2B1615] px-3 py-1 rounded-sm font-bold uppercase tracking-wider">
-                              View Image
-                            </span>
-                          )}
-                          {hasImage && isSelected && (
-                            <span className="text-[0.6rem] border border-[#C59B8F] text-[#C59B8F] px-3 py-1 rounded-sm font-bold uppercase tracking-wider">
-                              Viewing
-                            </span>
+                            <span className="text-[0.6rem] bg-[#C59B8F] text-[#2B1615] px-4 py-1.5 rounded-sm font-bold uppercase tracking-wider group-hover:bg-[#d4b4a9] transition-colors">View Image</span>
                           )}
                         </div>
                       </div>
                     </div>
                   );
                 })}
-
               </div>
+
+              {styles.length > 2 && (
+                <div className="bg-[#2A1616]/40 border border-[#3A1E1E] rounded-sm px-4 py-6">
+                  <div className="flex items-center gap-3 mb-8">
+                    <div className="h-px flex-1 bg-[#3A1E1E]"></div>
+                    <h4 className="text-[0.65rem] uppercase tracking-[0.4em] text-[#A68A82] font-bold">Alternative Selections</h4>
+                    <div className="h-px flex-1 bg-[#3A1E1E]"></div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {styles.slice(2, 5).map((style, idx) => (
+                      <div key={idx} className={`p-6 border border-[#3A1E1E] bg-[#211111] hover:border-[#C59B8F]/30 transition-all duration-500 group/alt ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'}`} style={{ transitionDelay: `${idx * 100}ms` }}>
+                        <div className="flex justify-between items-start mb-4">
+                          <span className="text-[0.55rem] text-[#A68A82] font-bold tracking-widest uppercase">RECOMENDATION #{idx + 3}</span>
+                          <span className="text-xs font-bold text-[#F3E8DE] bg-[#3A1E1E] px-2 py-1 rounded-sm">{style.match_score}%</span>
+                        </div>
+                        <h5 className="text-lg text-[#F3E8DE] font-serif mb-3 group-hover/alt:text-[#C59B8F] transition-colors">{style.nama_gaya}</h5>
+                        <p className="text-[0.7rem] text-[#A68A82] leading-relaxed mb-4 line-clamp-2 italic">"{style.alasan}"</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="flex flex-col items-center pt-4 pb-8 space-y-4">
                 {activeFeatures.includes("VIRTUAL_TRY_ON") ? (
-                  <button 
+                  <button
                     onClick={() => {
                       const nextIndex = (selectedStyleIndex + 1) % aiImageUrls.length;
                       setSelectedStyleIndex(nextIndex);
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    className="bg-[#D9D0C6] px-8 py-3 text-xs font-bold tracking-widest text-[#2B1D19] transition-all hover:scale-105 rounded-sm"
+                    className="bg-[#D9D0C6] px-10 py-4 text-xs font-bold tracking-[0.2em] text-[#2B1D19] transition-all hover:scale-105 hover:bg-[#F3E8DE] rounded-sm shadow-xl flex items-center gap-3"
                   >
+                    <Focus className="w-4 h-4" />
                     TRY NEXT STYLE (VIRTUAL TRY-ON)
                   </button>
                 ) : (
@@ -376,514 +418,494 @@ export default function AiResultPage() {
                     <span className="text-[0.6rem] text-[#A68A82] uppercase tracking-widest">Virtual Try-On Locked</span>
                   </div>
                 )}
-                <p className="text-[0.6rem] uppercase tracking-[0.2em] text-[#A68A82]">{activeFeatures.includes("VIRTUAL_TRY_ON") ? "Premium Feature: Virtual Try-On Active" : "Upgrade your package to unlock Virtual Try-On"}</p>
+                <p className="text-[0.6rem] uppercase tracking-[0.2em] text-[#A68A82] font-medium">{activeFeatures.includes("VIRTUAL_TRY_ON") ? "Premium Feature: Virtual Try-On Active" : "Upgrade your package to unlock Virtual Try-On"}</p>
               </div>
             </div>
 
-            <div className="bg-[#211111] border border-[#3A1E1E] rounded-md p-6 lg:p-8 flex flex-col space-y-8 shadow-2xl">
 
-              <div>
-                <h2 className="text-[0.7rem] uppercase tracking-widest text-[#A68A82] mb-6 font-bold flex items-center">
-                  FACIAL ANALYSIS <span className="text-[#C59B8F] ml-1">OVERVIEW</span>
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
 
-                  <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm p-5">
-                    <p className="text-xs text-[#A68A82] mb-1">Face Shape</p>
-                    <h3 className="text-xl text-[#F3E8DE] font-semibold mb-4">{data.bentuk_wajah || "-"}</h3>
-                    <div className="flex items-center gap-4">
-                      <svg width="40" height="50" viewBox="0 0 40 50">
-                        <ellipse cx="20" cy="25" rx="16" ry="22" fill="none" stroke="#C59B8F" strokeWidth="1.5" strokeDasharray="3 3" />
-                      </svg>
-                      <p className="text-[0.65rem] text-[#D2C3BD] leading-tight flex-1">
-                        {data.deskripsi_bentuk_wajah || `${data.bentuk_wajah || "-"} face shape.`}
+            <div className={`transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+              <h2 className="text-[0.75rem] uppercase tracking-[0.3em] text-[#A68A82] mb-8 font-bold flex items-center gap-3">
+                FACIAL ANALYSIS <span className="text-[#C59B8F]">OVERVIEW</span>
+              </h2>
+              <div className="grid grid-cols-1 lg:grid-cols-[62fr_38fr] gap-4">
+
+                <div className="w-full flex flex-col gap-4">
+                  <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm p-6 hover:border-[#C59B8F]/40 transition-colors group">
+                    <p className="text-[0.65rem] text-[#A68A82] mb-2 uppercase tracking-widest font-bold">Face Shape</p>
+                    <h3 className="text-2xl text-[#F3E8DE] font-serif mb-4">{data.bentuk_wajah || "-"}</h3>
+                    <div className="flex items-center gap-5">
+                      <div className="shrink-0 group-hover:rotate-12 transition-transform duration-500">
+                        <svg width="40" height="50" viewBox="0 0 40 50">
+                          <ellipse cx="20" cy="25" rx="16" ry="22" fill="none" stroke="#C59B8F" strokeWidth="1.5" strokeDasharray="4 4" className="animate-pulse" />
+                        </svg>
+                      </div>
+                      <p className="text-[0.7rem] text-[#D2C3BD] leading-relaxed italic">
+                        {data.deskripsi_bentuk_wajah || `Your ${data.bentuk_wajah || "-"} face shape provides a strong foundation for the selected styles.`}
                       </p>
                     </div>
                   </div>
 
-                  <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm p-5 flex flex-col justify-center space-y-6">
-                    <div className="flex justify-between items-start gap-4">
-                      <div className="w-1/2">
-                        <p className="text-xs text-[#A68A82] mb-1">Symmetry Score</p>
+                  <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm p-6 flex flex-col justify-center space-y-4 hover:border-[#C59B8F]/40 transition-colors">
+                    <div className="flex flex-col justify-between items-start gap-4">
+                      <div className="w-full">
+                        <p className="text-[0.6rem] text-[#A68A82] mb-2 uppercase tracking-widest font-bold">Symmetry</p>
                         {activeFeatures.includes("SYMMETRY") ? (
                           <>
                             <h3 className="text-3xl text-[#F3E8DE] font-light">{clamp(data.skor_simetri)}%</h3>
-                            <p className="text-xs text-[#F3E8DE] mb-2">{data.level_simetri || "-"}</p>
-                            <div className="h-1 w-full bg-[#3A1E1E] rounded-full overflow-hidden mt-2">
-                              <div className="h-full bg-[#8A9A5B]" style={{ width: `${clamp(data.skor_simetri)}%` }}></div>
+                            <p className="text-[0.6rem] text-[#8A9A5B] font-bold mt-1 uppercase tracking-tighter">{data.level_simetri || "-"}</p>
+                            <div className="h-1 w-full bg-[#3A1E1E] rounded-full overflow-hidden mt-3">
+                              <div className="h-full bg-[#8A9A5B] transition-all duration-[2s] ease-out delay-500" style={{ width: mounted ? `${clamp(data.skor_simetri)}%` : '0%' }}></div>
                             </div>
                           </>
                         ) : (
-                          <div className="flex items-center gap-2 mt-2">
-                            <Focus className="w-4 h-4 text-[#C59B8F]/30" />
+                          <div className="flex items-center gap-2 mt-2 opacity-40">
+                            <Focus className="w-4 h-4 text-[#C59B8F]" />
                             <span className="text-[0.6rem] text-[#A68A82] uppercase tracking-widest">Locked</span>
                           </div>
                         )}
                       </div>
-                      <div className="w-1/2">
-                        <p className="text-xs text-[#A68A82] mb-1">AI Confidence</p>
+                      <div className="w-full">
+                        <p className="text-[0.6rem] text-[#A68A82] mb-2 uppercase tracking-widest font-bold">AI Conf.</p>
                         <h3 className="text-3xl text-[#F3E8DE] font-light">{clamp(data.ai_confidence)}%</h3>
-                        <p className="text-xs text-[#F3E8DE] mb-2">{data.ai_confidence >= 90 ? "Very High" : data.ai_confidence >= 70 ? "High" : data.ai_confidence >= 50 ? "Medium" : "-"}</p>
-                        <div className="h-1 w-full bg-[#3A1E1E] rounded-full overflow-hidden mt-2">
-                          <div className="h-full bg-[#6B8E6B]" style={{ width: `${clamp(data.ai_confidence)}%` }}></div>
+                        <p className="text-[0.6rem] text-[#C59B8F] font-bold mt-1 uppercase tracking-tighter">Verified</p>
+                        <div className="h-1 w-full bg-[#3A1E1E] rounded-full overflow-hidden mt-3">
+                          <div className="h-full bg-[#C59B8F] transition-all duration-[2s] ease-out delay-700" style={{ width: mounted ? `${clamp(data.ai_confidence)}%` : '0%' }}></div>
                         </div>
                       </div>
                     </div>
                   </div>
-
-                  <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm p-4 flex gap-4">
-                    {!activeFeatures.includes("FACE_HEATMAP") ? (
-                      <div className="flex-1 flex flex-col items-center justify-center bg-[#1C0D0D] border border-[#3A1E1E] rounded-sm p-6 text-center">
-                        <Focus className="w-8 h-8 text-[#C59B8F]/30 mb-2" />
-                        <p className="text-[0.65rem] text-[#A68A82] uppercase tracking-widest mb-1">Feature Locked</p>
-                        <p className="text-[0.55rem] text-[#D2C3BD]">Face Heatmap requires a premium package.</p>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="flex-1 flex flex-col">
-                          <p className="text-xs text-[#A68A82] mb-3">Face Heatmap</p>
-                          <div className="space-y-2">
-                            {[
-                              { zone: "Dahi", val: data.heatmap_wajah?.dahi },
-                              { zone: "Pelipis", val: data.heatmap_wajah?.pelipis },
-                              { zone: "Pipi", val: data.heatmap_wajah?.pipi },
-                              { zone: "Rahang", val: data.heatmap_wajah?.rahang },
-                              { zone: "Dagu", val: data.heatmap_wajah?.dagu },
-                            ].map((item, i) => (
-                              <div key={i} className="flex justify-between items-center text-[0.65rem]">
-                                <span className="text-[#A68A82]">{item.zone}</span>
-                                <span className={`px-2 py-0.5 rounded-sm text-[0.55rem] ${item.val === "High Suitability" ? "bg-[#FF4500]/20 text-[#FF6347]" : item.val === "Medium" ? "bg-[#FFD700]/20 text-[#FFD700]" : "bg-[#00BFFF]/20 text-[#00BFFF]"}`}>{item.val || "-"}</span>
-                              </div>
-                            ))}
-                          </div>
-                          {data.heatmap_wajah?.zona_terbaik && (
-                            <p className="text-[0.55rem] text-[#D2C3BD] mt-3">Best Zone: <span className="text-[#C59B8F]">{data.heatmap_wajah.zona_terbaik}</span></p>
-                          )}
-                          {data.heatmap_wajah?.zona_fokus && (
-                            <p className="text-[0.55rem] text-[#D2C3BD] mt-1">Focus Zone: <span className="text-[#C59B8F]">{data.heatmap_wajah.zona_fokus}</span></p>
-                          )}
-                        </div>
-                        <div className="w-[100px] flex flex-col justify-center space-y-3">
-                          <div className="flex items-center gap-2">
-                            <div className="w-2.5 h-2.5 bg-[#FF4500] rounded-sm"></div>
-                            <span className="text-[0.55rem] text-[#D2C3BD]">High Suitability</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-2.5 h-2.5 bg-[#FFD700] rounded-sm"></div>
-                            <span className="text-[0.55rem] text-[#D2C3BD]">Medium</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-2.5 h-2.5 bg-[#00BFFF] rounded-sm"></div>
-                            <span className="text-[0.55rem] text-[#D2C3BD]">Low</span>
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </div>
-
                 </div>
-              </div>
 
-              <div>
-                <h2 className="text-[0.7rem] uppercase tracking-widest text-[#A68A82] mb-6 font-bold">
-                  DETAILED FACIAL ANALYSIS
-                </h2>
-                <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#3A1E1E]">
-
-                  <div className="p-6 flex flex-col relative h-[250px] justify-center items-center">
-                    <p className="absolute top-6 left-6 text-xs text-[#A68A82]">Facial Proportion</p>
-                    {!activeFeatures.includes("ADV_MAPPING") ? (
-                      <div className="flex flex-col items-center justify-center h-full">
-                        <Focus className="w-8 h-8 text-[#C59B8F]/30 mb-2" />
-                        <p className="text-[0.65rem] text-[#A68A82] uppercase tracking-widest mb-1">Feature Locked</p>
-                        <p className="text-[0.55rem] text-[#D2C3BD]">Advanced Mapping required.</p>
-                      </div>
-                    ) : (
-                      <>
-                    <svg viewBox="0 0 120 120" className="w-48 h-48 mt-4">
-                      <polygon points="60,10 105,45 85,105 35,105 15,45" fill="none" stroke="#4A2626" strokeWidth="0.5" />
-                      <polygon points="60,30 90,55 75,90 45,90 30,55" fill="none" stroke="#4A2626" strokeWidth="0.5" strokeDasharray="2,2" />
-                      <polygon points="60,18 100,48 80,100 40,95 20,48" fill="rgba(197,155,143,0.1)" stroke="#D15C5C" strokeWidth="1" />
-                      <circle cx="60" cy="18" r="1.5" fill="#D15C5C" />
-                      <circle cx="100" cy="48" r="1.5" fill="#D15C5C" />
-                      <circle cx="80" cy="100" r="1.5" fill="#D15C5C" />
-                      <circle cx="40" cy="95" r="1.5" fill="#D15C5C" />
-                      <circle cx="20" cy="48" r="1.5" fill="#D15C5C" />
-                    </svg>
-                    <span className="absolute top-10 text-[0.55rem] text-[#D2C3BD] text-center">Forehead<br />{clamp(data.peta_proporsi?.dahi)}%</span>
-                    <span className="absolute right-12 top-[40%] text-[0.55rem] text-[#D2C3BD] text-center">Cheekbones<br />{clamp(((data.peta_proporsi?.pipi_kiri || 0) + (data.peta_proporsi?.pipi_kanan || 0)) / 2)}%</span>
-                    <span className="absolute right-20 bottom-12 text-[0.55rem] text-[#D2C3BD] text-center">Jawline<br />{clamp(data.peta_proporsi?.rahang)}%</span>
-                    <span className="absolute left-20 bottom-12 text-[0.55rem] text-[#D2C3BD] text-center">Chin<br />{clamp(data.peta_proporsi?.dagu)}%</span>
-                    <span className="absolute left-12 top-[40%] text-[0.55rem] text-[#D2C3BD] text-center">Face Width<br />{clamp(data.pengukuran_fitur?.lebar_wajah)}%</span>
-                    <div className="absolute bottom-4 flex items-center gap-6 text-[0.55rem] text-[#A68A82]">
-                      <div className="flex items-center gap-2"><div className="w-3 h-0.5 bg-[#D15C5C]"></div> You</div>
-                      <div className="flex items-center gap-2"><div className="w-3 h-0.5 border-t border-dashed border-[#A68A82]"></div> Ideal</div>
+                <div className="w-full bg-[#2A1616] border border-[#3A1E1E] rounded-sm overflow-hidden hover:border-[#C59B8F]/40 transition-colors flex flex-col h-full">
+                  {!activeFeatures.includes("FACE_HEATMAP") ? (
+                    <div className="flex-1 flex flex-col items-center justify-center bg-transparent text-center opacity-60 p-5">
+                      <Focus className="w-8 h-8 text-[#C59B8F]/30 mb-2" />
+                      <p className="text-[0.6rem] text-[#A68A82] uppercase tracking-widest mb-1">Heatmap Locked</p>
                     </div>
-                      </>
-                    )}
-                  </div>
+                  ) : (
+                    <div className="w-full flex flex-col h-full">
+                      <style>
+                        {`
+            @keyframes pulse-soft {
+              0%, 100% { transform: scale(1); opacity: 0.8; }
+              50% { transform: scale(1.05); opacity: 1; }
+            }
+            @keyframes float {
+              0%, 100% { transform: translateY(0); }
+              50% { transform: translateY(-3px); }
+            }
+            .animate-pulse-soft {
+              animation: pulse-soft 3s ease-in-out infinite;
+              transform-origin: center;
+            }
+            .animate-float {
+              animation: float 4s ease-in-out infinite;
+            }
+            .zone-hover {
+              transition: all 0.3s ease;
+            }
+            .zone-hover:hover {
+              filter: brightness(1.3);
+              cursor: pointer;
+            }
+          `}
+                      </style>
 
-                  <div className="p-6 flex flex-col justify-between">
-                    <p className="text-xs text-[#A68A82] mb-4">Feature Measurements</p>
-
-                    {!activeFeatures.includes("ADV_MAPPING") ? (
-                      <div className="flex-1 flex flex-col items-center justify-center bg-[#1C0D0D] border border-[#3A1E1E] rounded-sm p-4 text-center">
-                        <Focus className="w-8 h-8 text-[#C59B8F]/30 mb-2" />
-                        <p className="text-[0.65rem] text-[#A68A82] uppercase tracking-widest mb-1">Feature Locked</p>
-                        <p className="text-[0.55rem] text-[#D2C3BD]">Advanced Mapping is required for this data.</p>
+                      <div className="px-4 pt-4 pb-2 flex items-center justify-between">
+                        <p className="text-[0.6rem] text-[#A68A82] font-bold uppercase tracking-widest">
+                          Face Heatmap
+                        </p>
                       </div>
-                    ) : (
-                      <div className="space-y-4 flex-1">
-                        {[
-                          { label: "Face Length", val: data.pengukuran_fitur?.panjang_wajah },
-                          { label: "Face Width", val: data.pengukuran_fitur?.lebar_wajah },
-                          { label: "Jawline Strength", val: data.pengukuran_fitur?.kekuatan_rahang },
-                          { label: "Cheekbone Width", val: data.pengukuran_fitur?.lebar_tulang_pipi },
-                          { label: "Forehead Width", val: data.pengukuran_fitur?.lebar_dahi },
-                        ].map((item, i) => {
-                          const clampedVal = item.val != null ? clamp(item.val) : null;
+
+                      <div className="relative mx-auto mb-0 overflow-hidden rounded-sm animate-float w-full max-w-[200px] aspect-[3/4] bg-transparent">
+                        <div className="absolute inset-5">
+                          <img
+                            src="/images/face.png"
+                            className="w-full h-full object-contain opacity-50 drop-shadow-lg pointer-events-none"
+                            alt="Face Reference"
+                          />
+                          <div className="absolute inset-0 bg-[#1C0D0D]/20 pointer-events-none" />
+
+                          <svg
+                            className="absolute inset-0 w-full h-full"
+                            viewBox="0 0 100 133"
+                            preserveAspectRatio="xMidYMid meet"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <defs>
+                              <filter id="heatBlur" x="-50%" y="-50%" width="200%" height="200%">
+                                <feGaussianBlur in="SourceGraphic" stdDeviation="3.2" />
+                              </filter>
+                              <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                                <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                                <feMerge>
+                                  <feMergeNode in="coloredBlur" />
+                                  <feMergeNode in="SourceGraphic" />
+                                </feMerge>
+                              </filter>
+                            </defs>
+
+                            {heatZones.map((zone) => {
+                              const { color, opacity } = getHeatColor(zone.val);
+                              const isHovered = hoveredZone === zone.id;
+
+                              return zone.ellipses.map((el, ei) => (
+                                <g
+                                  key={`${zone.id}-${ei}`}
+                                  className="zone-hover"
+                                  onMouseEnter={() => setHoveredZone(zone.id)}
+                                  onMouseLeave={() => setHoveredZone(null)}
+                                  style={{ transformOrigin: `${el.cx}px ${el.cy}px` }}
+                                >
+                                  <ellipse
+                                    className="animate-pulse-soft"
+                                    cx={el.cx}
+                                    cy={el.cy}
+                                    rx={isHovered ? el.rx * 1.2 : el.rx}
+                                    ry={isHovered ? el.ry * 1.2 : el.ry}
+                                    fill={color}
+                                    fillOpacity={isHovered ? opacity * 1.2 : opacity}
+                                    filter="url(#heatBlur)"
+                                  />
+                                </g>
+                              ));
+                            })}
+
+                            {heatZones.map((zone) => {
+                              const { color } = getHeatColor(zone.val);
+                              const el = zone.ellipses[0];
+                              const isHovered = hoveredZone === zone.id;
+
+                              return (
+                                <g key={`dot-${zone.id}`} filter="url(#glow)" className="pointer-events-none">
+                                  <circle
+                                    cx={el.cx}
+                                    cy={el.cy}
+                                    r={isHovered ? "3.5" : "2.5"}
+                                    fill={color}
+                                    fillOpacity="0.95"
+                                    style={{ transition: "all 0.3s ease" }}
+                                  />
+                                  <circle
+                                    className="animate-pulse-soft"
+                                    cx={el.cx}
+                                    cy={el.cy}
+                                    r={isHovered ? "6.5" : "4.8"}
+                                    fill="none"
+                                    stroke={color}
+                                    strokeWidth="0.8"
+                                    strokeOpacity="0.7"
+                                  />
+                                </g>
+                              );
+                            })}
+                          </svg>
+                        </div>
+                      </div>
+
+                      <div className="px-4 pt-3 pb-2 flex flex-wrap gap-1.5">
+                        {heatZones.map((zone) => {
+                          const { color, label: lvl } = getHeatColor(zone.val);
+                          const isHovered = hoveredZone === zone.id;
+
                           return (
-                            <div key={i}>
-                              <div className="flex justify-between text-[0.65rem] text-[#D2C3BD] mb-1">
-                                <span>{item.label}</span>
-                                <span>{clampedVal != null ? `${clampedVal}%` : "-"}</span>
-                              </div>
-                              <div className="h-[2px] w-full bg-[#3A1E1E]">
-                                <div className="h-full bg-[#D15C5C]" style={{ width: clampedVal != null ? `${clampedVal}%` : '0%' }}></div>
-                              </div>
+                            <div
+                              key={zone.id}
+                              onMouseEnter={() => setHoveredZone(zone.id)}
+                              onMouseLeave={() => setHoveredZone(null)}
+                              className={`flex items-center gap-1 px-2 py-[3px] rounded-sm border cursor-pointer transition-all duration-300 ${isHovered
+                                ? "bg-black/40 border-[#A68A82] scale-105"
+                                : "bg-black/20 border-[#3A1E1E]"
+                                }`}
+                            >
+                              <div
+                                className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                                style={{ background: color, boxShadow: `0 0 4px ${color}` }}
+                              />
+                              <span className="text-[0.48rem] text-[#A68A82] uppercase tracking-wide">{zone.label}</span>
+                              <span className="text-[0.48rem] font-bold uppercase" style={{ color }}>{lvl}</span>
                             </div>
                           );
                         })}
                       </div>
-                    )}
-                  </div>
 
-                  <div className="p-6 flex flex-col justify-between">
-                    <p className="text-xs text-[#A68A82] mb-4">Facial Balance</p>
-
-                    {!activeFeatures.includes("ADV_MAPPING") ? (
-                      <div className="flex-1 flex flex-col items-center justify-center bg-[#1C0D0D] border border-[#3A1E1E] rounded-sm p-4 text-center">
-                        <Focus className="w-8 h-8 text-[#C59B8F]/30 mb-2" />
-                        <p className="text-[0.65rem] text-[#A68A82] uppercase tracking-widest mb-1">Feature Locked</p>
-                        <p className="text-[0.55rem] text-[#D2C3BD]">Advanced Mapping is required for this data.</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-4 flex-1">
-                        {[
-                          { label: "Left Eye vs Right Eye", val: data.keseimbangan_wajah?.mata_kiri_kanan || "-" },
-                          { label: "Left Brow vs Right Brow", val: data.keseimbangan_wajah?.alis_kiri_kanan || "-" },
-                          { label: "Nose Centering", val: data.keseimbangan_wajah?.pemusatan_hidung || "-" },
-                          { label: "Mouth Alignment", val: data.keseimbangan_wajah?.kelurusan_mulut || "-" },
-                          { label: "Chin Balance", val: data.keseimbangan_wajah?.keseimbangan_dagu || "-" },
-                        ].map((item, i) => (
-                          <div key={i} className="flex justify-between items-center text-[0.7rem]">
-                            <span className="text-[#A68A82]">{item.label}</span>
-                            <span className={`text-${item.val === 'Good' || item.val === 'Average' ? '[#C59B8F]' : '[#F3E8DE]'}`}>{item.val}</span>
+                      {data.heatmap_wajah?.zona_terbaik && (
+                        <div className="px-4 pb-4 pt-1 flex items-center justify-between gap-3 border-t border-[#3A1E1E]/50 mt-1">
+                          <div className="shrink-0">
+                            <span className="text-[0.5rem] text-[#A68A82]">Best Zone: </span>
+                            <span className="text-[0.55rem] text-[#C59B8F] font-bold">{data.heatmap_wajah.zona_terbaik}</span>
                           </div>
-                        ))}
-                      </div>
-                    )}
-
-
-                  </div>
-
-                </div>
-              </div>
-
-              <div>
-                <h2 className="text-[0.7rem] uppercase tracking-widest text-[#A68A82] mb-6 font-bold">
-                  HAIR ANALYSIS & SCALP HEALTH
-                </h2>
-                {!activeFeatures.includes("HAIR_ANALYSIS") ? (
-                  <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm p-8 flex flex-col items-center justify-center text-center h-48">
-                    <Focus className="w-8 h-8 text-[#C59B8F]/30 mb-3" />
-                    <p className="text-xs text-[#A68A82] uppercase tracking-widest mb-1">Feature Locked</p>
-                    <p className="text-[0.65rem] text-[#D2C3BD]">Hair Analysis is a premium feature. Upgrade your package.</p>
-                  </div>
-                ) : (
-                <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm">
-                  <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#3A1E1E] p-6">
-
-                    <div className="flex flex-col gap-3 justify-center">
-                      <p className="text-xs text-[#A68A82]">Hair Thickness</p>
-                      <div className="flex items-center gap-4 mt-2">
-                        <div className="relative w-12 h-12 flex items-center justify-center">
-                          <svg viewBox="0 0 40 40" className="w-full h-full opacity-60">
-                            <path d="M20,35 C15,35 15,10 30,5" fill="none" stroke="#F3E8DE" strokeWidth="2" />
-                            <circle cx="20" cy="35" r="4" fill="#3A1E1E" stroke="#F3E8DE" strokeWidth="1.5" />
-                          </svg>
-                        </div>
-                        <div>
-                          <p className="text-lg text-[#F3E8DE] font-semibold">{data.ketebalan_rambut || "-"}</p>
-                          <p className="text-[0.65rem] text-[#D2C3BD]">{data.ketebalan_rambut_mm ? `${data.ketebalan_rambut_mm} mm` : ""}</p>
-                          {data.kondisi_rambut && (
-                            <div className="mt-1 bg-[#1C0D0D] px-2 py-0.5 inline-block text-[0.55rem] text-[#A68A82] rounded-sm border border-[#3A1E1E]">
-                              {data.kondisi_rambut}
+                          <div className="flex-1 flex flex-col gap-[2px] max-w-[90px]">
+                            <div className="h-[3px] w-full rounded-full bg-gradient-to-r from-[#1C6B8A] via-[#FFD700] to-[#FF4500]" />
+                            <div className="flex justify-between text-[0.42rem] text-[#A68A82]/50">
+                              <span>LOW</span>
+                              <span>HIGH</span>
                             </div>
-                          )}
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
-
-                    <div className="flex flex-col pl-6">
-                      <p className="text-xs text-[#A68A82] mb-2">Hair Density</p>
-                      <CircularProgress percentage={data.kepadatan_rambut || 0} color="#8A9A5B" label={data.kepadatan_rambut && data.kepadatan_rambut > 80 ? "High Density" : "Medium Density"} subLabel="Your hair density is evaluated by AI." />
-                    </div>
-
-                    <div className="flex flex-col pl-6">
-                      <p className="text-xs text-[#A68A82] mb-2">Scalp Health</p>
-                      <CircularProgress percentage={clamp(data.kesehatan_kulit_kepala)} color="#3CB371" label={data.kesehatan_kulit_kepala && data.kesehatan_kulit_kepala > 80 ? "Excellent" : "Good"} subLabel={data.rekomendasi_perawatan || ""} />
-                    </div>
-                  </div>
-
-                  <div className="border-t border-[#3A1E1E] p-4 px-6 flex items-center bg-[#251313]">
-                    <div className="flex items-center gap-3 w-1/3">
-                      <div className="w-4 h-6 rounded-full border border-[#8A9A5B] bg-[#8A9A5B]/20"></div>
-                      <div>
-                        <p className="text-[0.65rem] text-[#A68A82]">Hair Growth Potential</p>
-                        <p className="text-sm text-[#F3E8DE] font-semibold">{data.potensi_pertumbuhan && data.potensi_pertumbuhan > 80 ? "High" : "Medium"}</p>
-                      </div>
-                    </div>
-                    <div className="w-2/3 flex flex-col justify-center pl-4 border-l border-[#3A1E1E]">
-                      <p className="text-[0.65rem] text-[#D2C3BD] mb-2 flex justify-between">
-                        <span>You have great potential for various hairstyles.</span>
-                        <span>{data.potensi_pertumbuhan != null ? `${clamp(data.potensi_pertumbuhan)}%` : "-"}</span>
-                      </p>
-                      <div className="h-[3px] w-full bg-[#3A1E1E] rounded-full overflow-hidden">
-                        <div className="h-full bg-[#8A9A5B]" style={{ width: `${clamp(data.potensi_pertumbuhan)}%` }}></div>
-                      </div>
-                    </div>
-                  </div>
+                  )}
                 </div>
-                )}
               </div>
+            </div>
 
-              <div>
-                <h2 className="text-[0.7rem] uppercase tracking-widest text-[#A68A82] mb-6 font-bold">
-                  RISK ANALYSIS
-                </h2>
-                {!activeFeatures.includes("RISK_ANALYSIS") ? (
-                  <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm p-8 flex flex-col items-center justify-center text-center h-48">
-                    <Focus className="w-8 h-8 text-[#C59B8F]/30 mb-3" />
-                    <p className="text-xs text-[#A68A82] uppercase tracking-widest mb-1">Feature Locked</p>
-                    <p className="text-[0.65rem] text-[#D2C3BD]">Risk Analysis requires a premium package.</p>
-                  </div>
-                ) : (
-                  <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm p-6">
-                    <div className="flex items-center gap-6">
-                      <CircularProgress
-                        percentage={clamp(data.risiko_gaya?.persentase_risiko)}
-                        color={data.risiko_gaya?.persentase_risiko > 60 ? "#D15C5C" : data.risiko_gaya?.persentase_risiko > 30 ? "#FFD700" : "#8A9A5B"}
-                        size={80}
-                        label={data.risiko_gaya?.level_risiko || "-"}
-                        subLabel="Style Risk Level"
-                      />
-                      <div className="flex-1">
-                        <p className="text-[0.7rem] text-[#D2C3BD] leading-relaxed mb-3">{data.risiko_gaya?.deskripsi_risiko || "-"}</p>
-                        {data.risiko_gaya?.faktor_risiko && data.risiko_gaya.faktor_risiko.length > 0 && (
-                          <div className="flex flex-wrap gap-2">
-                            {data.risiko_gaya.faktor_risiko.map((f, i) => (
-                              <span key={i} className="bg-[#1C0D0D] border border-[#3A1E1E] px-2 py-1 text-[0.55rem] text-[#A68A82] rounded-sm">{f}</span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
 
-              <div>
-                <h2 className="text-[0.7rem] uppercase tracking-widest text-[#A68A82] mb-6 font-bold">
-                  BARBER INSTRUCTIONS
-                </h2>
-                {!activeFeatures.includes("BARBER_INSTRUCTIONS") ? (
-                  <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm p-8 flex flex-col items-center justify-center text-center h-48">
-                    <Focus className="w-8 h-8 text-[#C59B8F]/30 mb-3" />
-                    <p className="text-xs text-[#A68A82] uppercase tracking-widest mb-1">Feature Locked</p>
-                    <p className="text-[0.65rem] text-[#D2C3BD]">Barber Instructions requires a premium package.</p>
-                  </div>
-                ) : (
-                  <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm p-6">
-                    {data.instruksi_barber_detail ? (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {[
-                          { label: "Cutting Technique", val: data.instruksi_barber_detail.teknik_potong },
-                          { label: "Side Length", val: data.instruksi_barber_detail.panjang_sisi },
-                          { label: "Top Length", val: data.instruksi_barber_detail.panjang_atas },
-                          { label: "Finishing Technique", val: data.instruksi_barber_detail.teknik_finishing },
-                          { label: "Suggested Products", val: data.instruksi_barber_detail.produk_saran },
-                          { label: "Estimated Time", val: data.instruksi_barber_detail.estimasi_waktu },
-                        ].map((item, i) => (
-                          <div key={i} className="bg-[#1C0D0D] border border-[#3A1E1E] rounded-sm p-3">
-                            <p className="text-[0.55rem] text-[#A68A82] uppercase tracking-widest mb-1">{item.label}</p>
-                            <p className="text-[0.7rem] text-[#F3E8DE] leading-relaxed">{item.val || "-"}</p>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-[0.7rem] text-[#D2C3BD] leading-relaxed">{data.instruksi_barber || "-"}</p>
-                    )}
-                  </div>
-                )}
-              </div>
 
-              <div>
-                <h2 className="text-[0.7rem] uppercase tracking-widest text-[#A68A82] mb-6 font-bold">
-                  TREND ANALYTICS
-                </h2>
-                <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#3A1E1E] p-6">
-
-                  {!activeFeatures.includes("TREND_ANALYSIS") ? (
-                    <div className="col-span-3 flex-1 flex flex-col items-center justify-center bg-[#1C0D0D] border border-[#3A1E1E] rounded-sm p-8 text-center h-48">
-                      <Focus className="w-8 h-8 text-[#C59B8F]/30 mb-3" />
-                      <p className="text-xs text-[#A68A82] uppercase tracking-widest mb-1">Feature Locked</p>
-                      <p className="text-[0.65rem] text-[#D2C3BD]">Trend Analytics is a premium feature included in higher-tier packages.</p>
+            <div className={`transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+              <h2 className="text-[0.75rem] uppercase tracking-[0.3em] text-[#A68A82] mb-8 font-bold flex items-center gap-3">
+                DETAILED FACIAL ANALYSIS
+              </h2>
+              <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#3A1E1E]">
+                <div className="p-6 flex flex-col relative h-[250px] justify-center items-center">
+                  <p className="absolute top-6 left-6 text-xs text-[#A68A82]">Facial Proportion</p>
+                  {!activeFeatures.includes("ADV_MAPPING") ? (
+                    <div className="flex flex-col items-center justify-center h-full">
+                      <Focus className="w-8 h-8 text-[#C59B8F]/30 mb-2" />
+                      <p className="text-[0.65rem] text-[#A68A82] uppercase tracking-widest mb-1">Feature Locked</p>
+                      <p className="text-[0.55rem] text-[#D2C3BD]">Advanced Mapping required.</p>
                     </div>
                   ) : (
                     <>
-                      <div className="pr-6">
-                        <div className="flex justify-between items-center mb-4">
-                          <p className="text-xs text-[#A68A82]">Popularity Over Time</p>
-                          <span className="text-[0.55rem] text-[#D2C3BD] bg-[#1C0D0D] px-2 py-1 rounded-sm border border-[#3A1E1E]">6 Months v</span>
-                        </div>
-                        <div className="h-24 w-full relative">
-                          <svg viewBox="0 0 200 60" className="w-full h-full overflow-visible">
-                            <path d="M0,40 Q25,50 50,35 T100,25 T150,30 T200,10" fill="none" stroke="#D1A95C" strokeWidth="1.5" />
-                            <path d="M0,40 Q25,50 50,35 T100,25 T150,30 T200,10 L200,60 L0,60 Z" fill="url(#grad)" opacity="0.3" />
-                            <defs>
-                              <linearGradient id="grad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#D1A95C" stopOpacity="0.5" />
-                                <stop offset="100%" stopColor="#2A1616" stopOpacity="0" />
-                              </linearGradient>
-                            </defs>
-                            {[0, 50, 100, 150, 200].map(x => <circle key={x} cx={x} cy={x === 0 ? 40 : x === 50 ? 35 : x === 100 ? 25 : x === 150 ? 30 : 10} r="1.5" fill="#D1A95C" />)}
-                          </svg>
-                          <div className="absolute bottom-[-15px] w-full flex justify-between text-[0.45rem] text-[#A68A82]">
-                            <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="px-6">
-                        <p className="text-xs text-[#A68A82] mb-4">Trending Styles for You</p>
-                        <ul className="space-y-3">
-                          {(data.trending_styles || []).slice(0, 4).map((item, i) => {
-                            const isUp = !item.delta.startsWith("-");
-                            return (
-                              <li key={i} className="flex justify-between items-center text-[0.65rem]">
-                                <div className="flex items-center gap-3">
-                                  <span className="text-[#A68A82]">{i + 1}</span>
-                                  <span className="text-[#F3E8DE]">{item.nama}</span>
-                                </div>
-                                <div className={`flex items-center gap-1 ${isUp ? 'text-[#8A9A5B]' : 'text-[#D15C5C]'}`}>
-                                  {isUp ? <ArrowUp className="w-2 h-2" /> : <ArrowDown className="w-2 h-2" />}
-                                  <span>{item.delta}</span>
-                                </div>
-                              </li>
-                            );
-                          })}
-                          {(!data.trending_styles || data.trending_styles.length === 0) && (
-                            <p className="text-[0.6rem] text-[#A68A82] text-center pt-2">No trending data available.</p>
-                          )}
-                        </ul>
-                      </div>
-
-                      <div className="pl-6">
-                        <p className="text-xs text-[#A68A82] mb-2">Your Style Compatibility</p>
-                        <div className="mt-4">
-                          <CircularProgress percentage={clamp(data.kompatibilitas_gaya)} color="#D15C5C" size={70} label="Trend Match" subLabel="Based on your facial structure." />
-                        </div>
+                      <svg viewBox="0 0 120 120" className="w-48 h-48 mt-4">
+                        <polygon points="60,10 105,45 85,105 35,105 15,45" fill="none" stroke="#4A2626" strokeWidth="0.5" />
+                        <polygon points="60,30 90,55 75,90 45,90 30,55" fill="none" stroke="#4A2626" strokeWidth="0.5" strokeDasharray="2,2" />
+                        <polygon points="60,18 100,48 80,100 40,95 20,48" fill="rgba(197,155,143,0.1)" stroke="#D15C5C" strokeWidth="1" />
+                        <circle cx="60" cy="18" r="1.5" fill="#D15C5C" />
+                        <circle cx="100" cy="48" r="1.5" fill="#D15C5C" />
+                        <circle cx="80" cy="100" r="1.5" fill="#D15C5C" />
+                        <circle cx="40" cy="95" r="1.5" fill="#D15C5C" />
+                        <circle cx="20" cy="48" r="1.5" fill="#D15C5C" />
+                      </svg>
+                      <span className="absolute top-10 text-[0.55rem] text-[#D2C3BD] text-center">Forehead<br />{clamp(data.peta_proporsi?.dahi)}%</span>
+                      <span className="absolute right-12 top-[40%] text-[0.55rem] text-[#D2C3BD] text-center">Cheekbones<br />{clamp(((data.peta_proporsi?.pipi_kiri || 0) + (data.peta_proporsi?.pipi_kanan || 0)) / 2)}%</span>
+                      <span className="absolute right-20 bottom-12 text-[0.55rem] text-[#D2C3BD] text-center">Jawline<br />{clamp(data.peta_proporsi?.rahang)}%</span>
+                      <span className="absolute left-20 bottom-12 text-[0.55rem] text-[#D2C3BD] text-center">Chin<br />{clamp(data.peta_proporsi?.dagu)}%</span>
+                      <span className="absolute left-12 top-[40%] text-[0.55rem] text-[#D2C3BD] text-center">Face Width<br />{clamp(data.pengukuran_fitur?.lebar_wajah)}%</span>
+                      <div className="absolute bottom-4 flex items-center gap-6 text-[0.55rem] text-[#A68A82]">
+                        <div className="flex items-center gap-2"><div className="w-3 h-0.5 bg-[#D15C5C]"></div> You</div>
+                        <div className="flex items-center gap-2"><div className="w-3 h-0.5 border-t border-dashed border-[#A68A82]"></div> Ideal</div>
                       </div>
                     </>
                   )}
+                </div>
 
+                <div className="p-8 flex flex-col justify-between">
+                  <p className="text-[0.65rem] text-[#A68A82] mb-6 uppercase tracking-widest font-bold">Feature Measurements</p>
+                  {!activeFeatures.includes("ADV_MAPPING") ? (
+                    <div className="flex-1 flex flex-col items-center justify-center opacity-40">
+                      <BarChart3 className="w-8 h-8 text-[#C59B8F]/30 mb-3" />
+                      <p className="text-[0.55rem] text-[#D2C3BD] uppercase">Data Locked</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4 flex-1">
+                      {[
+                        { label: "Face Length", val: data.pengukuran_fitur?.panjang_wajah },
+                        { label: "Jawline Strength", val: data.pengukuran_fitur?.kekuatan_rahang },
+                        { label: "Cheekbone Width", val: data.pengukuran_fitur?.lebar_tulang_pipi },
+                        { label: "Forehead Width", val: data.pengukuran_fitur?.lebar_dahi },
+                      ].map((item, i) => (
+                        <div key={i} className="group/item">
+                          <div className="flex justify-between text-[0.65rem] text-[#D2C3BD] mb-1.5 font-medium">
+                            <span className="group-hover/item:text-[#F3E8DE] transition-colors">{item.label}</span>
+                            <span className="text-[#C59B8F]">{clamp(item.val)}%</span>
+                          </div>
+                          <div className="h-[2px] w-full bg-[#3A1E1E]">
+                            <div className="h-full bg-[#D15C5C] transition-all duration-[2s] ease-out" style={{ width: mounted ? `${clamp(item.val)}%` : '0%', transitionDelay: `${i * 150}ms` }}></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-8 flex flex-col justify-between">
+                  <p className="text-[0.65rem] text-[#A68A82] mb-6 uppercase tracking-widest font-bold">Facial Balance</p>
+                  {!activeFeatures.includes("ADV_MAPPING") ? (
+                    <div className="flex-1 flex flex-col items-center justify-center opacity-40">
+                      <ShieldCheck className="w-8 h-8 text-[#C59B8F]/30 mb-3" />
+                      <p className="text-[0.55rem] text-[#D2C3BD] uppercase">Data Locked</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4 flex-1">
+                      {[
+                        { label: "Eye Symmetry", val: data.keseimbangan_wajah?.mata_kiri_kanan || "-" },
+                        { label: "Brow Balance", val: data.keseimbangan_wajah?.alis_kiri_kanan || "-" },
+                        { label: "Nose Centering", val: data.keseimbangan_wajah?.pemusatan_hidung || "-" },
+                        { label: "Mouth Alignment", val: data.keseimbangan_wajah?.kelurusan_mulut || "-" },
+                      ].map((item, i) => (
+                        <div key={i} className="flex justify-between items-center text-[0.7rem] border-b border-[#3A1E1E]/30 pb-2 hover:border-[#C59B8F]/30 transition-colors">
+                          <span className="text-[#A68A82]">{item.label}</span>
+                          <span className="text-[#F3E8DE] font-semibold flex items-center gap-2">
+                            <Check className="w-3 h-3 text-[#8A9A5B]" /> {item.val}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
+            </div>
 
-              {activeFeatures.includes("HISTORY") && (
-                <div className="mt-12 mb-8">
-                  <h2 className="text-[0.7rem] uppercase tracking-widest text-[#A68A82] mb-6 font-bold">
-                    SCANNING HISTORY
-                  </h2>
-                  <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm p-6">
-                    {loadingHistory ? (
-                      <div className="flex justify-center items-center h-24">
-                        <div className="w-6 h-6 border-2 border-[#D15C5C] border-t-transparent rounded-full animate-spin"></div>
+            <div className={`transition-all duration-1000 delay-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+              <h2 className="text-[0.75rem] uppercase tracking-[0.3em] text-[#A68A82] mb-8 font-bold flex items-center gap-3">
+                HAIR ANALYSIS & SCALP HEALTH
+              </h2>
+              {!activeFeatures.includes("HAIR_ANALYSIS") ? (
+                <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm p-12 flex flex-col items-center justify-center text-center opacity-50">
+                  <Scissors className="w-10 h-10 text-[#C59B8F]/30 mb-4" />
+                  <p className="text-xs text-[#D2C3BD] uppercase tracking-widest font-bold mb-1">Premium Feature Locked</p>
+                </div>
+              ) : (
+                <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm overflow-hidden">
+                  <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#3A1E1E] p-8">
+                    <div className="flex flex-col gap-3 justify-center pb-6 md:pb-0">
+                      <p className="text-[0.65rem] text-[#A68A82] font-bold uppercase tracking-widest">Hair Thickness</p>
+                      <div className="flex items-center gap-6 mt-3 group/hair">
+                        <div className="relative w-14 h-14 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+                          <svg viewBox="0 0 40 40" className="w-full h-full opacity-60">
+                            <path d="M20,35 C15,35 15,10 30,5" fill="none" stroke="#F3E8DE" strokeWidth="2.5" className="animate-pulse" />
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="text-xl text-[#F3E8DE] font-semibold">{data.ketebalan_rambut || "-"}</p>
+                          <p className="text-[0.7rem] text-[#C59B8F] font-bold">{data.ketebalan_rambut_mm ? `${data.ketebalan_rambut_mm} mm` : "Normal"}</p>
+                        </div>
                       </div>
-                    ) : historyItems.length === 0 ? (
-                      <div className="text-center py-8">
-                        <p className="text-[0.65rem] text-[#D2C3BD]">No past scanning history found.</p>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col gap-4">
-                        {historyItems.map((item) => {
-                          const result = item.hasil_analisis || {};
-                          return (
-                            <div key={item.id} className="flex gap-4 p-4 border border-[#3A1E1E] bg-[#1C0D0D] rounded-sm group/item hover:border-[#4a2a2a] transition-all">
-                              <div className="flex gap-2 shrink-0">
-                                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#2A1616] relative overflow-hidden border border-white/5">
-                                  {item.url_foto_upload ? (
-                                    <img 
-                                      src={item.url_foto_upload.startsWith("http") ? item.url_foto_upload : `${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1").replace("/api/v1", "")}${item.url_foto_upload}`} 
-                                      alt="Before" 
-                                      className="object-cover w-full h-full opacity-60 group-hover/item:opacity-80 transition-opacity"
-                                    />
-                                  ) : (
-                                    <div className="w-full h-full flex items-center justify-center">
-                                      <Focus className="w-5 h-5 text-[#A68A82]/30" />
-                                    </div>
-                                  )}
-                                  <div className="absolute top-0 left-0 bg-black/40 px-1 text-[0.4rem] text-white uppercase">Before</div>
-                                </div>
+                    </div>
 
-                                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#2A1616] relative overflow-hidden border border-[#D15C5C]/20">
-                                  {(() => {
-                                    let historyAiUrl = null;
-                                    if (item.url_hasil_img) {
-                                      try {
-                                        const p = typeof item.url_hasil_img === 'string' ? JSON.parse(item.url_hasil_img) : item.url_hasil_img;
-                                        if (Array.isArray(p) && p.length > 0) historyAiUrl = p[0];
-                                      } catch (e) {}
-                                    }
-                                    return historyAiUrl ? (
-                                      <img 
-                                        src={historyAiUrl.startsWith("http") ? historyAiUrl : `${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1").replace("/api/v1", "")}${historyAiUrl}`} 
-                                        alt="After" 
-                                        className="object-cover w-full h-full opacity-90 group-hover/item:opacity-100 transition-opacity"
-                                      />
-                                    ) : (
-                                      <div className="w-full h-full flex items-center justify-center">
-                                        <Sparkles className="w-5 h-5 text-[#D15C5C]/30" />
-                                      </div>
-                                    );
-                                  })()}
-                                  <div className="absolute top-0 right-0 bg-[#4a1a1a]/80 px-1 text-[0.4rem] text-white uppercase">After</div>
-                                </div>
-                              </div>
-                              <div className="flex flex-col justify-center">
-                                <span className="text-[0.6rem] text-[#A68A82] mb-1">
-                                  {new Date(item.tgl_generate).toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                </span>
-                                <span className="text-sm text-[#F3E8DE] font-medium">{result.rekomendasi_gaya?.[0]?.nama_gaya || "Unknown Style"}</span>
-                                <div className="flex gap-3 mt-1.5">
-                                  <span className="text-[0.65rem] text-[#D2C3BD]">Match: {result.rekomendasi_gaya?.[0]?.match_score || 0}%</span>
-                                  <span className="text-[0.65rem] text-[#D2C3BD]">Face: {result.bentuk_wajah || "-"}</span>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
+                    <div className="flex flex-col pl-0 md:pl-8 py-6 md:py-0">
+                      <p className="text-[0.65rem] text-[#A68A82] font-bold uppercase tracking-widest mb-4">Hair Density</p>
+                      <CircularProgress percentage={data.kepadatan_rambut || 0} color="#8A9A5B" label={data.kepadatan_rambut > 80 ? "Optimal" : "Healthy"} subLabel="Density Score" />
+                    </div>
+
+                    <div className="flex flex-col pl-0 md:pl-8 pt-6 md:pt-0">
+                      <p className="text-[0.65rem] text-[#A68A82] font-bold uppercase tracking-widest mb-4">Scalp Health</p>
+                      <CircularProgress percentage={clamp(data.kesehatan_kulit_kepala)} color="#3CB371" label="Excellent" subLabel="Condition Score" />
+                    </div>
+                  </div>
+                  <div className="bg-[#251313] border-t border-[#3A1E1E] p-5 px-8 flex flex-col md:flex-row md:items-center gap-6">
+                    <div className="flex items-center gap-4 min-w-[200px]">
+                      <div className="w-10 h-10 rounded-full bg-[#8A9A5B]/10 border border-[#8A9A5B]/30 flex items-center justify-center">
+                        <ArrowUp className="w-5 h-5 text-[#8A9A5B]" />
                       </div>
-                    )}
+                      <div>
+                        <p className="text-[0.6rem] text-[#A68A82] font-bold uppercase">Growth Potential</p>
+                        <p className="text-sm text-[#F3E8DE] font-semibold">{data.potensi_pertumbuhan > 80 ? "High Potential" : "Normal"}</p>
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between items-center text-[0.65rem] text-[#D2C3BD] mb-2 italic">
+                        <span>Optimal growth detected for thick texture styles.</span>
+                        <span className="font-bold text-[#8A9A5B]">{clamp(data.potensi_pertumbuhan)}%</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-[#1C0D0D] rounded-full overflow-hidden">
+                        <div className="h-full bg-[#8A9A5B] transition-all duration-[2.5s] ease-out" style={{ width: mounted ? `${clamp(data.potensi_pertumbuhan)}%` : '0%' }}></div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
+            </div>
 
-              <div className="pt-4 text-center pb-2">
-                <p className="text-[0.55rem] text-[#A68A82] tracking-widest uppercase opacity-60">© {new Date().getFullYear()} Hair AI Stylist. All rights reserved.</p>
+            <div className={`transition-all duration-1000 delay-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+              <h2 className="text-[0.75rem] uppercase tracking-[0.3em] text-[#A68A82] mb-8 font-bold flex items-center gap-3">
+                BARBER INSTRUCTIONS
+              </h2>
+              {!activeFeatures.includes("BARBER_INSTRUCTIONS") ? (
+                <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm p-12 flex flex-col items-center justify-center opacity-50">
+                  <Info className="w-10 h-10 text-[#C59B8F]/30 mb-4" />
+                  <p className="text-xs text-[#D2C3BD] uppercase tracking-widest font-bold">Feature Locked</p>
+                </div>
+              ) : (
+                <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm p-8">
+                  {data.instruksi_barber_detail ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                      {[
+                        { label: "Cutting Technique", val: data.instruksi_barber_detail.teknik_potong, icon: <Scissors className="w-3 h-3" /> },
+                        { label: "Side Length", val: data.instruksi_barber_detail.panjang_sisi, icon: <div className="w-3 h-px bg-current"></div> },
+                        { label: "Top Length", val: data.instruksi_barber_detail.panjang_atas, icon: <ArrowUp className="w-3 h-3" /> },
+                        { label: "Finishing", val: data.instruksi_barber_detail.teknik_finishing, icon: <Sparkles className="w-3 h-3" /> },
+                        { label: "Product Guide", val: data.instruksi_barber_detail.produk_saran, icon: <Check className="w-3 h-3" /> },
+                        { label: "Est. Time", val: data.instruksi_barber_detail.estimasi_waktu, icon: <Clock className="w-3 h-3" /> },
+                      ].map((item, i) => (
+                        <div key={i} className="bg-[#1C0D0D] border border-[#3A1E1E] rounded-sm p-4 hover:border-[#C59B8F]/30 transition-all group/inst">
+                          <div className="flex items-center gap-2 mb-3">
+                            <div className="text-[#C59B8F] group-hover/inst:scale-110 transition-transform">{item.icon}</div>
+                            <p className="text-[0.6rem] text-[#A68A82] uppercase tracking-[0.15em] font-bold">{item.label}</p>
+                          </div>
+                          <p className="text-[0.75rem] text-[#F3E8DE] leading-relaxed font-medium">{item.val || "-"}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-[0.8rem] text-[#D2C3BD] leading-relaxed italic border-l-2 border-[#C59B8F] pl-6 py-2">
+                      {data.instruksi_barber || "Present these results to your barber for the most accurate implementation of your recommended style."}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {activeFeatures.includes("HISTORY") && historyItems.length > 0 && (
+              <div className="mt-16 pt-16 border-t border-[#3A1E1E]">
+                <h2 className="text-[0.75rem] uppercase tracking-[0.3em] text-[#A68A82] mb-10 font-bold flex items-center gap-3">
+                  SCANNING HISTORY
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {historyItems.slice(0, 4).map((item) => {
+                    const result = item.hasil_analisis || {};
+                    let historyAiUrl = null;
+                    if (item.url_hasil_img) {
+                      try {
+                        const p = typeof item.url_hasil_img === 'string' ? JSON.parse(item.url_hasil_img) : item.url_hasil_img;
+                        if (Array.isArray(p) && p.length > 0) historyAiUrl = p[0];
+                      } catch (e) { }
+                    }
+
+                    return (
+                      <div key={item.id} className="flex gap-5 p-5 border border-[#3A1E1E] bg-[#1C0D0D] rounded-sm group/history hover:border-[#C59B8F]/40 transition-all">
+                        <div className="relative w-24 h-24 shrink-0 overflow-hidden bg-[#2A1616]">
+                          <img
+                            src={item.url_foto_upload?.startsWith("http") ? item.url_foto_upload : `${(process.env.NEXT_PUBLIC_API_URL).replace("/api/v1", "")}${item.url_foto_upload}`}
+                            alt="Scan"
+                            className="object-cover w-full h-full opacity-40 group-hover/history:scale-110 transition-transform duration-700"
+                          />
+                          {historyAiUrl && (
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-2">
+                              <span className="text-[0.45rem] font-bold text-[#C59B8F] uppercase tracking-tighter">AI Result Saved</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex flex-col justify-center">
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <Clock className="w-3 h-3 text-[#A68A82]" />
+                            <span className="text-[0.6rem] text-[#A68A82] font-bold uppercase tracking-widest">
+                              {new Date(item.tgl_generate).toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' })}
+                            </span>
+                          </div>
+                          <h4 className="text-sm text-[#F3E8DE] font-serif font-medium mb-2 group-hover/history:text-[#C59B8F] transition-colors">{result.rekomendasi_gaya?.[0]?.nama_gaya || "Analysis"}</h4>
+                          <div className="flex gap-4">
+                            <div className="flex flex-col">
+                              <span className="text-[0.5rem] uppercase text-[#A68A82]">Match</span>
+                              <span className="text-[0.65rem] text-[#F3E8DE] font-bold">{result.rekomendasi_gaya?.[0]?.match_score || 0}%</span>
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[0.5rem] uppercase text-[#A68A82]">Face</span>
+                              <span className="text-[0.65rem] text-[#F3E8DE] font-bold">{result.bentuk_wajah || "-"}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
+            )}
 
+            <div className="pt-10 text-center border-t border-[#3A1E1E]/50">
+              <p className="text-[0.6rem] text-[#A68A82] tracking-[0.4em] uppercase font-bold opacity-40">© 2026 HAIR AI STYLIST • POWERED BY TELKOM UNIVERSITY</p>
             </div>
           </div>
         </div>
@@ -896,10 +918,10 @@ export default function AiResultPage() {
           0% { transform: translateY(-100%); opacity: 0; }
           10% { opacity: 1; }
           90% { opacity: 1; }
-          100% { transform: translateY(400px); opacity: 0; }
+          100% { transform: translateY(600px); opacity: 0; }
         }
         .animate-scan-line {
-          animation: scan-line 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+          animation: scan-line 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
         }
       `}</style>
     </main>

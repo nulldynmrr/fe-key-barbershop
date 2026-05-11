@@ -1,9 +1,16 @@
+"use client";
+
+import { useEffect } from "react";
+import AOS from "aos";
+import "aos/dist/aos.css";
 import Image from "next/image";
 import Link from "next/link";
 import { Clock3, Mail, MapPinned, Phone, Scissors, Sparkles, Shield } from "lucide-react";
 import SeparatorKey from "../../../components/SeparatorKey";
 import SiteFooter from "@/components/SiteFooter";
 import SiteNavbar from "@/components/SiteNavbar";
+import SocialGallery from "@/components/SocialGallery";
+
 
 const navItems = [
   { label: "Home", href: "#", active: true },
@@ -16,13 +23,6 @@ const stats = [
   { value: "100+", label: "Clients" },
   { value: "2+ Years", label: "Expertise" },
   { value: "20+", label: "Styles" },
-];
-
-const footerLinks = [
-  { label: "Home", href: "#home" },
-  { label: "AI Feature", href: "#ai-feature" },
-  { label: "Services", href: "#services" },
-  { label: "Gallery", href: "#gallery" },
 ];
 
 const contactDetails = [
@@ -71,7 +71,17 @@ function SectionCard({ title, description, className = "", titleClassName = "", 
 }
 
 export default function HomePage() {
+  useEffect(() => {
+    AOS.init({
+      duration: 1000,
+      once: true,
+      easing: "ease-in-out",
+      offset: 100,
+    });
+  }, []);
+
   return (
+
     <main className="min-h-screen overflow-x-hidden bg-white text-[#2B1D19] scroll-smooth">
       <section id="home" className="relative isolate overflow-hidden">
         <div className="absolute inset-0">
@@ -82,7 +92,7 @@ export default function HomePage() {
         <SiteNavbar activeLabel="Home" />
 
         <div className="relative mx-auto flex min-h-[min(100svh,58rem)] max-w-7xl flex-col items-center justify-center px-6 pb-24 pt-32 text-center lg:px-10 lg:pt-36">
-          <div className="mb-6 flex items-center gap-4">
+          <div className="mb-6 flex items-center gap-4" data-aos="fade-down">
             <span className="h-px w-16 bg-[#f0e2d9]/50" />
             <span className="text-lg  uppercase tracking-[0.42em] text-[#f0e2d9]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
               EST. 2024
@@ -90,25 +100,43 @@ export default function HomePage() {
             <span className="h-px w-16 bg-[#f0e2d9]/50" />
           </div>
 
-          <h1 className="max-w-5xl text-5xl font-semibold leading-[0.95] tracking-tight text-[#fdf9f4] text-shadow-soft sm:text-6xl lg:text-7xl" style={{ fontFamily: "var(--font-playfair)" }}>
+          <h1 
+            className="max-w-5xl text-5xl font-semibold leading-[0.95] tracking-tight text-[#fdf9f4] text-shadow-soft sm:text-6xl lg:text-7xl" 
+            style={{ fontFamily: "var(--font-playfair)" }}
+            data-aos="fade-up"
+            data-aos-delay="200"
+          >
             <span className="block">Find Your Perfect Hairstyle</span>
             <span className="block" style={{ fontFamily: "var(--font-noto-serif)" }}>
               with AI
             </span>
           </h1>
 
-          <p className="mt-8 max-w-3xl text-base leading-8 text-[#f0e2d9]/85 sm:text-lg" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
+          <p 
+            className="mt-8 max-w-3xl text-base leading-8 text-[#f0e2d9]/85 sm:text-lg" 
+            style={{ fontFamily: "var(--font-plus-jakarta)" }}
+            data-aos="fade-up"
+            data-aos-delay="400"
+          >
             Experience precision grooming powered by expertise and enhanced with AI-driven recommendations.
           </p>
 
-          <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:gap-5">
-            <Link
-              href="/ai"
-              className="inline-flex items-center justify-center border border-[#4a1a1a] bg-[#4a1a1a] px-8 py-4 text-sm font-medium uppercase tracking-[0.3em] text-[#fbf7f3] shadow-[inset_0_1px_2px_rgba(255,255,255,0.35)] transition hover:bg-[#5a2725]"
-              style={{ fontFamily: "var(--font-plus-jakarta)" }}
-            >
-              Start AI Recommendation
-            </Link>
+          <div 
+            className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:gap-5"
+            data-aos="fade-up"
+            data-aos-delay="600"
+          >
+            <div className="exclusive-border-container group shadow-[0_0_20px_rgba(74,26,26,0.15)] hover:shadow-[0_0_30px_rgba(74,26,26,0.3)] transition-all">
+              <div className="exclusive-border-glow"></div>
+              <Link
+                href="/ai"
+                className="relative z-10 inline-flex items-center justify-center bg-[#4a1a1a] px-8 py-4 text-sm font-medium uppercase tracking-[0.3em] text-[#fbf7f3] transition hover:bg-[#3d1515]"
+                style={{ fontFamily: "var(--font-plus-jakarta)" }}
+              >
+                Start AI Recommendation
+              </Link>
+            </div>
+
             <Link
               href="/service"
               className="inline-flex items-center justify-center border border-[#c57e7b]/55 bg-white/8 px-8 py-4 text-sm font-medium uppercase tracking-[0.3em] text-[#fbf7f3] backdrop-blur-[2px] transition hover:border-[#f0e2d9] hover:bg-white/14"
@@ -118,6 +146,7 @@ export default function HomePage() {
             </Link>
           </div>
         </div>
+
       </section>
 
       <SeparatorKey />
@@ -126,7 +155,11 @@ export default function HomePage() {
       <div className="bg-gradient-to-b from-white to-[#E1D5C9]">
         <section className="relative isolate mx-auto max-w-7xl px-6 py-10 lg:px-10 lg:pb-14">
           <div className="relative z-10 grid gap-8 lg:grid-cols-[0.65fr_0.35fr]">
-            <article className="relative row-span-2 min-h-128 overflow-hidden border border-[#e6d1c7] bg-[#ede8e0]">
+            <article 
+              className="relative row-span-2 min-h-128 overflow-hidden border border-[#e6d1c7] bg-[#ede8e0]"
+              data-aos="fade-right"
+            >
+
               <Image
                 src="/images/figma/home/artisanal-precision.png"
                 alt="Artisanal Precision"
@@ -147,40 +180,48 @@ export default function HomePage() {
                 </p>
               </div>
             </article>
-            <SectionCard
-              className="border border-[#e6d1c7] bg-[#ede8e0] px-9 py-12 text-center flex flex-col justify-center"
-              title="The Calm"
-              titleClassName="text-[#4a1a1a]"
-              description="A space designed for comfort, where every detail is crafted to give you a relaxing and refined grooming experience."
-              descriptionClassName="text-[#8B4513]"
-              childrenFirst={true}
-            >
-              <Shield className="mx-auto mb-4 h-10 w-10 text-[#8B4513]" strokeWidth={1.5} />
-            </SectionCard>
-
-            <SectionCard
-              className="border border-[#4a1a1a] bg-[#4a1a1a] px-9 py-12 text-left text-[#fbf7f3] shadow-[0_28px_60px_rgba(74,26,26,0.28)] flex flex-col justify-center"
-              title="AI Stylist"
-              titleClassName="text-[#fbf7f3]"
-              description="Our intelligent system analyzes your facial structure and hair characteristics to recommend the most suitable hairstyle for you."
-              descriptionClassName="text-[#f3ded6]"
-            >
-              <Link
-                href="/user/ai-analyze"
-                className="mt-8 inline-flex items-center gap-2 border-b border-white/30 pb-1 text-[0.72rem] uppercase tracking-[0.38em] text-[#fbf7f3] transition hover:border-white/70"
-                style={{ fontFamily: "var(--font-be-vietnam)" }}
+            <div data-aos="fade-left">
+              <SectionCard
+                className="border border-[#e6d1c7] bg-[#ede8e0] px-9 py-12 text-center flex flex-col justify-center h-full"
+                title="The Calm"
+                titleClassName="text-[#4a1a1a]"
+                description="A space designed for comfort, where every detail is crafted to give you a relaxing and refined grooming experience."
+                descriptionClassName="text-[#8B4513]"
+                childrenFirst={true}
               >
-                Discover your look
-              </Link>
-            </SectionCard>
+                <Shield className="mx-auto mb-4 h-10 w-10 text-[#8B4513]" strokeWidth={1.5} />
+              </SectionCard>
+            </div>
+
+            <div data-aos="fade-left" data-aos-delay="200">
+              <SectionCard
+                className="border border-[#4a1a1a] bg-[#4a1a1a] px-9 py-12 text-left text-[#fbf7f3] shadow-[0_28px_60px_rgba(74,26,26,0.28)] flex flex-col justify-center h-full"
+                title="AI Stylist"
+                titleClassName="text-[#fbf7f3]"
+                description="Our intelligent system analyzes your facial structure and hair characteristics to recommend the most suitable hairstyle for you."
+                descriptionClassName="text-[#f3ded6]"
+              >
+                <Link
+                  href="/user/ai-analyze"
+                  className="mt-8 inline-flex items-center gap-2 border-b border-white/30 pb-1 text-[0.72rem] uppercase tracking-[0.38em] text-[#fbf7f3] transition hover:border-white/70"
+                  style={{ fontFamily: "var(--font-be-vietnam)" }}
+                >
+                  Discover your look
+                </Link>
+              </SectionCard>
+            </div>
           </div>
         </section>
       </div>
 
+
       <div className="bg-[#E1D5C9]">
         {/* Banner Section */}
         <section className="relative isolate mx-auto max-w-7xl px-6 py-4 pb-10 lg:px-10 lg:pb-14">
-          <div className="w-full mb-8 relative flex items-center justify-center rounded-sm overflow-hidden">
+          <div 
+            className="w-full mb-8 relative flex items-center justify-center rounded-sm overflow-hidden"
+            data-aos="zoom-in"
+          >
             <Image
               src="/images/figma/home/keybarber-intro.png"
               alt="Key Barber Intro"
@@ -197,7 +238,10 @@ export default function HomePage() {
         {/* About Section */}
         <section id="about" className="relative isolate mx-auto max-w-7xl px-6 py-10 lg:px-10 lg:pb-24 mt-4">
           <div className="relative z-10 grid gap-12 lg:grid-cols-[0.3fr_0.7fr] items-center">
-            <div className="relative flex flex-col justify-center">
+            <div 
+              className="relative flex flex-col justify-center"
+              data-aos="fade-right"
+            >
               <div className="absolute -left-16 -top-16 w-64 h-64 pointer-events-none opacity-20">
                 <Image src="/images/figma/home/key-icon.png" alt="Key Barber Background" fill className="object-contain" />
               </div>
@@ -208,7 +252,10 @@ export default function HomePage() {
                 </h2>
               </div>
             </div>
-            <article className="relative overflow-hidden p-4 sm:p-8 md:p-0">
+            <article 
+              className="relative overflow-hidden p-4 sm:p-8 md:p-0"
+              data-aos="fade-left"
+            >
               <div className="relative z-10">
                 <p className="max-w-xl text-lg italic leading-8 text-[#5f463d]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
                   A legacy of craftsmanship refined through modern precision
@@ -219,8 +266,10 @@ export default function HomePage() {
                 </p>
 
                 <div className="mt-10 grid gap-4 grid-cols-2 sm:grid-cols-3">
-                  {stats.map((stat) => (
-                    <StatCard key={stat.label} value={stat.value} label={stat.label} />
+                  {stats.map((stat, idx) => (
+                    <div key={stat.label} data-aos="fade-up" data-aos-delay={idx * 100}>
+                      <StatCard value={stat.value} label={stat.label} />
+                    </div>
                   ))}
                 </div>
               </div>
@@ -229,38 +278,14 @@ export default function HomePage() {
         </section>
 
         {/* Our Media Social Section */}
-        <section className="relative isolate mx-auto max-w-7xl px-6 py-10 lg:px-10 lg:pb-32 overflow-hidden">
-          <div className="grid gap-12 lg:grid-cols-[0.55fr_0.45fr] items-center">
-            {/* Left: 3 Overlapping Cards */}
-            <div className="relative h-[450px] sm:h-[550px] w-full flex items-center justify-center">
-              <div className="absolute left-0 sm:left-[5%] z-10 w-48 sm:w-64 aspect-[3/4] transition transform -rotate-6 origin-bottom-right hover:scale-105 hover:-rotate-3 hover:z-30 duration-300">
-                <Image src="/images/figma/home/card1.png" alt="Card 1" fill className="object-contain" />
-              </div>
-
-              <div className="absolute right-0 sm:right-[5%] z-10 w-48 sm:w-64 aspect-[3/4] transition transform rotate-6 origin-bottom-left hover:scale-105 hover:rotate-3 hover:z-30 duration-300">
-                <Image src="/images/figma/home/card3.png" alt="Card 3" fill className="object-contain" />
-              </div>
-
-              <div className="absolute z-20 w-52 sm:w-72 aspect-[3/4] transition transform rotate-2 hover:scale-105 hover:rotate-0 hover:z-30 duration-300">
-                <Image src="/images/figma/home/card2.png" alt="Card 2" fill className="object-contain" />
-              </div>
-            </div>
-
-            {/* Right: Text Content */}
-            <div className="flex flex-col justify-center px-4 sm:px-8">
-              <h2 className="text-[#4a1a1a] flex items-center gap-4 text-4xl sm:text-5xl font-bold" style={{ fontFamily: "var(--font-playfair)" }}>
-                Our Media Social
-                <div className="h-12 w-4 sm:h-14 sm:w-5 relative shrink-0">
-                  <Image src="/images/figma/home/key-icon.png" alt="Key Icon" fill className="object-contain opacity-80" />
-                </div>
-              </h2>
-              <p className="mt-6 max-w-md text-sm sm:text-base italic leading-7 text-[#5f463d]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
-                A legacy of craftsmanship refined through modern precision
-              </p>
-            </div>
-          </div>
+        <section 
+          className="relative isolate mx-auto max-w-7xl px-6 py-10 lg:px-10 lg:pb-32 overflow-hidden"
+          data-aos="fade-up"
+        >
+          <SocialGallery />
         </section>
       </div>
+
 
       <SiteFooter />
     </main>

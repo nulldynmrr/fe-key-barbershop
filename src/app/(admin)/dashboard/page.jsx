@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { AlertTriangle, InboxIcon } from "lucide-react";
+import { AlertTriangle, InboxIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -335,10 +335,10 @@ export default function DashboardPage() {
                     />
                     <Tooltip cursor={{ fill: "transparent" }} />
                     <Bar
-                      dataKey="total"
+                      dataKey="value"
                       shape={
                         <CustomBar
-                          max={Math.max(...chartData.map((d) => d.total), 1)}
+                          max={computedMax}
                         />
                       }
                       barSize={40}

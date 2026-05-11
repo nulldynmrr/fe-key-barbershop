@@ -7,6 +7,7 @@ const ADMIN_ROUTES = [
   "/langganan",
   "/barbers",
   "/transaksi",
+  "/media-social",
 ];
 
 const isAdminRoute = (path) => ADMIN_ROUTES.some((r) => path.startsWith(r));

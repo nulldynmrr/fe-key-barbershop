@@ -154,7 +154,12 @@ export default function MeetOurCapster() {
                             Spesialisasi
                           </p>
 
-                          <h3 className="text-base md:text-lg font-serif font-bold leading-snug">
+                          <h3
+                            className="text-base md:text-sm font-serif font-bold leading-snug text-black"
+                            style={{
+                              WebkitTextStroke: "0.4px white",
+                            }}
+                          >
                             {capster.spesialisasi}
                           </h3>
                         </div>

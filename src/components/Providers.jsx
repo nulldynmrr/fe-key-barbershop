@@ -1,6 +1,7 @@
 "use client";
 
 import GoogleAuthProviderWrapper from "@/components/GoogleAuthProvider";
+
 import { ToastProvider } from "@/contexts/ToastContext";
 
 export default function Providers({ children }) {
@@ -12,3 +13,4 @@ export default function Providers({ children }) {
     </GoogleAuthProviderWrapper>
   );
 }
+

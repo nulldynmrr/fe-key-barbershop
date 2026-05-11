@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { Home, Cpu, Tags, Users, ReceiptText, Bell } from "lucide-react";
+import { Home, Cpu, Tags, Users, ReceiptText, Bell, Share2 } from "lucide-react";
 import { ToastProvider } from "@/contexts/ToastContext";
 
 export default function AdminLayout({ children }) {
@@ -14,8 +14,10 @@ export default function AdminLayout({ children }) {
     { name: "Dashboard", href: "/dashboard", icon: Home },
     { name: "AI Engine Control", href: "/ai-config", icon: Cpu },
     { name: "Harga & Langganan", href: "/langganan", icon: Tags },
-    { name: "Barbers", href: "/barbers", icon: Users },
     { name: "Transaksi", href: "/transaksi", icon: ReceiptText },
+    { name: "Barbers", href: "/barbers", icon: Users },
+    { name: "Media Social", href: "/media-social", icon: Share2 },
+
   ];
 
   return (
@@ -43,14 +45,14 @@ export default function AdminLayout({ children }) {
                   key={item.name}
                   href={item.href}
                   className={`flex items-center group relative px-3 py-3 text-sm font-medium transition-colors ${isActive
-                      ? "text-[#4a1a1a]"
-                      : "text-[#8b6f66] hover:text-[#4a1a1a]"
+                    ? "text-[#4a1a1a]"
+                    : "text-[#8b6f66] hover:text-[#4a1a1a]"
                     }`}
                 >
                   <Icon
                     className={`mr-3 h-5 w-5 flex-shrink-0 ${isActive
-                        ? "text-[#4a1a1a]"
-                        : "text-[#d8c8bc] group-hover:text-[#8b6f66]"
+                      ? "text-[#4a1a1a]"
+                      : "text-[#d8c8bc] group-hover:text-[#8b6f66]"
                       }`}
                     aria-hidden="true"
                   />

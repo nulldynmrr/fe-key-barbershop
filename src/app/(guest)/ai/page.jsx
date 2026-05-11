@@ -1,8 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useRef } from "react";
-import { ScanFace, Sparkles, Upload, Camera, Loader2 } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Sparkles, Upload, Camera, Loader2, Search } from "lucide-react";
+
+
 import SeparatorKey from "../../../components/SeparatorKey";
 import SiteFooter from "../../../components/SiteFooter";
 import SiteNavbar from "../../../components/SiteNavbar";
@@ -10,6 +12,7 @@ import { aiScanService } from "../../../services/aiScanService";
 import { useToast } from "../../../contexts/ToastContext";
 import { saveUserAuth } from "../../../utils/request";
 import Cookies from "js-cookie";
+import AILoadingModal from "../../../components/AILoadingModal";
 
 const stepItems = [
   {
@@ -22,7 +25,7 @@ const stepItems = [
     number: "02",
     title: "AI Analysis",
     description: "Our AI detects your face shape and features",
-    icon: ScanFace,
+    icon: Search,
   },
   {
     number: "03",
@@ -61,6 +64,14 @@ export default function AiPage() {
   const { showToast } = useToast();
   const fileInputRef = useRef(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isApiDone, setIsApiDone] = useState(false);
+  const [isAnimationDone, setIsAnimationDone] = useState(false);
+
+  useEffect(() => {
+    if (isApiDone && isAnimationDone) {
+      router.push("/ai/result?mode=upload");
+    }
+  }, [isApiDone, isAnimationDone, router]);
 
   const handleCameraClick = () => {
     router.push("/ai/camera");
@@ -129,7 +140,7 @@ export default function AiPage() {
           sessionStorage.setItem("aiAnalysisResult", JSON.stringify(analysisRes.data?.data));
 
           showToast("Analysis complete!", "success");
-          router.push("/ai/result?mode=upload");
+          setIsApiDone(true);
         } catch (err) {
           console.error(err);
           showToast(err.response?.data?.message || err.message || "Failed to analyze photo", "error");
@@ -147,29 +158,26 @@ export default function AiPage() {
     }
   };
 
+  const handleLoadingComplete = () => {
+    setIsAnimationDone(true);
+  };
+
+  const handleModalClose = () => {
+    setIsAnalyzing(false);
+    setIsApiDone(false);
+    setIsAnimationDone(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#FBF7F3] text-[#2B1D19] scroll-smooth">
       <SiteNavbar activeLabel="AI Feature" />
 
-      {isAnalyzing && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#2b1d19]/80 backdrop-blur-sm">
-          <ScanFace className="h-16 w-16 text-[#C59B8F] animate-pulse mb-6" />
-          <p className="text-[#F3E8DE] text-lg font-serif tracking-wider mb-3">Analyzing your photo...</p>
-          <div className="w-48 h-1 bg-white/20 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-[#C59B8F] rounded-full"
-              style={{ width: "60%", animation: "scanBar 1.8s ease-in-out infinite" }}
-            />
-          </div>
-          <p className="mt-4 text-xs text-white/40 uppercase tracking-[0.2em] animate-pulse">Running AI Model</p>
-          <style>{`
-            @keyframes scanBar {
-              0% { transform: translateX(-100%); }
-              100% { transform: translateX(250%); }
-            }
-          `}</style>
-        </div>
-      )}
+      <AILoadingModal
+        isOpen={isAnalyzing}
+        onClose={handleModalClose}
+        onComplete={handleLoadingComplete}
+      />
 
       <input
         ref={fileInputRef}

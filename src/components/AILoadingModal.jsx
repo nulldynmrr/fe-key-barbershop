@@ -109,7 +109,7 @@ export default function AILoadingModal({ isOpen, onClose, onComplete, disableAut
             Analyzing your face shape...
           </h3>
           <p className="mt-3 text-sm leading-6 text-[#6e5851]" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
-            Our artisanal algorithm is mapping 128 key facial landmarks to determine your ideal proportions.
+            Our artisanal algorithm is mapping facial landmarks to determine your ideal proportions.
           </p>
         </div>
 

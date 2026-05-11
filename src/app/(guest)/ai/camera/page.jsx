@@ -2,12 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Camera, X, RefreshCw, ScanFace } from "lucide-react";
+import { Camera, X, RefreshCw } from "lucide-react";
+
 import { aiScanService } from "@/services/aiScanService";
 import { useToast } from "@/contexts/ToastContext";
 
 import Cookies from "js-cookie";
 import { saveUserAuth } from "@/utils/request";
+import AILoadingModal from "@/components/AILoadingModal";
 
 export default function AiCameraPage() {
   const router = useRouter();
@@ -17,7 +19,18 @@ export default function AiCameraPage() {
   const [stream, setStream] = useState(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isApiDone, setIsApiDone] = useState(false);
+  const [isAnimationDone, setIsAnimationDone] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+
+  useEffect(() => {
+    if (isApiDone && isAnimationDone) {
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
+      router.push("/ai/result?mode=camera");
+    }
+  }, [isApiDone, isAnimationDone, router, stream]);
 
   // Request camera access on mount
   useEffect(() => {
@@ -127,18 +140,24 @@ export default function AiCameraPage() {
       sessionStorage.setItem("aiAnalysisResult", JSON.stringify(analysisRes.data?.data));
 
       showToast("Analysis complete!", "success");
-      
-      // Navigate to result page
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
-      }
-      router.push("/ai/result?mode=camera");
+      setIsApiDone(true);
     } catch (err) {
       console.error(err);
       showToast(err.response?.data?.message || err.message || "Failed to analyze face", "error");
       setIsCapturing(false);
       setIsProcessing(false);
     }
+  };
+
+  const handleLoadingComplete = () => {
+    setIsAnimationDone(true);
+  };
+
+  const handleModalClose = () => {
+    setIsProcessing(false);
+    setIsApiDone(false);
+    setIsAnimationDone(false);
+    setIsCapturing(false);
   };
 
   return (
@@ -198,18 +217,11 @@ export default function AiCameraPage() {
       )}
 
       {/* Processing Animation */}
-      {isProcessing && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm z-40">
-          <ScanFace className="h-20 w-20 text-[#C59B8F] animate-pulse" />
-          <div className="mt-6 flex flex-col items-center">
-            <h3 className="text-xl font-serif text-[#F3E8DE] tracking-wider mb-2">Analyzing Biometrics</h3>
-            <div className="w-48 h-1 bg-white/20 rounded-full overflow-hidden">
-              <div className="h-full bg-[#C59B8F] w-1/2 animate-[progress_2s_ease-in-out_infinite]"></div>
-            </div>
-            <p className="mt-4 text-xs text-white/50 uppercase tracking-[0.2em] animate-pulse">Running AI Model...</p>
-          </div>
-        </div>
-      )}
+      <AILoadingModal
+        isOpen={isProcessing}
+        onClose={handleModalClose}
+        onComplete={handleLoadingComplete}
+      />
 
       {/* Error Message */}
       {errorMsg && (

@@ -97,15 +97,11 @@ export default function RegistrationPage() {
         return;
       }
 
-      // Simpan token dan data user ke localStorage
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.data));
+      setSuccess("Akun berhasil dibuat! Mengalihkan ke halaman verifikasi...");
 
-      setSuccess("Akun berhasil dibuat! Mengalihkan ke halaman login...");
-
-      // Redirect ke login setelah 1.5 detik
+      // Redirect ke otp setelah 1.5 detik
       setTimeout(() => {
-        router.push("/login");
+        router.push(`/otp?email=${encodeURIComponent(email)}&from=register`);
       }, 1500);
     } catch (err) {
       setError("Tidak dapat terhubung ke server. Pastikan backend sudah berjalan.");

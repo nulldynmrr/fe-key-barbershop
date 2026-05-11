@@ -84,9 +84,15 @@ function OTPForm() {
         return;
       }
 
-      // Save auth and navigate to home on success
-      saveUserAuth(data.token, data.user);
-      router.push("/home");
+      const fromParam = searchParams.get("from");
+      if (fromParam === "register") {
+        router.push("/login?verified=true");
+      } else {
+        // Save auth and navigate to home on success
+        saveUserAuth(data.token, data.user);
+        router.push("/home");
+      }
+
     } catch (err) {
       const msg = err?.response?.data?.message;
       setError(msg || "Kode OTP tidak valid. Silakan coba lagi.");

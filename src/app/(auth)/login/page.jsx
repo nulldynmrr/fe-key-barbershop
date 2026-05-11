@@ -3,18 +3,22 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useGoogleLogin } from "@react-oauth/google";
 import api, { saveUserAuth } from "@/utils/request";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  
+  const isVerified = searchParams.get("verified") === "true";
 
   const handleGoogleLogin = useGoogleLogin({
     flow: "implicit",
@@ -86,7 +90,16 @@ export default function LoginPage() {
       saveUserAuth(data.token, data.user);
       router.push("/home");
     } catch (err) {
-      const msg = err?.response?.data?.message;
+      const errData = err?.response?.data;
+      if (errData?.needsVerification) {
+        setError(errData.message);
+        setTimeout(() => {
+          router.push(`/otp?email=${encodeURIComponent(email)}&from=login`);
+        }, 1500);
+        return;
+      }
+      
+      const msg = errData?.message;
       setError(
         msg ||
           "Tidak dapat terhubung ke server. Pastikan backend sudah berjalan.",
@@ -145,6 +158,17 @@ export default function LoginPage() {
             <br /> recommendation feature.
           </p>
         </div>
+
+        {isVerified && (
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
+            <p
+              className="text-xs text-green-600 text-center"
+              style={{ fontFamily: "var(--font-be-vietnam)" }}
+            >
+              Email berhasil diverifikasi! Silakan login untuk melanjutkan.
+            </p>
+          </div>
+        )}
 
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
@@ -296,5 +320,13 @@ export default function LoginPage() {
         © 2026 KEY BARBER
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="flex w-full min-h-screen items-center justify-center">Loading...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

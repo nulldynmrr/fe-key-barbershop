@@ -35,7 +35,8 @@ export default function SiteNavbar({
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const res = await api.get("/users/profile");
+        const res = await api.get("/users/profile", null, {}, true);
+
         if (res.data && res.data.success) {
           setUser(res.data.data);
         }
@@ -48,6 +49,7 @@ export default function SiteNavbar({
       fetchProfile();
     }
   }, [showSignIn]);
+
 
   const isAiPage = pathname?.startsWith("/ai");
 
@@ -78,16 +80,19 @@ export default function SiteNavbar({
                   <Link href="/profile" className="text-[0.65rem] uppercase tracking-[0.25em] text-[#4a1a1a] transition hover:text-[#2b1d19] font-bold" style={{ fontFamily: "Liberation Serif" }}>
                     HI, {user.nama.split(" ")[0]}
                   </Link>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="flex items-center gap-1 text-[0.6rem] bg-[#f7f1ea] px-1.5 py-0.5 rounded-sm border border-[#e6d1c7] text-[#5a2725] font-semibold">
-                      <Coins className="w-3 h-3 text-[#C59B8F]" />
-                      {user.sisa_credit || 0}
-                    </span>
-                    <span className="flex items-center gap-1 text-[0.6rem] bg-[#4a1a1a] px-1.5 py-0.5 rounded-sm text-[#fbf7f3] uppercase tracking-wider">
-                      <Sparkles className="w-3 h-3 text-[#C59B8F]" />
-                      {user.active_package?.namaPaket || "Free"}
-                    </span>
-                  </div>
+                  {isAiPage && (
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="flex items-center gap-1 text-[0.6rem] bg-[#f7f1ea] px-1.5 py-0.5 rounded-sm border border-[#e6d1c7] text-[#5a2725] font-semibold">
+                        <Coins className="w-3 h-3 text-[#C59B8F]" />
+                        {user.sisa_credit || 0}
+                      </span>
+                      <span className="flex items-center gap-1 text-[0.6rem] bg-[#4a1a1a] px-1.5 py-0.5 rounded-sm text-[#fbf7f3] uppercase tracking-wider">
+                        <Sparkles className="w-3 h-3 text-[#C59B8F]" />
+                        {user.active_package?.namaPaket || "Free"}
+                      </span>
+                    </div>
+                  )}
+
                 </div>
               </div>
             ) : (
@@ -109,7 +114,7 @@ export default function SiteNavbar({
         </div>
 
         <div className="flex items-center gap-3 lg:hidden">
-          {user && (
+          {user && isAiPage && (
             <div className="flex flex-col items-end mr-2">
               <span className="flex items-center gap-1 text-[0.55rem] text-[#5a2725] font-semibold">
                 <Coins className="w-2.5 h-2.5 text-[#C59B8F]" />
@@ -120,6 +125,7 @@ export default function SiteNavbar({
               </span>
             </div>
           )}
+
           {!isAiPage && (
             <Link
               href={ctaHref}
@@ -160,16 +166,19 @@ export default function SiteNavbar({
                     <Link href="/profile" onClick={closeMenu} className="block text-sm uppercase tracking-[0.25em] text-[#4a1a1a] transition hover:text-[#2b1d19] font-bold">
                       HI, {user.nama.split(" ")[0]}
                     </Link>
-                    <div className="flex gap-2">
-                      <span className="flex items-center gap-1 text-[0.6rem] bg-[#f7f1ea] px-2 py-1 rounded-sm border border-[#e6d1c7] text-[#5a2725] font-semibold">
-                        <Coins className="w-3 h-3 text-[#C59B8F]" />
-                        {user.sisa_credit || 0}
-                      </span>
-                      <span className="flex items-center gap-1 text-[0.6rem] bg-[#4a1a1a] px-2 py-1 rounded-sm text-[#fbf7f3] uppercase tracking-wider">
-                        <Sparkles className="w-3 h-3 text-[#C59B8F]" />
-                        {user.active_package?.namaPaket || "Free"}
-                      </span>
-                    </div>
+                    {isAiPage && (
+                      <div className="flex gap-2">
+                        <span className="flex items-center gap-1 text-[0.6rem] bg-[#f7f1ea] px-2 py-1 rounded-sm border border-[#e6d1c7] text-[#5a2725] font-semibold">
+                          <Coins className="w-3 h-3 text-[#C59B8F]" />
+                          {user.sisa_credit || 0}
+                        </span>
+                        <span className="flex items-center gap-1 text-[0.6rem] bg-[#4a1a1a] px-2 py-1 rounded-sm text-[#fbf7f3] uppercase tracking-wider">
+                          <Sparkles className="w-3 h-3 text-[#C59B8F]" />
+                          {user.active_package?.namaPaket || "Free"}
+                        </span>
+                      </div>
+                    )}
+
                   </div>
                 ) : (
                   <Link href={signInHref} onClick={closeMenu} className="block text-sm uppercase tracking-[0.25em] text-[#4a1a1a] transition hover:text-[#2b1d19]">

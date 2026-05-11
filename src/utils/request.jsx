@@ -91,8 +91,8 @@ export const logoutUser = () => {
 };
 
 const api = {
-  get: (url, params = null, headers = {}) =>
-    request({ method: "get", url, params, headers }),
+  get: (url, params = null, headers = {}, skipAuthRedirect = false) =>
+    request({ method: "get", url, params, headers, skipAuthRedirect }),
 
   post: (url, data, headers = {}, skipAuthRedirect = false) =>
     request({ method: "post", url, data, headers, skipAuthRedirect }),

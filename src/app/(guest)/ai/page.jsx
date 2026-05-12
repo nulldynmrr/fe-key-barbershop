@@ -143,7 +143,13 @@ export default function AiPage() {
           setIsApiDone(true);
         } catch (err) {
           console.error(err);
-          showToast(err.response?.data?.message || err.message || "Failed to analyze photo", "error");
+          const errCode = err.response?.data?.errorCode;
+          if (errCode === "SERVICE_UNAVAILABLE" || err.response?.status === 503) {
+            router.push("/ai/busy");
+            return;
+          } else {
+            showToast(err.response?.data?.message || err.message || "Failed to analyze photo", "error");
+          }
           setIsAnalyzing(false);
           if (fileInputRef.current) fileInputRef.current.value = "";
         }

@@ -221,13 +221,23 @@ export default function DashboardPage() {
       {modelAiData.some((m) => m.value <= 20) && (
         <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl shadow-sm flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-          <div>
+          <div className="flex-1">
             <h4 className="text-red-800 font-bold text-sm" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
-              Peringatan Token AI Hampir Habis!
+              ⚠️ DANGER: Budget API AI Hampir / Sudah Habis!
             </h4>
             <p className="text-red-600 text-xs mt-1" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
-              Satu atau lebih model AI memiliki sisa budget/token kurang dari 20%. Segera top-up atau perbarui API Key untuk menghindari gangguan layanan.
+              Satu atau lebih model AI memiliki sisa budget kurang dari 20%. Fitur Virtual Try-On dan analisis AI akan GAGAL jika budget habis. Segera top-up saldo provider atau ganti API Key.
             </p>
+            <div className="mt-3 flex gap-2">
+              <a
+                href="/ai-config"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-600 text-white text-xs font-bold rounded-lg hover:bg-red-700 transition-colors shadow-sm"
+                style={{ fontFamily: "var(--font-plus-jakarta)" }}
+              >
+                <AlertTriangle className="w-3.5 h-3.5" />
+                Kelola API Key Sekarang
+              </a>
+            </div>
           </div>
         </div>
       )}

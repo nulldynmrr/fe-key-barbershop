@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Key Barbershop Frontend
 
-## Getting Started
+Platform digital yang menghadirkan standar baru dalam industri grooming melalui personalisasi berbasis teknologi dan desain antarmuka yang intuitif.
 
-First, run the development server:
+## Pilar Utama Layanan
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### Personalisasi Gaya
+Kami menghadirkan pengalaman yang benar-benar personal bagi setiap pelanggan. Melalui analisis karakteristik visual yang mendalam, platform ini memberikan rekomendasi gaya rambut yang paling sesuai dengan profil unik setiap individu, memastikan kepuasan maksimal sebelum langkah pertama pemotongan dilakukan.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Ekosistem Digital Pelanggan
+- **Manajemen Keanggotaan**: Sistem yang dirancang untuk memberikan nilai tambah bertahap, mulai dari akses dasar hingga layanan eksklusif bagi anggota premium.
+- **Inspirasi Tanpa Batas**: Integrasi konten kreatif dari berbagai platform media sosial untuk memastikan pelanggan selalu mendapatkan tren terbaru secara langsung.
+- **Navigasi Reservasi**: Alur yang efisien untuk memudahkan eksplorasi layanan dan pemesanan jadwal kunjungan.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+### Pusat Kendali Operasional
+Solusi manajemen terpadu bagi administrator untuk memantau metrik bisnis, mengelola data operasional barber, serta melakukan kalibrasi parameter teknologi secara real-time demi menjaga kualitas layanan.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Arsitektur Teknologi
 
-## Learn More
+Aplikasi ini dibangun menggunakan tatanan teknologi modern yang mengutamakan kecepatan dan stabilitas:
 
-To learn more about Next.js, take a look at the following resources:
+- **Inti Framework**: Next.js 14 (App Router)
+- **Visual & Interaksi**: Tailwind CSS 4, Framer Motion, AOS
+- **Integrasi Data**: Axios & React Context API
+- **Komponen Antarmuka**: Shadcn UI, Radix UI, Lucide Icons
+- **Analitik Visual**: Recharts
+- **Keamanan Akses**: Google OAuth
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Memulai Pengembangan
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Persiapan Lingkungan
+Pastikan perangkat Anda telah menggunakan Node.js versi 18.x atau yang lebih baru.
 
-## Deploy on Vercel
+### Langkah Instalasi
+1. Gandakan repositori ke direktori lokal.
+2. Pasang dependensi yang diperlukan:
+   ```bash
+   npm install
+   ```
+3. Jalankan lingkungan pengembangan:
+   ```bash
+   npm run dev
+   ```
+4. Aplikasi dapat diakses melalui alamat `http://localhost:3000`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Struktur Organisasi Kode
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `src/app`: Definisi rute, layout, dan logika halaman utama.
+- `src/components`: Pustaka komponen antarmuka yang modular.
+- `src/services`: Layer komunikasi data dengan sistem backend.
+- `src/contexts`: Pengelola status global aplikasi.
+- `src/lib` & `src/utils`: Konfigurasi teknis dan fungsi pembantu.
+
+---
+Dedikasi untuk menghadirkan pengalaman grooming yang cerdas dan berkelas.

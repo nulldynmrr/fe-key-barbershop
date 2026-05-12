@@ -1,55 +1,77 @@
-# Key Barbershop Frontend
+# Key Barbershop - Frontend
 
-Platform digital yang menghadirkan standar baru dalam industri grooming melalui personalisasi berbasis teknologi dan desain antarmuka yang intuitif.
+Aplikasi frontend modern untuk **Key Barbershop**, dibangun menggunakan **Next.js 14** dengan fitur unggulan **AI Hair Transformation**. Project ini dirancang untuk memberikan pengalaman premium bagi pelanggan barbershop dan kemudahan manajemen bagi admin.
 
-## Pilar Utama Layanan
+## Fitur Utama
 
-### Personalisasi Gaya
-Kami menghadirkan pengalaman yang benar-benar personal bagi setiap pelanggan. Melalui analisis karakteristik visual yang mendalam, platform ini memberikan rekomendasi gaya rambut yang paling sesuai dengan profil unik setiap individu, memastikan kepuasan maksimal sebelum langkah pertama pemotongan dilakukan.
+### AI Hair Transformation
+- **Analisis Wajah**: Menggunakan AI untuk menganalisis bentuk wajah pengguna.
+- **Rekomendasi Gaya**: Memberikan rekomendasi gaya rambut yang paling sesuai berdasarkan hasil analisis.
+- **Visualisasi**: (Segera hadir/Eksperimental) Visualisasi transformasi gaya rambut secara real-time.
 
-### Ekosistem Digital Pelanggan
-- **Manajemen Keanggotaan**: Sistem yang dirancang untuk memberikan nilai tambah bertahap, mulai dari akses dasar hingga layanan eksklusif bagi anggota premium.
-- **Inspirasi Tanpa Batas**: Integrasi konten kreatif dari berbagai platform media sosial untuk memastikan pelanggan selalu mendapatkan tren terbaru secara langsung.
-- **Navigasi Reservasi**: Alur yang efisien untuk memudahkan eksplorasi layanan dan pemesanan jadwal kunjungan.
+### User Experience
+- **Sistem Keanggotaan**: Fitur Free dan Premium dengan akses konten yang berbeda.
+- **Social Media Gallery**: Integrasi feed media sosial untuk inspirasi gaya rambut terbaru.
+- **Layanan**: Informasi lengkap mengenai layanan barbershop yang tersedia.
 
-### Pusat Kendali Operasional
-Solusi manajemen terpadu bagi administrator untuk memantau metrik bisnis, mengelola data operasional barber, serta melakukan kalibrasi parameter teknologi secara real-time demi menjaga kualitas layanan.
+### Pembayaran & Transaksi
+- **Integrasi Gateway**: Sistem pembayaran yang aman untuk upgrade keanggotaan Premium.
+- **Riwayat Transaksi**: Pengguna dapat melihat riwayat pembayaran mereka.
 
-## Arsitektur Teknologi
+### Dashboard Admin
+- **Analisis Statistik**: Grafik pendapatan dan statistik penggunaan AI menggunakan Recharts.
+- **Manajemen Barber**: Kelola data barber yang bertugas.
+- **Konfigurasi AI**: Pengaturan model dan parameter AI langsung dari dashboard.
+- **Kelola Konten**: Update gallery media sosial dan daftar layanan.
 
-Aplikasi ini dibangun menggunakan tatanan teknologi modern yang mengutamakan kecepatan dan stabilitas:
+## Teknologi
 
-- **Inti Framework**: Next.js 14 (App Router)
-- **Visual & Interaksi**: Tailwind CSS 4, Framer Motion, AOS
-- **Integrasi Data**: Axios & React Context API
-- **Komponen Antarmuka**: Shadcn UI, Radix UI, Lucide Icons
-- **Analitik Visual**: Recharts
-- **Keamanan Akses**: Google OAuth
+Aplikasi ini dibangun dengan teknologi mutakhir:
 
-## Memulai Pengembangan
+- **Framework**: [Next.js 14](https://nextjs.org/) (App Router)
+- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/), [Framer Motion](https://www.framer.com/motion/), [AOS (Animate On Scroll)](https://michalsnik.github.io/aos/)
+- **State Management & Data**: [Axios](https://axios-http.com/), [React Context API](https://react.dev/learn/passing-data-deeply-with-context)[Lucide Icons](https://lucide.dev/)
+- **Charts**: [Recharts](https://recharts.org/)
+- **Authentication**: [Google OAuth](https://github.com/MomenSherif/react-oauth)
 
-### Persiapan Lingkungan
-Pastikan perangkat Anda telah menggunakan Node.js versi 18.x atau yang lebih baru.
+## Memulai (Getting Started)
 
-### Langkah Instalasi
-1. Gandakan repositori ke direktori lokal.
-2. Pasang dependensi yang diperlukan:
+### Prasyarat
+- Node.js 18.x atau versi terbaru
+- NPM atau Yarn
+
+### Instalasi
+
+1. Clone repository ini.
+2. Masuk ke direktori project:
+   ```bash
+   cd fe-key-barbershop
+   ```
+3. Install dependensi:
    ```bash
    npm install
    ```
-3. Jalankan lingkungan pengembangan:
-   ```bash
-   npm run dev
-   ```
-4. Aplikasi dapat diakses melalui alamat `http://localhost:3000`.
 
-## Struktur Organisasi Kode
+### Pengembangan
 
-- `src/app`: Definisi rute, layout, dan logika halaman utama.
-- `src/components`: Pustaka komponen antarmuka yang modular.
-- `src/services`: Layer komunikasi data dengan sistem backend.
-- `src/contexts`: Pengelola status global aplikasi.
-- `src/lib` & `src/utils`: Konfigurasi teknis dan fungsi pembantu.
+Jalankan server pengembangan:
 
----
-Dedikasi untuk menghadirkan pengalaman grooming yang cerdas dan berkelas.
+```bash
+npm run dev
+```
+
+Buka [http://localhost:3000](http://localhost:3000) di browser Anda untuk melihat hasilnya.
+
+## Struktur Folder
+
+- `src/app`: Routing utama menggunakan App Router (Admin, Auth, Guest).
+- `src/components`: Komponen UI yang reusable.
+- `src/services`: Logika integrasi API (Axios).
+- `src/contexts`: Manajemen state global (Auth, UI).
+- `src/lib`: Konfigurasi library pihak ketiga.
+- `src/utils`: Fungsi pembantu (helpers).
+- `public`: Aset statis seperti gambar dan ikon.
+
+## Catatan Tambahan
+
+Pastikan file `.env` sudah terkonfigurasi dengan benar untuk menghubungkan aplikasi dengan Backend API dan layanan AI.

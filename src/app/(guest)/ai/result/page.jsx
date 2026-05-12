@@ -341,8 +341,15 @@ export default function AiResultPage() {
           <div className="px-6 py-12 lg:px-12 xl:px-16 flex flex-col space-y-12">
 
             <div ref={targetScrollRef} className="pt-4 flex flex-col space-y-8 scroll-mt-24">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {styles.slice(0, 2).map((style, idx) => {
+              {(() => {
+                const mainCount = aiImageUrls.length > 0 ? Math.min(aiImageUrls.length, 5) : 2;
+                const gridClass = mainCount === 1 ? "grid-cols-1" :
+                                  mainCount === 2 ? "grid-cols-1 md:grid-cols-2" :
+                                  mainCount === 4 ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-4" :
+                                  "grid-cols-1 md:grid-cols-2 lg:grid-cols-3";
+                return (
+                  <div className={`grid ${gridClass} gap-6`}>
+                    {styles.slice(0, mainCount).map((style, idx) => {
                   const hasImage = idx < aiImageUrls.length;
                   const isSelected = selectedStyleIndex === idx;
                   const isLocked = isPremiumLocked && idx > 0;
@@ -360,7 +367,7 @@ export default function AiResultPage() {
                           window.scrollTo({ top: 0, behavior: 'smooth' });
                         }
                       }}
-                      className={`bg-[#2B1615] rounded-sm border ${isSelected ? 'border-[#C59B8F] shadow-[0_0_20px_rgba(197,155,143,0.3)]' : 'border-[#3A1E1E]'} flex flex-col justify-end relative h-[400px] md:h-[500px] overflow-hidden group hover:border-[#C59B8F] transition-all duration-700 ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} ${isLocked ? 'cursor-pointer' : (hasImage ? 'cursor-pointer' : 'cursor-default opacity-90')}`}
+                      className={`bg-[#2B1615] rounded-sm border ${isSelected ? 'border-[#C59B8F] shadow-[0_0_20px_rgba(197,155,143,0.3)]' : 'border-[#3A1E1E]'} flex flex-col relative h-[500px] md:h-[650px] overflow-hidden group hover:border-[#C59B8F] transition-all duration-700 ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} ${isLocked ? 'cursor-pointer' : (hasImage ? 'cursor-pointer' : 'cursor-default opacity-90')}`}
                     >
                       {isLocked && (
                         <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-[#2B1D19]/60 backdrop-blur-md transition-all group-hover:bg-[#2B1D19]/40">
@@ -369,60 +376,80 @@ export default function AiResultPage() {
                           <p className="text-[0.5rem] text-[#D2C3BD] mt-1 uppercase tracking-widest">Upgrade to view</p>
                         </div>
                       )}
-                      <div className={`absolute inset-0 bg-gradient-to-b from-[#2B1615]/20 via-[#2B1615]/80 to-[#1F0D0D] z-0 ${isLocked ? 'blur-xl' : ''}`}></div>
-                      <div className={`relative z-10 p-8 flex flex-col h-full justify-end transition-transform duration-700 ${!isLocked ? 'group-hover:-translate-y-2' : ''} ${isLocked ? 'blur-sm grayscale' : ''}`}>
-                        <div className="flex justify-between items-end border-b border-[#3A1E1E] pb-5 mb-5">
+                      
+                      {hasImage && !isLocked && (
+                        <div className="relative h-[60%] w-full shrink-0 overflow-hidden">
+                          <img 
+                            src={aiImageUrls[idx].startsWith("data:") || aiImageUrls[idx].startsWith("http") ? aiImageUrls[idx] : `${(process.env.NEXT_PUBLIC_API_URL || "").replace("/api/v1", "")}${aiImageUrls[idx]}`}
+                            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                            alt={style.nama_gaya}
+                          />
+                          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#1F0D0D] to-transparent z-10 pointer-events-none"></div>
+                        </div>
+                      )}
+                      
+                      {(!hasImage || isLocked) && (
+                        <div className={`absolute inset-0 bg-gradient-to-b from-[#2B1615]/20 via-[#2B1615]/80 to-[#1F0D0D] z-0 ${isLocked ? 'blur-xl' : ''}`}></div>
+                      )}
+
+                      <div className={`relative z-10 p-6 md:px-8 md:pb-8 flex flex-col ${hasImage && !isLocked ? 'flex-1 justify-between bg-[#1F0D0D] pt-2' : 'h-full justify-end'} transition-transform duration-700 ${!isLocked && !hasImage ? 'group-hover:-translate-y-2' : ''} ${isLocked ? 'blur-sm grayscale' : ''}`}>
+                        <div className="flex justify-between items-end border-b border-[#3A1E1E] pb-4 mb-4">
                           <div>
-                            <p className="text-[0.6rem] uppercase tracking-widest text-[#C59B8F] mb-1 font-bold">
-                              {idx === 0 ? "TOP RECOMMENDATION" : "RECOMMENDATION #2"}
+                            <p className="text-[0.55rem] md:text-[0.6rem] uppercase tracking-widest text-[#C59B8F] mb-1 font-bold">
+                              {idx === 0 ? "TOP RECOMMENDATION" : `RECOMMENDATION #${idx + 1}`}
                             </p>
-                            <h3 className="text-2xl md:text-3xl text-[#F3E8DE] font-serif font-medium">{style.nama_gaya}</h3>
+                            <h3 className="text-xl md:text-3xl text-[#F3E8DE] font-serif font-medium leading-tight">{style.nama_gaya}</h3>
                           </div>
-                          <div className="bg-[#592D2D] rounded-sm flex flex-col items-center justify-center px-4 py-2 shadow-lg group-hover:scale-110 transition-transform duration-500">
-                            <span className="text-xl font-bold text-[#F3E8DE]">{style.match_score ? `${style.match_score}%` : "-"}</span>
-                            <span className="text-[0.45rem] uppercase tracking-widest text-[#D2C3BD]">MATCH</span>
+                          <div className="bg-[#592D2D] rounded-sm flex flex-col items-center justify-center px-3 py-1.5 md:px-4 md:py-2 shadow-lg group-hover:scale-105 transition-transform duration-500">
+                            <span className="text-lg md:text-xl font-bold text-[#F3E8DE]">{style.match_score ? `${style.match_score}%` : "-"}</span>
+                            <span className="text-[0.4rem] md:text-[0.45rem] uppercase tracking-widest text-[#D2C3BD]">MATCH</span>
                           </div>
                         </div>
 
-                        <div className="space-y-3">
-                          <p className="text-[0.6rem] uppercase tracking-widest text-[#A68A82] font-semibold">WHY IT WORKS</p>
-                          <p className="text-[0.75rem] md:text-[0.85rem] text-[#D2C3BD] leading-relaxed line-clamp-3">
+                        <div className="space-y-2 flex-1">
+                          <p className="text-[0.55rem] md:text-[0.6rem] uppercase tracking-widest text-[#A68A82] font-semibold">WHY IT WORKS</p>
+                          <p className="text-[0.7rem] md:text-[0.8rem] text-[#D2C3BD] leading-relaxed line-clamp-3">
                             {style.alasan || "Perfect for your face shape and natural features."}
                           </p>
                         </div>
 
-                        <div className="mt-5 pt-5 border-t border-[#3A1E1E]/50 flex justify-between items-center">
-                          <div className="flex items-center gap-2 text-[#8A9A5B]">
-                            <Sparkles className="w-4 h-4 animate-pulse" />
-                            <span className="text-[0.65rem] font-bold tracking-wider uppercase">Premium Image Available</span>
+                        <div className="mt-4 pt-4 border-t border-[#3A1E1E]/50 flex justify-between items-center">
+                          <div className="flex items-center gap-1.5 text-[#8A9A5B]">
+                            <Sparkles className="w-3 h-3 md:w-4 md:h-4 animate-pulse" />
+                            <span className="text-[0.55rem] md:text-[0.65rem] font-bold tracking-wider uppercase">Premium Image Available</span>
                           </div>
                           {isSelected ? (
-                            <span className="text-[0.6rem] border border-[#C59B8F] text-[#C59B8F] px-4 py-1.5 rounded-sm font-bold uppercase tracking-wider bg-[#C59B8F]/10">Viewing</span>
+                            <span className="text-[0.55rem] md:text-[0.6rem] border border-[#C59B8F] text-[#C59B8F] px-3 py-1 md:px-4 md:py-1.5 rounded-sm font-bold uppercase tracking-wider bg-[#C59B8F]/10">Viewing</span>
                           ) : (
-                            <span className="text-[0.6rem] bg-[#C59B8F] text-[#2B1615] px-4 py-1.5 rounded-sm font-bold uppercase tracking-wider group-hover:bg-[#d4b4a9] transition-colors">View Image</span>
+                            <span className="text-[0.55rem] md:text-[0.6rem] bg-[#C59B8F] text-[#2B1615] px-3 py-1 md:px-4 md:py-1.5 rounded-sm font-bold uppercase tracking-wider group-hover:bg-[#d4b4a9] transition-colors">View Image</span>
                           )}
                         </div>
                       </div>
+
                     </div>
                   );
                 })}
               </div>
+              );})()}
 
-              {styles.length > 2 && (
-                <div className="bg-[#2A1616]/40 border border-[#3A1E1E] rounded-sm px-4 py-6">
-                  <div className="flex items-center gap-3 mb-8">
-                    <div className="h-px flex-1 bg-[#3A1E1E]"></div>
-                    <h4 className="text-[0.65rem] uppercase tracking-[0.4em] text-[#A68A82] font-bold">Alternative Selections</h4>
-                    <div className="h-px flex-1 bg-[#3A1E1E]"></div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {styles.slice(2, 5).map((style, idx) => (
-                      <div 
-                        key={idx} 
-                        onClick={() => isPremiumLocked && router.push('/service')}
-                        className={`p-6 border border-[#3A1E1E] bg-[#211111] hover:border-[#C59B8F]/30 transition-all duration-500 group/alt relative overflow-hidden ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'} ${isPremiumLocked ? 'cursor-pointer' : ''}`} 
-                        style={{ transitionDelay: `${idx * 100}ms` }}
-                      >
+              {(() => {
+                const mainCount = aiImageUrls.length > 0 ? Math.min(aiImageUrls.length, 5) : 2;
+                if (styles.length <= mainCount) return null;
+                return (
+                  <div className="bg-[#2A1616]/40 border border-[#3A1E1E] rounded-sm px-4 py-6">
+                    <div className="flex items-center gap-3 mb-8">
+                      <div className="h-px flex-1 bg-[#3A1E1E]"></div>
+                      <h4 className="text-[0.65rem] uppercase tracking-[0.4em] text-[#A68A82] font-bold">Alternative Selections</h4>
+                      <div className="h-px flex-1 bg-[#3A1E1E]"></div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {styles.slice(mainCount).map((style, idx) => (
+                        <div 
+                          key={idx + mainCount} 
+                          onClick={() => isPremiumLocked && router.push('/service')}
+                          className={`p-6 border border-[#3A1E1E] bg-[#211111] hover:border-[#C59B8F]/30 transition-all duration-500 group/alt relative overflow-hidden ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'} ${isPremiumLocked ? 'cursor-pointer' : ''}`} 
+                          style={{ transitionDelay: `${idx * 100}ms` }}
+                        >
                         {isPremiumLocked && (
                           <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#2B1D19]/70 backdrop-blur-sm">
                             <Lock className="w-6 h-6 text-[#C59B8F] mb-2" />
@@ -431,7 +458,7 @@ export default function AiResultPage() {
                         )}
                         <div className={isPremiumLocked ? "blur-md grayscale opacity-40 select-none" : ""}>
                           <div className="flex justify-between items-start mb-4">
-                            <span className="text-[0.55rem] text-[#A68A82] font-bold tracking-widest uppercase">RECOMENDATION #{idx + 3}</span>
+                            <span className="text-[0.55rem] text-[#A68A82] font-bold tracking-widest uppercase">RECOMMENDATION #{idx + mainCount + 1}</span>
                             <span className="text-xs font-bold text-[#F3E8DE] bg-[#3A1E1E] px-2 py-1 rounded-sm">{style.match_score}%</span>
                           </div>
                           <h5 className="text-lg text-[#F3E8DE] font-serif mb-3 group-hover/alt:text-[#C59B8F] transition-colors">{style.nama_gaya}</h5>
@@ -441,7 +468,8 @@ export default function AiResultPage() {
                     ))}
                   </div>
                 </div>
-              )}
+                );
+              })()}
 
               <div className="flex flex-col items-center pt-4 pb-8 space-y-4">
                 {activeFeatures.includes("VIRTUAL_TRY_ON") && !isPremiumLocked ? (

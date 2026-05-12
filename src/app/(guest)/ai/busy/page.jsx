@@ -50,31 +50,31 @@ export default function AiBusyPage() {
   };
 
   return (
-    <main className="h-[100dvh] w-full overflow-hidden bg-white flex flex-col relative">
+    <main className="min-h-screen lg:h-[100dvh] w-full lg:overflow-hidden bg-white flex flex-col relative overflow-y-auto">
       <SiteNavbar activeLabel="AI Feature" />
 
-      <div className="flex-1 flex w-full h-full relative z-10 overflow-hidden">
-        <div className="w-full h-full grid lg:grid-cols-2 gap-0 overflow-hidden">
+      <div className="flex-1 flex w-full relative z-10">
+        <div className="w-full grid lg:grid-cols-2 gap-0">
 
           {/* Left Panel: Illustration & Branding */}
           <div className="hidden lg:flex flex-col bg-[#2B1D19] relative overflow-hidden">
             {/* Background Texture */}
             <div className="absolute inset-0 opacity-10 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
-
+            
             {/* Illustration */}
             <div className="flex-1 flex items-center justify-center p-8 pb-0 relative z-10 min-h-0">
               <div className="relative w-full h-full max-h-[110%] aspect-square animate-in fade-in zoom-in duration-1000">
-                <Image
-                  src="/images/ILUSTRASI BUSY.png"
-                  alt="Barber Busy Illustration"
+                <Image 
+                  src="/images/ILUSTRASI BUSY.png" 
+                  alt="Barber Busy Illustration" 
                   fill
-                  className="object-contain "
+                  className="object-contain"
                   priority
                 />
               </div>
             </div>
 
-            {/* Info Text - Compacted */}
+            {/* Info Text */}
             <div className="p-12 pb-14 pt-4 relative z-10 space-y-5">
               <div>
                 <h1 className="text-5xl font-semibold leading-tight mb-3 text-[#FBF7F3]" style={{ fontFamily: "var(--font-playfair)" }}>
@@ -93,23 +93,26 @@ export default function AiBusyPage() {
           </div>
 
           {/* Right Panel: Interactive Form */}
-          <div className="flex flex-col p-8 md:p-16 justify-center bg-[#FBF7F3] overflow-hidden">
+          <div className="flex flex-col p-8 md:p-16 justify-center bg-[#FBF7F3]">
             {!isSuccess ? (
-              <div className="w-full max-w-sm mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
+              <div className="w-full max-w-sm mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700 py-10 lg:py-0">
                 <div className="lg:hidden text-center mb-4">
-                  <div className="relative w-36 h-36 mx-auto mb-2">
-                    <Image
-                      src="/images/ILUSTRASI BUSY.png"
-                      alt="Barber Busy Illustration"
+                  <div className="relative w-48 h-48 mx-auto mb-4">
+                    <Image 
+                      src="/images/ILUSTRASI BUSY.png" 
+                      alt="Barber Busy Illustration" 
                       fill
                       className="object-contain"
                     />
                   </div>
-                  <h2 className="text-3xl font-semibold text-[#2b1d19]" style={{ fontFamily: "var(--font-playfair)" }}>Antrian Penuh</h2>
+                  <h2 className="text-4xl font-semibold text-[#2b1d19] mb-2" style={{ fontFamily: "var(--font-playfair)" }}>Antrian Penuh</h2>
+                  <p className="text-sm text-[#6e5851] leading-relaxed mb-6 px-4" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
+                    Barber AI kami sedang melayani banyak permintaan. Tim kami segera kembali normal secepat kilat.
+                  </p>
                 </div>
 
-                {/* Keamanan Kredit - Moved here */}
-                <div className="flex items-start gap-4 p-4 rounded-xl bg-white border border-[#e6d1c7] shadow-sm">
+                {/* Keamanan Kredit */}
+                <div className="flex items-start gap-4 p-5 rounded-xl bg-white border border-[#e6d1c7] shadow-sm">
                   <AlertCircle className="h-5 w-5 text-[#8b1a1a] shrink-0 mt-0.5" />
                   <p className="text-[11px] text-[#6e5851] leading-normal" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
                     <span className="text-[#2b1d19] font-bold block mb-0.5 uppercase tracking-wider text-[9px]">Keamanan Kredit</span>
@@ -136,7 +139,7 @@ export default function AiBusyPage() {
                       id="pesan"
                       name="pesan"
                       required
-                      rows="5"
+                      rows="6"
                       value={formData.pesan}
                       onChange={handleChange}
                       className="w-full bg-white border-2 border-[#e6d1c7] rounded-xl px-6 py-5 text-sm focus:outline-none focus:border-[#c57e7b] transition-all resize-none shadow-sm placeholder:text-[#2b1d19]/20"
@@ -155,19 +158,23 @@ export default function AiBusyPage() {
                       {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                       Kirim Sekarang
                     </button>
-
-
                   </div>
                 </form>
+
+                <div className="lg:hidden text-center pt-4">
+                  <p className="text-[9px] uppercase tracking-[0.4em] text-[#2b1d19]/20" style={{ fontFamily: "var(--font-be-vietnam)" }}>
+                    © 2026 Key Barber AI Experience
+                  </p>
+                </div>
               </div>
             ) : (
-              <div className="w-full max-w-sm mx-auto text-center space-y-6 animate-in fade-in zoom-in duration-500">
+              <div className="w-full max-w-sm mx-auto text-center space-y-6 animate-in fade-in zoom-in duration-500 py-20">
                 <div className="inline-flex items-center justify-center h-24 w-24 rounded-full bg-white border-4 border-[#f0f9f4] shadow-xl mb-1">
                   <Send className="h-10 w-10 text-[#2e8b57] ml-1.5" />
                 </div>
                 <div className="space-y-2">
                   <h2 className="text-3xl text-[#1e5c3a]" style={{ fontFamily: "var(--font-noto-serif)" }}>Terima Kasih</h2>
-                  <p className="text-[#3b7a57] text-sm leading-relaxed" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
+                  <p className="text-[#3b7a57] text-sm leading-relaxed px-4" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
                     Pesan Anda telah kami terima dan akan segera diproses oleh tim Master Barber kami.
                   </p>
                 </div>

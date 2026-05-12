@@ -115,10 +115,10 @@ export default function AiConfigPage() {
         setLogsData(logsRes.data.data || []);
         if (logsRes.data.meta) {
           setLogsPagination({
-            currentPage: logsRes.data.meta.page,
-            totalPages: logsRes.data.meta.totalPages,
-            totalItems: logsRes.data.meta.total,
-            limit: logsRes.data.meta.limit,
+            currentPage: Number(logsRes.data.meta.page),
+            totalPages: Number(logsRes.data.meta.totalPages),
+            totalItems: Number(logsRes.data.meta.total),
+            limit: Number(logsRes.data.meta.limit),
           });
         }
       }
@@ -131,18 +131,25 @@ export default function AiConfigPage() {
   };
 
   const fetchLogs = async (page = 1) => {
+    console.log("Fetching logs for page:", page);
     setIsLogsLoading(true);
     try {
       const res = await aiConfigService.getLogs(page, logsPagination.limit);
+      console.log("Logs response:", res.data);
       if (res.data.success) {
         setLogsData(res.data.data || []);
         if (res.data.meta) {
           setLogsPagination({
-            currentPage: res.data.meta.page,
-            totalPages: res.data.meta.totalPages,
-            totalItems: res.data.meta.total,
-            limit: res.data.meta.limit,
+            currentPage: Number(res.data.meta.page),
+            totalPages: Number(res.data.meta.totalPages),
+            totalItems: Number(res.data.meta.total),
+            limit: Number(res.data.meta.limit),
           });
+        }
+        // Scroll ke tabel logs agar user tahu data berubah
+        const tableHeader = document.getElementById("logs-section");
+        if (tableHeader) {
+          tableHeader.scrollIntoView({ behavior: "smooth", block: "start" });
         }
       }
     } catch (err) {
@@ -595,7 +602,7 @@ export default function AiConfigPage() {
       </section>
 
       {/* AI Usage Logs */}
-      <section>
+      <section id="logs-section">
         <div className="mb-6">
           <h2
             className="text-xl font-bold text-[#4a1a1a]"

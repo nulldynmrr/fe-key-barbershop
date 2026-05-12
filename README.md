@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Key Barbershop - Frontend
 
-## Getting Started
+Aplikasi frontend modern untuk **Key Barbershop**, dibangun menggunakan **Next.js 14** dengan fitur unggulan **AI Hair Transformation**. Project ini dirancang untuk memberikan pengalaman premium bagi pelanggan barbershop dan kemudahan manajemen bagi admin.
 
-First, run the development server:
+## Fitur Utama
+
+### AI Hair Transformation
+- **Analisis Wajah**: Menggunakan AI untuk menganalisis bentuk wajah pengguna.
+- **Rekomendasi Gaya**: Memberikan rekomendasi gaya rambut yang paling sesuai berdasarkan hasil analisis.
+- **Visualisasi**: (Segera hadir/Eksperimental) Visualisasi transformasi gaya rambut secara real-time.
+
+### User Experience
+- **Sistem Keanggotaan**: Fitur Free dan Premium dengan akses konten yang berbeda.
+- **Social Media Gallery**: Integrasi feed media sosial untuk inspirasi gaya rambut terbaru.
+- **Layanan**: Informasi lengkap mengenai layanan barbershop yang tersedia.
+
+### Pembayaran & Transaksi
+- **Integrasi Gateway**: Sistem pembayaran yang aman untuk upgrade keanggotaan Premium.
+- **Riwayat Transaksi**: Pengguna dapat melihat riwayat pembayaran mereka.
+
+### Dashboard Admin
+- **Analisis Statistik**: Grafik pendapatan dan statistik penggunaan AI menggunakan Recharts.
+- **Manajemen Barber**: Kelola data barber yang bertugas.
+- **Konfigurasi AI**: Pengaturan model dan parameter AI langsung dari dashboard.
+- **Kelola Konten**: Update gallery media sosial dan daftar layanan.
+
+## Teknologi
+
+Aplikasi ini dibangun dengan teknologi mutakhir:
+
+- **Framework**: [Next.js 14](https://nextjs.org/) (App Router)
+- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/), [Framer Motion](https://www.framer.com/motion/), [AOS (Animate On Scroll)](https://michalsnik.github.io/aos/)
+- **State Management & Data**: [Axios](https://axios-http.com/), [React Context API](https://react.dev/learn/passing-data-deeply-with-context)[Lucide Icons](https://lucide.dev/)
+- **Charts**: [Recharts](https://recharts.org/)
+- **Authentication**: [Google OAuth](https://github.com/MomenSherif/react-oauth)
+
+## Memulai (Getting Started)
+
+### Prasyarat
+- Node.js 18.x atau versi terbaru
+- NPM atau Yarn
+
+### Instalasi
+
+1. Clone repository ini.
+2. Masuk ke direktori project:
+   ```bash
+   cd fe-key-barbershop
+   ```
+3. Install dependensi:
+   ```bash
+   npm install
+   ```
+
+### Pengembangan
+
+Jalankan server pengembangan:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Buka [http://localhost:3000](http://localhost:3000) di browser Anda untuk melihat hasilnya.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Struktur Folder
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `src/app`: Routing utama menggunakan App Router (Admin, Auth, Guest).
+- `src/components`: Komponen UI yang reusable.
+- `src/services`: Logika integrasi API (Axios).
+- `src/contexts`: Manajemen state global (Auth, UI).
+- `src/lib`: Konfigurasi library pihak ketiga.
+- `src/utils`: Fungsi pembantu (helpers).
+- `public`: Aset statis seperti gambar dan ikon.
 
-## Learn More
+## Catatan Tambahan
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Pastikan file `.env` sudah terkonfigurasi dengan benar untuk menghubungkan aplikasi dengan Backend API dan layanan AI.

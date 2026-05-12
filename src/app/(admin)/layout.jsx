@@ -231,14 +231,14 @@ function AdminLayoutContent({ children }) {
                       </button>
                     )}
                   </div>
-                  <div className="max-h-96 overflow-y-auto">
+                  <div className="max-h-96 overflow-y-auto p-2">
                     {notifications.length > 0 ? (
                       notifications.map((n) => (
                         <div
                           key={n.id}
                           className={`px-4 py-3 border-b border-[#f9f5f3] hover:bg-[#faf9f8] transition-colors relative ${!n.is_read ? 'bg-[#fffcfb]' : ''}`}
                         >
-                          {!n.is_read && <div className="absolute left-1 top-4 w-1 h-1 bg-[#4a1a1a] rounded-full" />}
+                          {!n.is_read && <div className="absolute left-1 top-4 w-2 h-2 p-1 bg-green-600 rounded-full" />}
                           <p className="text-xs font-bold mb-0.5">{n.title}</p>
                           <p className="text-[11px] text-[#8b6f66] leading-relaxed">{n.message}</p>
                           <span className="text-[9px] text-[#d8c8bc] mt-1 block">

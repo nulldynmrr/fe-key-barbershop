@@ -78,32 +78,32 @@ export default function TermsPage() {
 
                 <div>
                   <h3 className="text-lg font-bold text-[#2b1d19] mb-3 flex items-center gap-2">
-                    <span className="text-[#8b6f66]">1.</span> Ketentuan Umum
+                    1. Ketentuan Umum
                   </h3>
                   <p>Syarat dan Ketentuan ini mengatur penggunaan situs web dan layanan kecerdasan buatan (AI) dari Key Barber. Dengan mengakses situs web ini, mendaftar akun, atau menggunakan layanan pemindaian wajah kami, Anda menyetujui seluruh isi dokumen ini.</p>
                 </div>
 
                 <div>
                   <h3 className="text-lg font-bold text-[#2b1d19] mb-3 flex items-center gap-2">
-                    <span className="text-[#8b6f66]">2.</span> Deskripsi Layanan
+                    2.Deskripsi Layanan
                   </h3>
                   <p>Key Barber menyediakan layanan analisis morfologi wajah, rekomendasi gaya rambut, instruksi teknis untuk kapster, dan simulasi visual (virtual try-on) menggunakan teknologi kecerdasan buatan (AI). Seluruh hasil analisis dan gambar yang dihasilkan oleh sistem adalah estimasi komputasi dan hanya berfungsi sebagai referensi visual.</p>
                 </div>
 
                 <div>
                   <h3 className="text-lg font-bold text-[#2b1d19] mb-3 flex items-center gap-2">
-                    <span className="text-[#8b6f66]">3.</span> Akun Pengguna dan Sistem Koin
+                    3. Akun Pengguna dan Sistem Koin
                   </h3>
                   <div className="space-y-4">
-                    <div className="p-4 bg-[#fdfbf9] rounded-2xl border-l-4 border-[#efe2d7]">
+                    <div className="p-4 bg-[#fdfbf9] rounded-2xl">
                       <p className="font-bold text-sm text-[#2b1d19] mb-1 uppercase tracking-wider">Akses Layanan</p>
                       <p>Layanan dapat diakses melalui akun terdaftar (menggunakan email) atau akun tamu (guest) yang diidentifikasi melalui cookie perangkat Anda. Jika Anda menggunakan akun tamu dan membersihkan cookie peramban (browser), data dan sisa koin Anda akan hilang.</p>
                     </div>
-                    <div className="p-4 bg-[#fdfbf9] rounded-2xl border-l-4 border-[#efe2d7]">
+                    <div className="p-4 bg-[#fdfbf9] rounded-2xl">
                       <p className="font-bold text-sm text-[#2b1d19] mb-1 uppercase tracking-wider">Penggunaan Koin</p>
                       <p>Setiap kali Anda menggunakan fitur analisis AI (seperti pemindaian dasar, heatmap wajah, analisis simetri, atau virtual try-on), sistem akan memotong saldo koin (credit) dari akun Anda sesuai tarif yang berlaku.</p>
                     </div>
-                    <div className="p-4 bg-red-50 rounded-2xl border-l-4 border-red-200">
+                    <div className="p-4 bg-red-50 rounded-2xl">
                       <p className="font-bold text-sm text-red-800 mb-1 uppercase tracking-wider">Pembelian dan Pengembalian Dana</p>
                       <p className="text-red-900/80">Semua pembelian koin atau paket langganan bersifat final. Key Barber tidak melayani pengembalian dana (refund) untuk koin yang telah terpotong akibat penggunaan sistem AI, terlepas dari kualitas foto yang Anda unggah.</p>
                     </div>
@@ -112,7 +112,7 @@ export default function TermsPage() {
 
                 <div>
                   <h3 className="text-lg font-bold text-[#2b1d19] mb-3 flex items-center gap-2">
-                    <span className="text-[#8b6f66]">4.</span> Aturan Pengunggahan Foto
+                    4. Aturan Pengunggahan Foto
                   </h3>
                   <p className="mb-4">Sistem kami mengharuskan Anda untuk mengunggah foto wajah. Anda wajib mematuhi aturan berikut:</p>
                   <ul className="list-disc pl-5 space-y-2">
@@ -124,7 +124,7 @@ export default function TermsPage() {
 
                 <div>
                   <h3 className="text-lg font-bold text-[#2b1d19] mb-3 flex items-center gap-2">
-                    <span className="text-[#8b6f66]">5.</span> Batasan Tanggung Jawab
+                    5. Batasan Tanggung Jawab
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="p-6 border border-[#efe2d7] rounded-2xl">
@@ -165,7 +165,7 @@ export default function TermsPage() {
 
                 <div>
                   <h3 className="text-lg font-bold text-[#2b1d19] mb-3 flex items-center gap-2">
-                    <span className="text-[#8b6f66]">1.</span> Informasi yang Kami Kumpulkan
+                    1. Informasi yang Kami Kumpulkan
                   </h3>
                   <p className="mb-4">Saat Anda menggunakan Key Barber, kami mengumpulkan data berikut:</p>
                   <ul className="space-y-3">
@@ -190,7 +190,7 @@ export default function TermsPage() {
 
                 <div>
                   <h3 className="text-lg font-bold text-[#2b1d19] mb-3 flex items-center gap-2">
-                    <span className="text-[#8b6f66]">2.</span> Penggunaan Data
+                    2. Penggunaan Data
                   </h3>
                   <p className="mb-4">Kami menggunakan data Anda secara eksklusif untuk keperluan operasional Key Barber:</p>
                   <ul className="list-disc pl-5 space-y-2">
@@ -203,14 +203,14 @@ export default function TermsPage() {
 
                 <div>
                   <h3 className="text-lg font-bold text-[#2b1d19] mb-3 flex items-center gap-2">
-                    <span className="text-[#8b6f66]">3.</span> Berbagi Data dengan Pihak Ketiga
+                    3.Berbagi Data dengan Pihak Ketiga
                   </h3>
-                  <p>Key Barber wajib mengirimkan foto wajah Anda ke penyedia layanan Kecerdasan Buatan pihak ketiga (Google Generative AI/Vertex AI) agar fitur dapat bekerja. Kami <strong>tidak menjual</strong> data Anda kepada agen periklanan atau pialang data.</p>
+                  <p>Key Barber wajib mengirimkan foto wajah Anda ke penyedia layanan Kecerdasan Buatan pihak ketiga agar fitur dapat bekerja. Kami <strong>tidak menjual</strong> data Anda kepada agen periklanan atau pialang data.</p>
                 </div>
 
                 <div>
                   <h3 className="text-lg font-bold text-[#2b1d19] mb-3 flex items-center gap-2">
-                    <span className="text-[#8b6f66]">4.</span> Penyimpanan dan Keamanan Data
+                    4. Penyimpanan dan Keamanan Data
                   </h3>
                   <ul className="list-disc pl-5 space-y-2">
                     <li>Foto wajah disimpan di direktori penyimpanan lokal peladen (server) Key Barber.</li>
@@ -221,7 +221,7 @@ export default function TermsPage() {
 
                 <div>
                   <h3 className="text-lg font-bold text-[#2b1d19] mb-3 flex items-center gap-2">
-                    <span className="text-[#8b6f66]">5.</span> Hak Pengguna
+                    5. Hak Pengguna
                   </h3>
                   <p>Anda berhak meminta penghapusan akun, sisa koin, serta penghapusan foto wajah asli dan foto hasil AI dari peladen kami secara permanen melalui layanan pelanggan.</p>
                 </div>

@@ -14,6 +14,7 @@ import { saveUserAuth } from "../../../utils/request";
 import { fetchHasActivePurchaseablePackage } from "../../../utils/packageAvailability";
 import Cookies from "js-cookie";
 import AILoadingModal from "../../../components/AILoadingModal";
+import AICreditExhaustedModal from "../../../components/AICreditExhaustedModal";
 
 const stepItems = [
   {
@@ -69,6 +70,7 @@ export default function AiPage() {
   const [isApiDone, setIsApiDone] = useState(false);
   const [isAnimationDone, setIsAnimationDone] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [isExhaustedModalOpen, setIsExhaustedModalOpen] = useState(false);
   const [ripples, setRipples] = useState([]);
 
   const addRipple = (e) => {
@@ -120,9 +122,23 @@ export default function AiPage() {
         deviceId = "dev_" + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
         Cookies.set("device_cookie", deviceId, { expires: 365 });
       }
-      const res = await aiScanService.guestLogin({ device_cookie: deviceId });
-      const { data } = res.data;
-      saveUserAuth(data.token, data.user);
+      
+      try {
+        const res = await aiScanService.guestLogin({ device_cookie: deviceId });
+        const { token: authToken, user } = res.data || {};
+        
+        if (authToken && user) {
+          saveUserAuth(authToken, user);
+        } else {
+          throw new Error("Gagal menginisialisasi sesi tamu.");
+        }
+      } catch (err) {
+        setIsExhaustedModalOpen(true);
+        if (err.response?.data?.errorCode === "TRIAL_EXHAUSTED") {
+          throw new Error("TRIAL_EXHAUSTED");
+        }
+        throw new Error("GUEST_AUTH_FAILED");
+      }
     }
   };
 
@@ -174,10 +190,10 @@ export default function AiPage() {
       reader.onloadend = async () => {
         try {
           sessionStorage.setItem("aiOriginalImage", reader.result);
-          
+
           const formData = new FormData();
           formData.append("foto", file);
-          
+
           if (activeFeatures.length === 0) {
             // Default to ALL globally active features for guests instead of just STANDARD_SCAN
             const allGloballyActive = Object.keys(featuresData).filter(
@@ -201,11 +217,12 @@ export default function AiPage() {
             return;
           } else {
             const message = err.response?.data?.message || err.message || "";
-            if (message.toLowerCase().includes("credit") || message.toLowerCase().includes("koin")) {
-              showToast(message, "error");
-              setTimeout(() => {
-                router.push("/service#ai-pricing");
-              }, 2000);
+            if (
+              message.toLowerCase().includes("credit") || 
+              message.toLowerCase().includes("koin") ||
+              errCode === "TRIAL_EXHAUSTED"
+            ) {
+              setIsExhaustedModalOpen(true);
             } else {
               showToast(message || "Failed to analyze photo", "error");
             }
@@ -218,12 +235,24 @@ export default function AiPage() {
 
     } catch (err) {
       console.error(err);
+      if (err.message === "TRIAL_EXHAUSTED" || err.message === "GUEST_AUTH_FAILED") {
+        setIsAnalyzing(false);
+        return;
+      }
+
+      const errCode = err.response?.data?.errorCode;
+      if (errCode === "SERVICE_UNAVAILABLE" || err.response?.status === 503) {
+        router.push("/ai/busy");
+        return;
+      }
+
       const message = err.response?.data?.message || err.message || "";
-      if (message.toLowerCase().includes("credit") || message.toLowerCase().includes("koin")) {
-        showToast(message, "error");
-        setTimeout(() => {
-          router.push("/service#ai-pricing");
-        }, 2000);
+      if (
+        message.toLowerCase().includes("credit") ||
+        message.toLowerCase().includes("koin") ||
+        errCode === "TRIAL_EXHAUSTED"
+      ) {
+        setIsExhaustedModalOpen(true);
       } else {
         showToast(message || "Failed to analyze photo", "error");
       }
@@ -267,6 +296,11 @@ export default function AiPage() {
         onComplete={handleLoadingComplete}
       />
 
+      <AICreditExhaustedModal
+        isOpen={isExhaustedModalOpen}
+        onClose={() => setIsExhaustedModalOpen(false)}
+      />
+
       <input
         ref={fileInputRef}
         type="file"
@@ -292,16 +326,15 @@ export default function AiPage() {
         </div>
 
         <div className="mt-12 flex flex-col gap-8">
-          <div 
+          <div
             onClick={handleUploadClick}
             onDragOver={onDragOver}
             onDragLeave={onDragLeave}
             onDrop={onDrop}
-            className={`relative rounded-[40px] border-2 transition-all duration-300 cursor-pointer overflow-hidden ${
-              isDragging 
-                ? "border-[#c57e7b] bg-[#fdfcfb] scale-[1.01] shadow-2xl shadow-[#c57e7b]/10" 
-                : "border-[#e6d1c7] bg-[#f7f1ea] hover:border-[#d8c8bc] hover:shadow-xl"
-            }`}
+            className={`relative rounded-[40px] border-2 transition-all duration-300 cursor-pointer overflow-hidden ${isDragging
+              ? "border-[#c57e7b] bg-[#fdfcfb] scale-[1.01] shadow-2xl shadow-[#c57e7b]/10"
+              : "border-[#e6d1c7] bg-[#f7f1ea] hover:border-[#d8c8bc] hover:shadow-xl"
+              }`}
           >
             {/* Luxury Wave Effects Container */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-[40px]">
@@ -413,7 +446,6 @@ export default function AiPage() {
 
               <button
                 type="button"
-                onClick={handleUploadClick}
                 disabled={isAnalyzing}
                 className="mt-8 inline-flex items-center justify-center gap-2 bg-[#4a1a1a] px-6 py-4 text-xs font-semibold uppercase tracking-[0.3em] text-[#fbf7f3] transition hover:bg-[#2b1d19] disabled:opacity-60 disabled:cursor-not-allowed"
                 style={{ fontFamily: "var(--font-be-vietnam)" }}

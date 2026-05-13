@@ -69,7 +69,6 @@ export default function SiteNavbar({
     }
   }, [showSignIn, pathname]);
 
-  // Handle click outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (isDropdownOpen && !event.target.closest(".user-dropdown-container")) {
@@ -93,9 +92,16 @@ export default function SiteNavbar({
     };
   }, []);
 
-  /** Only after /packages resolves: show AI nav + Try AI when at least one active package exists (no flash while loading). */
   const showAiNavAndCta = packagesResolved && hasActivePackage && !hideAiCta;
   const visibleNavItems = navItems.filter((item) => item.href !== "/ai" || showAiNavAndCta);
+
+  const formatDisplayName = (name) => {
+    if (!name) return "";
+    if (name.toLowerCase().startsWith("guest_")) {
+      return "Barber Guest";
+    }
+    return `${name.split(" ")[0]}`;
+  };
 
   const isAiPage = pathname?.startsWith("/ai");
 
@@ -128,7 +134,7 @@ export default function SiteNavbar({
                     className="flex items-center gap-2 text-[0.65rem] uppercase tracking-[0.25em] text-[#4a1a1a] transition hover:text-[#2b1d19] font-bold"
                     style={{ fontFamily: "Liberation Serif" }}
                   >
-                    HI, {user.nama.split(" ")[0]}
+                    {formatDisplayName(user.nama)}
                     <ChevronDown className={`w-3 h-3 transition-transform duration-300 ${isDropdownOpen ? "rotate-180" : ""}`} />
                   </button>
                   {isAiPage && (
@@ -175,7 +181,7 @@ export default function SiteNavbar({
               </Link>
             )
           ) : null}
-          
+
           {!isAiPage && showAiNavAndCta && (
             <Link
               href={ctaHref}
@@ -239,7 +245,7 @@ export default function SiteNavbar({
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center justify-between">
                       <Link href="/profile" onClick={closeMenu} className="block text-sm uppercase tracking-[0.25em] text-[#4a1a1a] transition hover:text-[#2b1d19] font-bold">
-                        HI, {user.nama.split(" ")[0]}
+                        {formatDisplayName(user.nama)}
                       </Link>
                       <button onClick={handleLogout} className="text-red-600">
                         <LogOut className="w-4 h-4" />

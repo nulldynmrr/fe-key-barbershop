@@ -14,7 +14,10 @@ import {
     Check,
     X,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    Phone,
+    Sparkles,
+    ImagePlus
 } from "lucide-react";
 import { waitlistService } from "@/services/waitlistService";
 import { useToast } from "@/contexts/ToastContext";
@@ -44,9 +47,9 @@ export default function FeedbacksPage() {
         setLoading(true);
         try {
             const res = await waitlistService.getWaitlist(page, meta.limit);
-            if (res.data.success) {
-                setFeedbacks(res.data.data);
-                setMeta(res.data.meta);
+            if (res.success) {
+                setFeedbacks(res.data);
+                setMeta(res.meta);
             }
         } catch (err) {
             console.error("Gagal memuat feedback:", err);
@@ -77,13 +80,50 @@ export default function FeedbacksPage() {
     const handleMarkHandled = async (feedbackId) => {
         try {
             const res = await waitlistService.markHandled(feedbackId);
-            if (res.data.success) {
+            if (res.success) {
                 showToast("Ditandai sudah ditangani!", "success");
                 fetchFeedbacks(meta.page);
             }
         } catch (err) {
             showToast(err?.response?.data?.message || "Gagal memperbarui status", "error");
         }
+    };
+
+    const copyImageToClipboard = async () => {
+        try {
+            const domain = window.location.origin;
+            const imageUrl = `${domain}/images/ILUSTRASI BUSY.png`;
+            const response = await fetch(imageUrl);
+            const blob = await response.blob();
+
+            // Perlu file blob untuk clipboard
+            const item = new ClipboardItem({ [blob.type]: blob });
+            await navigator.clipboard.write([item]);
+            showToast("Gambar ilustrasi berhasil disalin!", "success");
+        } catch (err) {
+            console.error(err);
+            showToast("Gagal menyalin gambar. Silakan salin manual.", "error");
+        }
+    };
+
+    const getWaLink = (phone, pesan) => {
+        const domain = window.location.origin;
+
+        // Menggunakan kode Unicode agar pasti terbaca sebagai emoji yang benar di semua HP
+        const emojiGunting = "\u2702\uFE0F";
+        const emojiBarber = "\uD83D\uDC88";
+
+        const text = `Halo! Tim Master Barber Key Barber AI Experience di sini. ${emojiGunting}\n\n` +
+            `Mohon maaf, saat ini antrian kami sedang sangat penuh. Kami telah menerima pesan Anda: "${pesan}".\n\n` +
+            `Kami akan memprioritaskan sesi Anda segera setelah slot tersedia. Cek status secara berkala di:\n${domain}/ai\n\n` +
+            `Terima kasih atas kesabarannya! ${emojiBarber}`;
+
+        let cleanPhone = (phone || "").replace(/\D/g, '');
+        if (cleanPhone.startsWith('0')) {
+            cleanPhone = '62' + cleanPhone.substring(1);
+        }
+
+        return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
     };
 
     const filteredFeedbacks = feedbacks.filter(item => {
@@ -182,6 +222,12 @@ export default function FeedbacksPage() {
                                                 <p className="text-xs font-bold text-[#2b1d19] truncate max-w-[150px]" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
                                                     {item.email || "Anonymous Guest"}
                                                 </p>
+                                                {item.phone && (
+                                                    <p className="text-[10px] text-[#8b6f66] flex items-center gap-1 mt-0.5">
+                                                        <Phone className="w-2.5 h-2.5" />
+                                                        {item.phone}
+                                                    </p>
+                                                )}
                                                 <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-[#8b6f66]">
                                                     <Clock className="w-3 h-3" />
                                                     {format(new Date(item.createdAt), "d MMM yyyy, HH:mm", { locale: id })}
@@ -227,15 +273,33 @@ export default function FeedbacksPage() {
                                         </button>
                                     )}
 
-                                    {item.is_handled && item.email && (
-                                        <a
-                                            href={`mailto:${item.email}`}
-                                            className="flex items-center gap-2 px-4 py-2 bg-white border border-[#f0e2d9] text-[#4a1a1a] text-[11px] font-bold rounded-lg hover:bg-[#fdf2f0] transition-all"
-                                            style={{ fontFamily: "var(--font-plus-jakarta)" }}
-                                        >
-                                            <Mail className="w-3.5 h-3.5" />
-                                            Balas Email
-                                        </a>
+                                    {item.is_handled && (
+                                        <div className="flex gap-2">
+
+                                            {item.phone && (
+                                                <div className="flex gap-2">
+                                                    <a
+                                                        href={getWaLink(item.phone, item.pesan)}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="flex items-center gap-2 px-4 py-2 bg-[#25D366] text-white text-[11px] font-bold rounded-lg hover:bg-[#128C7E] transition-all shadow-sm"
+                                                        style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                                                    >
+                                                        <Phone className="w-3.5 h-3.5" />
+                                                        Kirim WA
+                                                    </a>
+                                                    <button
+                                                        onClick={copyImageToClipboard}
+                                                        className="flex items-center gap-2 px-4 py-2 bg-white border border-[#25D366] text-[#25D366] text-[11px] font-bold rounded-lg hover:bg-[#25D366]/5 transition-all shadow-sm"
+                                                        style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                                                        title="Salin Gambar Ilustrasi"
+                                                    >
+                                                        <ImagePlus className="w-3.5 h-3.5" />
+                                                        Salin Gambar
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
                             </div>

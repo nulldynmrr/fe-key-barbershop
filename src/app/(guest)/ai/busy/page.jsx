@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Send, Loader2, MessageSquare, AlertCircle } from "lucide-react";
+import { Send, Loader2, MessageSquare, AlertCircle, Phone, User as UserIcon } from "lucide-react";
 import SiteNavbar from "../../../../components/SiteNavbar";
 import { useToast } from "../../../../contexts/ToastContext";
 import { waitlistService } from "../../../../services/waitlistService";
@@ -16,17 +16,33 @@ export default function AiBusyPage() {
   const { showToast } = useToast();
 
   const [formData, setFormData] = useState({
-    pesan: ""
+    pesan: "",
+    phone: ""
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
-    const hasSubmitted = localStorage.getItem("has_submitted_waitlist");
-    if (hasSubmitted) {
-      setIsSuccess(true);
-    }
-  }, []);
+    const checkStatus = async () => {
+      try {
+        await ensureAuth();
+        const res = await waitlistService.checkStatus();
+        if (res.success) {
+          setIsSuccess(res.hasPending);
+          if (!res.hasPending) {
+            localStorage.removeItem("has_submitted_waitlist");
+          }
+        }
+      } catch (err) {
+        console.error("Gagal cek status antrian:", err);
+        // Fallback ke localStorage jika API gagal
+        const hasSubmitted = localStorage.getItem("has_submitted_waitlist");
+        if (hasSubmitted) setIsSuccess(true);
+      }
+    };
+
+    checkStatus();
+  }, [router]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -148,6 +164,26 @@ export default function AiBusyPage() {
                 </div>
 
                 <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 gap-2 sm:gap-3">
+                  <div className="flex flex-col gap-1.5 sm:gap-2 shrink-0">
+                    <label htmlFor="phone" className="block text-[9px] font-bold tracking-[0.25em] text-[#8b1a1a] uppercase ml-1" style={{ fontFamily: "var(--font-be-vietnam)" }}>
+                      Nomor WhatsApp
+                    </label>
+                    <div className="relative">
+                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#8b1a1a]/40" />
+                      <input
+                        type="tel"
+                        id="phone"
+                        name="phone"
+                        required
+                        value={formData.phone}
+                        onChange={handleChange}
+                        className="w-full bg-white border-2 border-[#e6d1c7] rounded-xl pl-10 pr-4 py-3 sm:py-3.5 text-xs focus:outline-none focus:border-[#c57e7b] transition-all shadow-sm placeholder:text-[#2b1d19]/20"
+                        placeholder="0812xxxxxxx"
+                        style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                      />
+                    </div>
+                  </div>
+
                   <div className="flex flex-col flex-1 min-h-0 gap-1.5 sm:gap-2">
                     <label htmlFor="pesan" className="block text-[9px] font-bold tracking-[0.25em] text-[#8b1a1a] uppercase ml-1 shrink-0" style={{ fontFamily: "var(--font-be-vietnam)" }}>
                       Detail Konsultasi
@@ -174,6 +210,16 @@ export default function AiBusyPage() {
                     >
                       {isSubmitting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
                       Kirim Sekarang
+                    </button>
+                    
+                    <button
+                      type="button"
+                      onClick={() => router.push("/login")}
+                      className="w-full inline-flex items-center justify-center gap-2 py-2 text-[9px] font-bold uppercase tracking-[0.15em] text-[#6e5851] hover:text-[#2b1d19] transition-colors"
+                      style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                    >
+                      <UserIcon className="w-3 h-3" />
+                      Sudah punya akun? Masuk di sini
                     </button>
                   </div>
                 </form>

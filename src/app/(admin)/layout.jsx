@@ -8,6 +8,7 @@ import { Home, Cpu, Tags, Users, ReceiptText, Bell, Share2, LogOut, User, Settin
 import { ToastProvider, useToast } from "@/contexts/ToastContext";
 import { logoutAdmin } from "@/utils/request";
 import { getAdminProfile, requestAdminOTP, getNotifications, updateAdminProfile, markNotificationRead, markAllNotificationsRead, resolveUserEmail } from "@/services/adminService";
+import { waitlistService } from "@/services/waitlistService";
 
 function UserEmailResolver({ userId }) {
   const [email, setEmail] = useState(userId);
@@ -135,6 +136,7 @@ function AdminLayoutContent({ children }) {
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [unhandledCount, setUnhandledCount] = useState(0);
 
   const notifDropdownRef = useRef(null);
   const profileDropdownRef = useRef(null);
@@ -180,9 +182,10 @@ function AdminLayoutContent({ children }) {
 
   const fetchInitialData = async () => {
     try {
-      const [profileRes, notifRes] = await Promise.all([
+      const [profileRes, notifRes, waitlistRes] = await Promise.all([
         getAdminProfile(),
-        getNotifications()
+        getNotifications(),
+        waitlistService.getUnhandledCount()
       ]);
 
       if (profileRes.success) {
@@ -193,6 +196,10 @@ function AdminLayoutContent({ children }) {
       if (notifRes.success) {
         setNotifications(notifRes.data);
         setUnreadCount(notifRes.unreadCount);
+      }
+
+      if (waitlistRes.success) {
+        setUnhandledCount(waitlistRes.count);
       }
     } catch (err) {
       console.error("Failed to fetch admin data:", err);
@@ -297,6 +304,12 @@ function AdminLayoutContent({ children }) {
                 >
                   {item.name}
                 </span>
+
+                {/* Dot Notifikasi untuk Feedbacks */}
+                {item.name === "Feedbacks" && unhandledCount > 0 && (
+                  <span className="ml-2 flex h-2 w-2 items-center justify-center rounded-full bg-red-600 ring-2 ring-white animate-pulse" />
+                )}
+
                 {isActive && (
                   <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-[#4a1a1a] rounded-l-md" />
                 )}

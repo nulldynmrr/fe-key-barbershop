@@ -207,6 +207,18 @@ export default function AiPage() {
           const analysisRes = await aiScanService.analyzeFace(formData);
           sessionStorage.setItem("aiAnalysisResult", JSON.stringify(analysisRes.data?.data));
 
+          // Sync credit to localStorage
+          const newCredit = analysisRes.data?.usage_info?.credit_after;
+          if (typeof newCredit === "number") {
+            try {
+              const savedUser = JSON.parse(localStorage.getItem("user") || "{}");
+              savedUser.sisa_credit = newCredit;
+              localStorage.setItem("user", JSON.stringify(savedUser));
+            } catch (e) {
+              console.error("Failed to sync credit:", e);
+            }
+          }
+
           showToast("Analysis complete!", "success");
           setIsApiDone(true);
         } catch (err) {

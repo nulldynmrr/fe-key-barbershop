@@ -113,7 +113,7 @@ export default function FeedbacksPage() {
         const emojiGunting = "\u2702\uFE0F";
         const emojiBarber = "\uD83D\uDC88";
 
-        const text = `Halo! Tim Master Barber Key Barber AI Experience di sini. ${emojiGunting}\n\n` +
+        const text = `Halo! Tim Master Key Barbersho AI Experience di sini. ${emojiGunting}\n\n` +
             `Terima kasih telah bersabar. Kami telah menerima pesan Anda: "${pesan}".\n\n` +
             `Kami akan memprioritaskan sesi Anda sekarang karena slot sudah tersedia. Silakan cek status secara berkala di:\n${domain}/ai\n\n` +
             `Terima kasih! ${emojiBarber}`;

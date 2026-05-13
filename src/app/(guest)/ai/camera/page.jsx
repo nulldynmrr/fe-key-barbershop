@@ -50,14 +50,13 @@ export default function AiCameraPage() {
     };
   }, [router]);
 
-  // Request camera access once packages allow AI purchase
   useEffect(() => {
     if (packageGateOk !== true) return;
 
     async function setupCamera() {
       try {
         const mediaStream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "user" }, // Use front camera
+          video: { facingMode: "user" },
           audio: false,
         });
         setStream(mediaStream);
@@ -71,7 +70,6 @@ export default function AiCameraPage() {
     }
     setupCamera();
 
-    // Cleanup stream on unmount
     return () => {
       setStream((prev) => {
         if (prev) {
@@ -92,13 +90,12 @@ export default function AiCameraPage() {
   const ensureAuth = async () => {
     const token = Cookies.get("user_token");
     if (!token) {
-      // Generate a unique device ID if none exists
       let deviceId = Cookies.get("device_cookie");
       if (!deviceId) {
         deviceId = "dev_" + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
         Cookies.set("device_cookie", deviceId, { expires: 365 });
       }
-      
+
       const res = await aiScanService.guestLogin({ device_cookie: deviceId });
       const { data } = res.data;
       saveUserAuth(data.token, data.user);
@@ -107,18 +104,17 @@ export default function AiCameraPage() {
 
   const handleCapture = async () => {
     if (!videoRef.current || !canvasRef.current || isProcessing) return;
-    
+
     setIsCapturing(true);
     setIsProcessing(true);
 
     try {
-      // 0. Ensure user is authenticated (guest login if no token)
       await ensureAuth();
 
       // 1. Check AI Features global status + user package
       const featureRes = await aiScanService.getFeatures();
       const featuresData = featureRes.data?.data || {};
-      
+
       const activeFeatures = Object.keys(featuresData).filter(
         (key) => featuresData[key].available
       );
@@ -129,7 +125,7 @@ export default function AiCameraPage() {
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
       const ctx = canvas.getContext("2d");
-      
+
       // Optional: mirror the image on canvas if video is mirrored
       ctx.translate(canvas.width, 0);
       ctx.scale(-1, 1);
@@ -146,7 +142,7 @@ export default function AiCameraPage() {
       // 3. Send to analysis API
       const formData = new FormData();
       formData.append("foto", blob, "face-scan.jpg");
-      
+
       if (activeFeatures.length === 0) {
         // Default to ALL globally active features for guests instead of just STANDARD_SCAN
         const allGloballyActive = Object.keys(featuresData).filter(
@@ -158,7 +154,7 @@ export default function AiCameraPage() {
       }
 
       const analysisRes = await aiScanService.analyzeFace(formData);
-      
+
       // Store result to display on the Result page
       sessionStorage.setItem("aiAnalysisResult", JSON.stringify(analysisRes.data?.data));
 
@@ -199,18 +195,16 @@ export default function AiCameraPage() {
 
   return (
     <main className="relative h-screen w-screen overflow-hidden bg-black text-white">
-      {/* Video Stream */}
       <video
         ref={videoRef}
         autoPlay
         playsInline
         muted
         className={`h-full w-full object-cover transition-opacity duration-1000 ${isCapturing ? "opacity-30" : "opacity-100"}`}
-        style={{ transform: "scaleX(-1)" }} // Mirror view for front camera
+        style={{ transform: "scaleX(-1)" }}
       />
       <canvas ref={canvasRef} className="hidden" />
 
-      {/* Close Button */}
       <button
         onClick={handleClose}
         className="absolute top-6 right-6 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 backdrop-blur-md transition hover:bg-white/20"
@@ -218,11 +212,9 @@ export default function AiCameraPage() {
         <X className="h-6 w-6 text-white" />
       </button>
 
-      {/* Face Guide Overlay */}
       {!isCapturing && (
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center p-6">
           <div className="relative flex h-[400px] w-[300px] items-center justify-center">
-            {/* SVG Ellipse representing a face shape */}
             <svg className="absolute inset-0 h-full w-full drop-shadow-2xl" viewBox="0 0 300 400">
               <ellipse
                 cx="150"
@@ -240,8 +232,7 @@ export default function AiCameraPage() {
                 strokeWidth="2"
               />
             </svg>
-            
-            {/* Animated Corners */}
+
             <div className="absolute top-0 left-0 h-8 w-8 border-t-4 border-l-4 border-white"></div>
             <div className="absolute top-0 right-0 h-8 w-8 border-t-4 border-r-4 border-white"></div>
             <div className="absolute bottom-0 left-0 h-8 w-8 border-b-4 border-l-4 border-white"></div>
@@ -253,14 +244,12 @@ export default function AiCameraPage() {
         </div>
       )}
 
-      {/* Processing Animation */}
       <AILoadingModal
         isOpen={isProcessing}
         onClose={handleModalClose}
         onComplete={handleLoadingComplete}
       />
 
-      {/* Error Message */}
       {errorMsg && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-red-500/20 text-red-100 border border-red-500 px-6 py-4 rounded-md backdrop-blur-md text-center max-w-sm">
           <p>{errorMsg}</p>
@@ -270,7 +259,6 @@ export default function AiCameraPage() {
         </div>
       )}
 
-      {/* Capture Button Area */}
       <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/80 to-transparent p-10 pb-16 flex justify-center z-50">
         <button
           onClick={handleCapture}

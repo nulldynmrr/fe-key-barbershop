@@ -127,31 +127,21 @@ function OTPForm() {
       <div className="absolute bottom-10 right-20 w-16 h-16 bg-[#f0e2d9] rounded-full opacity-50 blur-sm pointer-events-none"></div>
 
       <div className="w-full max-w-md bg-[#ffffff] p-8 sm:p-12 rounded-[8px] shadow-[0_20px_60px_-15px_rgba(74,26,26,0.05)] relative z-10 text-[#2B1D19]">
-        <div className="flex flex-col items-center mb-8">
-          <div className="flex items-center gap-4 mb-6 w-full">
-            <div className="h-px grow bg-[#e6d1c7]"></div>
-            <div className="w-10 h-10 relative">
-              <Image
-                src="/images/key.png"
-                alt="Key Logo"
-                fill
-                className="object-contain"
-              />
-            </div>
-            <div className="h-px grow bg-[#e6d1c7]"></div>
+        <div className="flex flex-col items-center mb-10">
+          <div className="w-20 h-20 relative mb-6">
+            <Image
+              src="/images/logo.png"
+              alt="Key Barber Logo"
+              fill
+              className="object-contain"
+            />
           </div>
-          <h1
-            className="text-[#4a1a1a] text-lg tracking-[0.15em] uppercase mb-1"
-            style={{ fontFamily: "var(--font-playfair)" }}
-          >
-            Key Barber
-          </h1>
-          <p
-            className="text-[9px] tracking-[0.25em] text-[#8b6f66] font-normal uppercase"
-            style={{ fontFamily: "var(--font-be-vietnam)" }}
-          >
-            Established in Tradition
-          </p>
+          <h1 className="text-[#4a1a1a] text-[15px] tracking-[0.35em] uppercase mb-2 font-bold" style={{ fontFamily: "var(--font-playfair)" }}>Key Barber</h1>
+          <div className="flex items-center gap-3 w-full">
+            <div className="h-[1px] grow bg-[#e6d1c7]/50"></div>
+            <p className="text-[8px] tracking-[0.3em] text-[#8b6f66] font-medium uppercase whitespace-nowrap" style={{ fontFamily: "var(--font-be-vietnam)" }}>Established in Tradition</p>
+            <div className="h-[1px] grow bg-[#e6d1c7]/50"></div>
+          </div>
         </div>
 
         <div className="text-center mb-8">

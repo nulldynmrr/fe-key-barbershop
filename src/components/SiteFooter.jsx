@@ -109,8 +109,14 @@ export default function SiteFooter({ footerLinks = defaultFooterLinks, contactDe
             <div className="grow border-t border-[#c57e7b]/20"></div>
           </div>
         </div>
-        <div className=" flex flex-col gap-4 text-xs uppercase tracking-[0.34em] text-[#c57e7b]/70 md:flex-row md:items-center md:justify-between">
-          <span>© 2026 Key Barber. Seluruh hak cipta dilindungi.</span>
+        <div className="flex flex-col gap-6 text-[10px] uppercase tracking-[0.34em] text-[#c57e7b]/70 md:flex-row md:items-center md:justify-between border-t border-[#c57e7b]/10 pt-8 mt-8">
+          <div className="flex flex-col md:flex-row gap-4 md:gap-8">
+            <span>© 2026 Key Barber. Seluruh hak cipta dilindungi.</span>
+            <div className="flex gap-4">
+              <Link href="/terms" className="hover:text-[#f3e8de] transition-colors underline underline-offset-4">Terms</Link>
+              <Link href="/terms#privacy" className="hover:text-[#f3e8de] transition-colors underline underline-offset-4">Privacy</Link>
+            </div>
+          </div>
           <span>
             DIKEMBANGKAN OLEH <span className="text-[#D07B46]">IUM26-042 · TELKOM UNIVERSITY</span>
           </span>

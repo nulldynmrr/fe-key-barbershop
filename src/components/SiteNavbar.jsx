@@ -4,8 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { Menu, X, Coins, Sparkles } from "lucide-react";
-import api from "@/utils/request";
+import { Menu, X, Coins, Sparkles, LogOut, User as UserIcon, ChevronDown } from "lucide-react";
+import api, { logoutUser } from "@/utils/request";
 import { fetchHasActivePurchaseablePackage } from "@/utils/packageAvailability";
 
 const defaultNavItems = [
@@ -28,13 +28,28 @@ export default function SiteNavbar({
   hideAiCta = false,
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [user, setUser] = useState(() => {
+    if (typeof window !== "undefined") {
+      const savedUser = localStorage.getItem("user");
+      try {
+        return savedUser ? JSON.parse(savedUser) : null;
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  });
   const [packagesResolved, setPackagesResolved] = useState(false);
   const [hasActivePackage, setHasActivePackage] = useState(false);
   const pathname = usePathname();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const closeMenu = () => setIsMenuOpen(false);
+
+  const handleLogout = async () => {
+    await logoutUser();
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -52,7 +67,18 @@ export default function SiteNavbar({
     if (showSignIn) {
       fetchProfile();
     }
-  }, [showSignIn]);
+  }, [showSignIn, pathname]);
+
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isDropdownOpen && !event.target.closest(".user-dropdown-container")) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isDropdownOpen]);
 
   useEffect(() => {
     let cancelled = false;
@@ -95,11 +121,16 @@ export default function SiteNavbar({
         <div className="hidden items-center gap-5 lg:flex">
           {showSignIn ? (
             user ? (
-              <div className="flex items-center gap-4 border-r border-[#d8c8bc] pr-5">
+              <div className="flex items-center gap-4 border-r border-[#d8c8bc] pr-5 relative user-dropdown-container">
                 <div className="flex flex-col items-end">
-                  <Link href="/profile" className="text-[0.65rem] uppercase tracking-[0.25em] text-[#4a1a1a] transition hover:text-[#2b1d19] font-bold" style={{ fontFamily: "Liberation Serif" }}>
+                  <button
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className="flex items-center gap-2 text-[0.65rem] uppercase tracking-[0.25em] text-[#4a1a1a] transition hover:text-[#2b1d19] font-bold"
+                    style={{ fontFamily: "Liberation Serif" }}
+                  >
                     HI, {user.nama.split(" ")[0]}
-                  </Link>
+                    <ChevronDown className={`w-3 h-3 transition-transform duration-300 ${isDropdownOpen ? "rotate-180" : ""}`} />
+                  </button>
                   {isAiPage && (
                     <div className="flex items-center gap-2 mt-1">
                       <span className="flex items-center gap-1 text-[0.6rem] bg-[#f7f1ea] px-1.5 py-0.5 rounded-sm border border-[#e6d1c7] text-[#5a2725] font-semibold">
@@ -113,6 +144,29 @@ export default function SiteNavbar({
                     </div>
                   )}
 
+                  {/* Dropdown Menu */}
+                  {isDropdownOpen && (
+                    <div className="absolute top-full right-5 mt-2 w-48 bg-white border border-[#e6d1c7] rounded-md shadow-[0_10px_30px_-10px_rgba(43,29,25,0.15)] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                      <Link
+                        href="/profile"
+                        onClick={() => setIsDropdownOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 text-xs uppercase tracking-widest text-[#78716c] hover:bg-[#f7f1ea] hover:text-[#4a1a1a] transition-colors"
+                        style={{ fontFamily: "var(--font-be-vietnam)" }}
+                      >
+                        <UserIcon className="w-4 h-4" />
+                        My Profile
+                      </Link>
+                      <div className="h-px bg-[#e6d1c7]/50" />
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-xs uppercase tracking-widest text-red-600 hover:bg-red-50 transition-colors text-left"
+                        style={{ fontFamily: "var(--font-be-vietnam)" }}
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Logout
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
@@ -183,9 +237,14 @@ export default function SiteNavbar({
               {showSignIn ? (
                 user ? (
                   <div className="flex flex-col gap-2">
-                    <Link href="/profile" onClick={closeMenu} className="block text-sm uppercase tracking-[0.25em] text-[#4a1a1a] transition hover:text-[#2b1d19] font-bold">
-                      HI, {user.nama.split(" ")[0]}
-                    </Link>
+                    <div className="flex items-center justify-between">
+                      <Link href="/profile" onClick={closeMenu} className="block text-sm uppercase tracking-[0.25em] text-[#4a1a1a] transition hover:text-[#2b1d19] font-bold">
+                        HI, {user.nama.split(" ")[0]}
+                      </Link>
+                      <button onClick={handleLogout} className="text-red-600">
+                        <LogOut className="w-4 h-4" />
+                      </button>
+                    </div>
                     {isAiPage && (
                       <div className="flex gap-2">
                         <span className="flex items-center gap-1 text-[0.6rem] bg-[#f7f1ea] px-2 py-1 rounded-sm border border-[#e6d1c7] text-[#5a2725] font-semibold">

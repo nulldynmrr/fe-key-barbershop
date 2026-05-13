@@ -66,7 +66,7 @@ export default function FeedbacksPage() {
             async () => {
                 try {
                     const res = await waitlistService.deleteWaitlist(feedbackId);
-                    if (res.data.success) {
+                    if (res.success) {
                         showToast("Feedback berhasil dihapus!", "success");
                         fetchFeedbacks(meta.page);
                     }
@@ -92,7 +92,7 @@ export default function FeedbacksPage() {
     const copyImageToClipboard = async () => {
         try {
             const domain = window.location.origin;
-            const imageUrl = `${domain}/images/ILUSTRASI BUSY.png`;
+            const imageUrl = `${domain}/images/WA.png`;
             const response = await fetch(imageUrl);
             const blob = await response.blob();
 
@@ -114,9 +114,9 @@ export default function FeedbacksPage() {
         const emojiBarber = "\uD83D\uDC88";
 
         const text = `Halo! Tim Master Barber Key Barber AI Experience di sini. ${emojiGunting}\n\n` +
-            `Mohon maaf, saat ini antrian kami sedang sangat penuh. Kami telah menerima pesan Anda: "${pesan}".\n\n` +
-            `Kami akan memprioritaskan sesi Anda segera setelah slot tersedia. Cek status secara berkala di:\n${domain}/ai\n\n` +
-            `Terima kasih atas kesabarannya! ${emojiBarber}`;
+            `Terima kasih telah bersabar. Kami telah menerima pesan Anda: "${pesan}".\n\n` +
+            `Kami akan memprioritaskan sesi Anda sekarang karena slot sudah tersedia. Silakan cek status secara berkala di:\n${domain}/ai\n\n` +
+            `Terima kasih! ${emojiBarber}`;
 
         let cleanPhone = (phone || "").replace(/\D/g, '');
         if (cleanPhone.startsWith('0')) {

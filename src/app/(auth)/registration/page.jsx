@@ -2,12 +2,15 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { useGoogleLogin } from "@react-oauth/google";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+import Image from "next/image";
+import TermsModal from "@/components/TermsModal";
+import { saveUserAuth } from "@/utils/request";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
 export default function RegistrationPage() {
   const router = useRouter();
@@ -20,8 +23,11 @@ export default function RegistrationPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [agreed, setAgreed] = useState(false);
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
 
-  const handleGoogleLogin = useGoogleLogin({
+  const googleLogin = useGoogleLogin({
     flow: "implicit",
     onSuccess: async (tokenResponse) => {
       setError("");
@@ -35,7 +41,7 @@ export default function RegistrationPage() {
         const res = await fetch(`${API_BASE}/auth/google`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token: tokenResponse.access_token, email: userInfo.email, name: userInfo.name }),
+          body: JSON.stringify({ token: tokenResponse.access_token, email: userInfo.email, name: userInfo.name, agreed: true }),
         });
 
         const data = await res.json();
@@ -45,8 +51,7 @@ export default function RegistrationPage() {
           return;
         }
 
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.data));
+        saveUserAuth(data.token, data.data);
         router.push("/home");
       } catch (err) {
         setError("Gagal login dengan Google. Coba lagi.");
@@ -59,36 +64,23 @@ export default function RegistrationPage() {
     },
   });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
+  const handleGoogleClick = () => {
+    setPendingAction(() => googleLogin);
+    setIsTermsModalOpen(true);
+  };
 
-    // Validasi password match
-    if (password !== confirmPassword) {
-      setError("Password dan Confirm Password tidak sama.");
-      return;
-    }
-
-    // Validasi panjang password
-    if (password.length < 6) {
-      setError("Password minimal 6 karakter.");
-      return;
-    }
-
+  const executeRegistration = async () => {
     setLoading(true);
-
     try {
       const res = await fetch(`${API_BASE}/auth/user/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nama, email, password }),
+        body: JSON.stringify({ nama, email, password, agreed: true }),
       });
 
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        // Handle validation errors array
         if (data.errors && Array.isArray(data.errors)) {
           setError(data.errors.join(", "));
         } else {
@@ -98,8 +90,6 @@ export default function RegistrationPage() {
       }
 
       setSuccess("Akun berhasil dibuat! Mengalihkan ke halaman verifikasi...");
-
-      // Redirect ke otp setelah 1.5 detik
       setTimeout(() => {
         router.push(`/otp?email=${encodeURIComponent(email)}&from=register`);
       }, 1500);
@@ -110,6 +100,37 @@ export default function RegistrationPage() {
     }
   };
 
+  const handleTermsConfirm = () => {
+    setIsTermsModalOpen(false);
+    if (pendingAction) {
+      pendingAction();
+      setPendingAction(null);
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+
+    if (!agreed) {
+      setError("You must agree to the Terms of Service and Privacy Policy.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Password dan Confirm Password tidak sama.");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password minimal 6 karakter.");
+      return;
+    }
+
+    executeRegistration();
+  };
+
   return (
     <div className="flex w-full min-h-screen items-center justify-center relative overflow-hidden py-12 px-4 sm:px-6 lg:px-8">
       {/* Background Decorative Elements */}
@@ -118,22 +139,23 @@ export default function RegistrationPage() {
       <div className="absolute bottom-10 right-20 w-16 h-16 bg-[#f0e2d9] rounded-full opacity-50 blur-sm pointer-events-none"></div>
 
       <div className="w-full max-w-md bg-[#ffffff] p-8 sm:p-12 rounded-[8px] shadow-[0_20px_60px_-15px_rgba(74,26,26,0.05)] relative z-10 text-[#2B1D19]">
+        
         {/* Logo Section */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="flex items-center gap-4 mb-6 w-full">
-            <div className="h-px grow bg-[#e6d1c7]"></div>
-            <div className="w-10 h-10 relative">
-              <Image
-                src="/images/key.png"
-                alt="Key Logo"
-                fill
-                className="object-contain"
-              />
-            </div>
-            <div className="h-px grow bg-[#e6d1c7]"></div>
+        <div className="flex flex-col items-center mb-10">
+          <div className="w-20 h-20 relative mb-6">
+            <Image
+              src="/images/logo.png"
+              alt="Key Barber Logo"
+              fill
+              className="object-contain"
+            />
           </div>
-          <h1 className="text-[#4a1a1a] text-lg tracking-[0.15em] uppercase mb-1" style={{ fontFamily: "var(--font-playfair)" }}>Key Barber</h1>
-          <p className="text-[9px] tracking-[0.25em] text-[#8b6f66] font-normal uppercase" style={{ fontFamily: "var(--font-be-vietnam)" }}>Established in Tradition</p>
+          <h1 className="text-[#4a1a1a] text-[15px] tracking-[0.35em] uppercase mb-2 font-bold" style={{ fontFamily: "var(--font-playfair)" }}>Key Barber</h1>
+          <div className="flex items-center gap-3 w-full">
+            <div className="h-[1px] grow bg-[#e6d1c7]/50"></div>
+            <p className="text-[8px] tracking-[0.3em] text-[#8b6f66] font-medium uppercase whitespace-nowrap" style={{ fontFamily: "var(--font-be-vietnam)" }}>Established in Tradition</p>
+            <div className="h-[1px] grow bg-[#e6d1c7]/50"></div>
+          </div>
         </div>
 
         {/* Create Section */}
@@ -162,9 +184,9 @@ export default function RegistrationPage() {
         {/* Google Button */}
         <button
           type="button"
-          onClick={() => handleGoogleLogin()}
+          onClick={handleGoogleClick}
           disabled={loading}
-          className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-[#e6d1c7] bg-white rounded-md hover:bg-[#ede8e0] transition-colors mb-6 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-[#e6d1c7] bg-white rounded-md hover:bg-[#ede8e0] transition-colors mb-6 disabled:opacity-30 disabled:cursor-not-allowed group relative"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -258,15 +280,36 @@ export default function RegistrationPage() {
             </div>
           </div>
 
+          {/* Terms Agreement Toggle */}
+          <div className="mb-8 flex flex-col gap-3">
+            <div className="flex items-center gap-3 group cursor-pointer" onClick={() => setAgreed(!agreed)}>
+              <div className={`w-10 h-5 rounded-full relative transition-all duration-300 ${agreed ? "bg-[#4a1a1a]" : "bg-[#e6d1c7]"}`}>
+                <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all duration-300 ${agreed ? "left-6" : "left-1"}`}></div>
+              </div>
+              <span className="text-[11px] font-bold text-[#4a1a1a] tracking-wide" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
+                I agree to the <Link href="/terms" target="_blank" className="underline hover:text-[#2b1d19]" onClick={(e) => e.stopPropagation()}>terms and conditions</Link>
+              </span>
+            </div>
+            <p className="text-[9px] text-[#8b6f66] leading-relaxed italic ml-13">
+              By agreeing, you consent to having your photo processed by our AI systems for hairstyle analysis and simulation.
+            </p>
+          </div>
+
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#4a1a1a] hover:bg-[#2b1d19] disabled:opacity-50 disabled:cursor-not-allowed text-[#fbf7f3] py-4 rounded-md text-xs font-semibold tracking-[0.3em] uppercase transition-colors shadow-sm"
+            className="w-full bg-[#4a1a1a] hover:bg-[#2B1D19] disabled:opacity-30 disabled:cursor-not-allowed text-[#fbf7f3] py-4 rounded-md text-xs font-semibold tracking-[0.3em] uppercase transition-colors shadow-sm"
             style={{ fontFamily: "var(--font-be-vietnam)" }}
           >
             {loading ? "Creating Account..." : "Sign Up"}
           </button>
         </form>
+
+        <TermsModal 
+          isOpen={isTermsModalOpen} 
+          onClose={() => setIsTermsModalOpen(false)} 
+          onConfirm={handleTermsConfirm} 
+        />
 
         {/* Footer */}
         <div className="mt-8 text-center">
@@ -276,7 +319,6 @@ export default function RegistrationPage() {
               SIGN IN
             </Link>
           </p>
-          <p className="text-[9px] text-[#8b6f66] leading-[1.6] italic max-w-[280px] mx-auto" style={{ fontFamily: "var(--font-be-vietnam)" }}>By signing up, you agree to our Terms of Service and Privacy Policy concerning AI processing.</p>
         </div>
       </div>
 

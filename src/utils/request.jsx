@@ -86,7 +86,12 @@ export const logoutAdmin = () => {
   window.location.href = "/login-admin";
 };
 
-export const logoutUser = () => {
+export const logoutUser = async () => {
+  try {
+    await api.post("/auth/user/logout", {}, {}, true);
+  } catch (e) {
+    // ignore
+  }
   Cookies.remove("user_token");
   localStorage.removeItem("user");
   window.location.href = "/login";

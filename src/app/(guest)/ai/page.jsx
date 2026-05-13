@@ -11,6 +11,7 @@ import SiteNavbar from "../../../components/SiteNavbar";
 import { aiScanService } from "../../../services/aiScanService";
 import { useToast } from "../../../contexts/ToastContext";
 import { saveUserAuth } from "../../../utils/request";
+import { fetchHasActivePurchaseablePackage } from "../../../utils/packageAvailability";
 import Cookies from "js-cookie";
 import AILoadingModal from "../../../components/AILoadingModal";
 
@@ -63,15 +64,45 @@ export default function AiPage() {
   const router = useRouter();
   const { showToast } = useToast();
   const fileInputRef = useRef(null);
+  const [packageGateOk, setPackageGateOk] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isApiDone, setIsApiDone] = useState(false);
   const [isAnimationDone, setIsAnimationDone] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [ripples, setRipples] = useState([]);
+
+  const addRipple = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const id = Date.now();
+    setRipples((prev) => [...prev, { id, x, y }]);
+    setTimeout(() => {
+      setRipples((prev) => prev.filter((r) => r.id !== id));
+    }, 2000);
+  };
 
   useEffect(() => {
     if (isApiDone && isAnimationDone) {
       router.push("/ai/result?mode=upload");
     }
   }, [isApiDone, isAnimationDone, router]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const ok = await fetchHasActivePurchaseablePackage();
+      if (cancelled) return;
+      if (!ok) {
+        router.replace("/ai/busy");
+        return;
+      }
+      setPackageGateOk(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   const handleCameraClick = () => {
     router.push("/ai/camera");
@@ -95,8 +126,29 @@ export default function AiPage() {
     }
   };
 
-  const handleFileChange = async (e) => {
+  const handleFileChange = (e) => {
     const file = e.target.files?.[0];
+    processFile(file);
+  };
+
+  const onDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const onDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const onDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    addRipple(e);
+    const file = e.dataTransfer.files?.[0];
+    processFile(file);
+  };
+
+  const processFile = async (file) => {
     if (!file) return;
 
     const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
@@ -148,7 +200,15 @@ export default function AiPage() {
             router.push("/ai/busy");
             return;
           } else {
-            showToast(err.response?.data?.message || err.message || "Failed to analyze photo", "error");
+            const message = err.response?.data?.message || err.message || "";
+            if (message.toLowerCase().includes("credit") || message.toLowerCase().includes("koin")) {
+              showToast(message, "error");
+              setTimeout(() => {
+                router.push("/service#ai-pricing");
+              }, 2000);
+            } else {
+              showToast(message || "Failed to analyze photo", "error");
+            }
           }
           setIsAnalyzing(false);
           if (fileInputRef.current) fileInputRef.current.value = "";
@@ -158,7 +218,15 @@ export default function AiPage() {
 
     } catch (err) {
       console.error(err);
-      showToast(err.response?.data?.message || err.message || "Failed to analyze photo", "error");
+      const message = err.response?.data?.message || err.message || "";
+      if (message.toLowerCase().includes("credit") || message.toLowerCase().includes("koin")) {
+        showToast(message, "error");
+        setTimeout(() => {
+          router.push("/service#ai-pricing");
+        }, 2000);
+      } else {
+        showToast(message || "Failed to analyze photo", "error");
+      }
       setIsAnalyzing(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
@@ -174,6 +242,20 @@ export default function AiPage() {
     setIsAnimationDone(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
+
+  if (packageGateOk !== true) {
+    return (
+      <main className="min-h-screen overflow-x-hidden bg-[#FBF7F3] text-[#2B1D19]">
+        <SiteNavbar activeLabel="AI Feature" />
+        <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-6">
+          <Loader2 className="h-8 w-8 animate-spin text-[#4a1a1a]" aria-hidden />
+          <p className="text-sm text-[#6e5851]" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
+            Loading…
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#FBF7F3] text-[#2B1D19] scroll-smooth">
@@ -210,8 +292,94 @@ export default function AiPage() {
         </div>
 
         <div className="mt-12 flex flex-col gap-8">
-          <div className="rounded-[40px] border border-[#e6d1c7] bg-[#f7f1ea] p-8 lg:p-12">
-            <div className="flex flex-col items-center text-center">
+          <div 
+            onClick={handleUploadClick}
+            onDragOver={onDragOver}
+            onDragLeave={onDragLeave}
+            onDrop={onDrop}
+            className={`relative rounded-[40px] border-2 transition-all duration-300 cursor-pointer overflow-hidden ${
+              isDragging 
+                ? "border-[#c57e7b] bg-[#fdfcfb] scale-[1.01] shadow-2xl shadow-[#c57e7b]/10" 
+                : "border-[#e6d1c7] bg-[#f7f1ea] hover:border-[#d8c8bc] hover:shadow-xl"
+            }`}
+          >
+            {/* Luxury Wave Effects Container */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-[40px]">
+              {ripples.map((ripple) => (
+                <div key={ripple.id} className="absolute inset-0">
+                  {/* Primary Wave */}
+                  <div
+                    className="absolute rounded-full border border-[#c57e7b]/40 shadow-[0_0_20px_rgba(197,126,123,0.3)]"
+                    style={{
+                      left: ripple.x,
+                      top: ripple.y,
+                      width: '0px',
+                      height: '0px',
+                      transform: 'translate(-50%, -50%)',
+                      animation: 'luxuryWave 2.2s cubic-bezier(0.165, 0.84, 0.44, 1) forwards'
+                    }}
+                  />
+                  {/* Secondary Delayed Wave */}
+                  <div
+                    className="absolute rounded-full border border-[#c57e7b]/20"
+                    style={{
+                      left: ripple.x,
+                      top: ripple.y,
+                      width: '0px',
+                      height: '0px',
+                      transform: 'translate(-50%, -50%)',
+                      animation: 'luxuryWave 2.2s cubic-bezier(0.165, 0.84, 0.44, 1) 0.3s forwards'
+                    }}
+                  />
+                  {/* Central Puddle Expansion */}
+                  <div
+                    className="absolute rounded-full bg-gradient-to-br from-[#c57e7b]/5 to-transparent blur-2xl"
+                    style={{
+                      left: ripple.x,
+                      top: ripple.y,
+                      width: '0px',
+                      height: '0px',
+                      transform: 'translate(-50%, -50%)',
+                      animation: 'puddleExpand 1.8s ease-out forwards'
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+
+            <style jsx global>{`
+              @keyframes luxuryWave {
+                0% {
+                  width: 0;
+                  height: 0;
+                  opacity: 0.8;
+                  border-width: 3px;
+                }
+                100% {
+                  width: 250%;
+                  height: 250%;
+                  opacity: 0;
+                  border-width: 0.5px;
+                }
+              }
+              @keyframes puddleExpand {
+                0% {
+                  width: 0;
+                  height: 0;
+                  opacity: 0.6;
+                }
+                50% {
+                  opacity: 0.3;
+                }
+                100% {
+                  width: 150%;
+                  height: 150%;
+                  opacity: 0;
+                }
+              }
+            `}</style>
+
+            <div className="flex flex-col items-center text-center p-8 lg:p-12 relative z-10">
               <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-[#d8c8bc] bg-white shadow-sm">
                 <Upload className="h-8 w-8 text-[#4a1a1a]" />
               </div>

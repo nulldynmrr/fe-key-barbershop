@@ -29,3 +29,8 @@ export const markAllNotificationsRead = async () => {
   const res = await api.put("/notifications/mark-all-read");
   return res.data;
 };
+
+export const resolveUserEmail = async (userId) => {
+  const res = await api.get(`/user/${userId}/resolve-email`);
+  return res.data;
+};

@@ -27,6 +27,17 @@ import { aiConfigService } from "@/services/aiConfigService";
 import { MinimalDatePicker } from "@/components/ui/MinimalDatePicker";
 import { useToast } from "@/contexts/ToastContext";
 
+/** Tanggal promo dari API (ISO) → yyyy-mm-dd untuk MinimalDatePicker */
+function isoDateToYmd(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 const ToggleSwitch = ({ checked, onChange, disabled }) => {
   return (
     <button
@@ -105,6 +116,7 @@ export default function LanggananPage() {
   const [isCalculatingKoin, setIsCalculatingKoin] = useState(false);
   const [estimasiKoinIdeal, setEstimasiKoinIdeal] = useState(0);
   const [showHppDetail, setShowHppDetail] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   useEffect(() => {
     fetchPackages();
@@ -322,6 +334,7 @@ export default function LanggananPage() {
     });
     setIsEditing(false);
     setEditingId(null);
+    setFieldErrors({});
     setIsModalOpen(true);
   };
 
@@ -335,30 +348,50 @@ export default function LanggananPage() {
         ? activeModels.image_gen[0].id || activeModels.image_gen[0]._id
         : "";
 
+    const promoFromDb = !!pkg.promoAktif;
+    const hargaDiskonEdit =
+      promoFromDb && pkg.hargaDiskon != null && pkg.hargaDiskon !== ""
+        ? String(pkg.hargaDiskon)
+        : "";
+
     setFormData({
       ...initialFormState,
-      namaPaket: pkg.nama,
+      namaPaket: pkg.nama ?? "",
       typeValue: pkg.tipe,
-      jumlahKoin: pkg.koin,
-      hargaNominal: pkg.harga_asli,
-      promoAktif: pkg.is_promo,
-      hargaDiskon: pkg.is_promo ? pkg.harga_bayar : "",
+      jumlahKoin: pkg.koin != null ? String(pkg.koin) : "",
+      deskripsi: pkg.deskripsi ?? "",
+      hargaNominal: pkg.harga_asli != null ? String(pkg.harga_asli) : "",
+      promoAktif: promoFromDb,
+      hargaDiskon: hargaDiskonEdit,
+      diskonMulai: isoDateToYmd(pkg.diskonMulai),
+      diskonAkhir: isoDateToYmd(pkg.diskonAkhir),
       llmModelId: pkg.llmModelId || defaultLlm,
       imageModelId: pkg.imageModelId || defaultImage,
-      featStandardScan: true,
-      featFaceHeatmap: pkg.featFaceHeatmap || false,
-      featSymmetry: pkg.featSymmetry || false,
-      featAdvMapping: pkg.featAdvMapping || false,
-      featHairAnalysis: pkg.featHairAnalysis || false,
-      featRiskAnalysis: pkg.featRiskAnalysis || false,
-      featBarberInstructions: pkg.featBarberInstructions || false,
-      featVirtualTryOn: pkg.featVirtualTryOn || false,
-      virtualTryOnLimit: pkg.virtualTryOnLimit || 1,
-      featHistory: pkg.featHistory || false,
-      featHairstyleTrend: pkg.featHairstyleTrend || false,
+      featStandardScan: pkg.featStandardScan !== false,
+      featFaceHeatmap: !!pkg.featFaceHeatmap,
+      featSymmetry: !!pkg.featSymmetry,
+      featAdvMapping: !!pkg.featAdvMapping,
+      featHairAnalysis: !!pkg.featHairAnalysis,
+      featRiskAnalysis: !!pkg.featRiskAnalysis,
+      featBarberInstructions: !!pkg.featBarberInstructions,
+      featVirtualTryOn: !!pkg.featVirtualTryOn,
+      virtualTryOnLimit: pkg.virtualTryOnLimit ?? 1,
+      featHistory: !!pkg.featHistory,
+      featHairstyleTrend: !!(pkg.featHairstyleTrend ?? pkg.featTrendAnalysis),
+      durasi_value: pkg.durasi_value ?? initialFormState.durasi_value,
+      durasi_unit: pkg.durasi_unit ?? initialFormState.durasi_unit,
+      hppIdeal:
+        pkg.hppIdeal != null && pkg.hppIdeal !== ""
+          ? Number(pkg.hppIdeal)
+          : 0,
+      hppBreakdown: pkg.hppBreakdown ?? null,
+      estimasiModalApi: 0,
+      estimasiAksi: 0,
+      estimasiTokenPerAksi: 0,
     });
     setEditingId(pkg.id);
     setIsEditing(true);
+    setFieldErrors({});
     setIsModalOpen(true);
   };
 
@@ -394,6 +427,7 @@ export default function LanggananPage() {
     }
 
     setIsSubmitting(true);
+    setFieldErrors({});
     try {
       const payload = {
         namaPaket: formData.namaPaket,
@@ -414,6 +448,7 @@ export default function LanggananPage() {
         featHistory: formData.featHistory,
         featHairstyleTrend: formData.featHairstyleTrend,
         hppIdeal: Number(formData.hppIdeal),
+        hppBreakdown: formData.hppBreakdown ?? null,
         hargaNominal: Number(formData.hargaNominal),
         promoAktif: formData.promoAktif,
       };
@@ -449,7 +484,15 @@ export default function LanggananPage() {
       }
     } catch (err) {
       if (err?.response?.data?.errors) {
-        showToast(err.response.data.errors[0].message, "error");
+        const errors = err.response.data.errors;
+        const mappedErrors = {};
+        errors.forEach((e) => {
+          if (e.path) {
+            mappedErrors[e.path[0]] = e.message;
+          }
+        });
+        setFieldErrors(mappedErrors);
+        showToast("Ada kesalahan validasi. Periksa kembali form Anda.", "error");
       } else {
         showToast(err?.response?.data?.message || "Gagal menyimpan paket", "error");
       }
@@ -568,11 +611,16 @@ export default function LanggananPage() {
                         <div className="flex flex-col items-center justify-center gap-2">
                           {pkg.status === "AKTIF" ? (
                             <span className="bg-[#bbf7d0] text-[#166534] text-[10px] font-bold px-2 py-1 rounded-md flex items-center justify-center w-fit mx-auto gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#166534]"></span> AKTIF
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#166534]"></span>{" "}
+                              AKTIF
                             </span>
                           ) : (
-                            <span className="bg-[#fecaca] text-[#991b1b] text-[10px] font-bold px-2 py-1 rounded-md flex items-center justify-center w-fit mx-auto gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#991b1b]"></span> NONAKTIF
+                            <span
+                              className="bg-[#fecaca] text-[#991b1b] text-[10px] font-bold px-2 py-1 rounded-md flex items-center justify-center w-fit mx-auto gap-1 cursor-help"
+                              title="Paket nonaktif otomatis karena Model AI terkait sedang OFF atau budget habis"
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#991b1b]"></span>{" "}
+                              NONAKTIF
                             </span>
                           )}
                         </div>
@@ -600,7 +648,7 @@ export default function LanggananPage() {
                 ) : (
                   <tr>
                     <td
-                      colSpan="7"
+                      colSpan="8"
                       className="px-6 py-8 text-center text-gray-500"
                     >
                       Belum ada paket yang tersedia
@@ -643,9 +691,14 @@ export default function LanggananPage() {
                       name="namaPaket"
                       value={formData.namaPaket}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm"
+                      className={`w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm ${fieldErrors.namaPaket ? "border-red-500 bg-red-50" : "border-gray-200"}`}
                       placeholder="Starter Pack"
                     />
+                    {fieldErrors.namaPaket && (
+                      <p className="mt-1 text-[11px] font-medium text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                        {fieldErrors.namaPaket}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-[#2b1d19] mb-2">
@@ -656,9 +709,14 @@ export default function LanggananPage() {
                       name="jumlahKoin"
                       value={formData.jumlahKoin}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm"
+                      className={`w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm ${fieldErrors.jumlahKoin ? "border-red-500 bg-red-50" : "border-gray-200"}`}
                       placeholder="100"
                     />
+                    {fieldErrors.jumlahKoin && (
+                      <p className="mt-1 text-[11px] font-medium text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                        {fieldErrors.jumlahKoin}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -670,9 +728,14 @@ export default function LanggananPage() {
                     name="deskripsi"
                     value={formData.deskripsi}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm min-h-[80px]"
+                    className={`w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm min-h-[80px] ${fieldErrors.deskripsi ? "border-red-500 bg-red-50" : "border-gray-200"}`}
                     placeholder="Paket hemat untuk memulai analisis wajah Anda dengan kredit yang cukup"
                   />
+                  {fieldErrors.deskripsi && (
+                    <p className="mt-1 text-[11px] font-medium text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                      {fieldErrors.deskripsi}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -1004,6 +1067,11 @@ export default function LanggananPage() {
                         })}
                       </div>
                     )}
+                    {fieldErrors.llmModelId && (
+                      <p className="mt-2 text-[11px] font-medium text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                        {fieldErrors.llmModelId}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -1085,6 +1153,11 @@ export default function LanggananPage() {
                           );
                         })}
                       </div>
+                    )}
+                    {fieldErrors.imageModelId && (
+                      <p className="mt-2 text-[11px] font-medium text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                        {fieldErrors.imageModelId}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -1204,6 +1277,11 @@ export default function LanggananPage() {
                         <option value="TAHUN">TAHUN</option>
                       </select>
                     </div>
+                    {(fieldErrors.durasi_value || fieldErrors.durasi_unit) && (
+                      <p className="mt-1 text-[11px] font-medium text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                        {fieldErrors.durasi_value || fieldErrors.durasi_unit}
+                      </p>
+                    )}
                   </div>
                 )}
 
@@ -1339,9 +1417,14 @@ export default function LanggananPage() {
                       name="hargaNominal"
                       value={formData.hargaNominal}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm"
+                      className={`w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm ${fieldErrors.hargaNominal ? "border-red-500 bg-red-50" : "border-gray-200"}`}
                       placeholder="Rp25.000"
                     />
+                    {fieldErrors.hargaNominal && (
+                      <p className="mt-1 text-[11px] font-medium text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                        {fieldErrors.hargaNominal}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-[#2b1d19] mb-2">
@@ -1367,9 +1450,14 @@ export default function LanggananPage() {
                         name="hargaDiskon"
                         value={formData.hargaDiskon}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm"
+                        className={`w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm ${fieldErrors.hargaDiskon ? "border-red-500 bg-red-50" : "border-gray-200"}`}
                         placeholder="Rp23.000"
                       />
+                      {fieldErrors.hargaDiskon && (
+                        <p className="mt-1 text-[11px] font-medium text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                          {fieldErrors.hargaDiskon}
+                        </p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-[#2b1d19] mb-2">
@@ -1381,6 +1469,11 @@ export default function LanggananPage() {
                         onChange={handleInputChange}
                         placeholder="Pilih Tanggal Mulai"
                       />
+                      {fieldErrors.diskonMulai && (
+                        <p className="mt-1 text-[11px] font-medium text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                          {fieldErrors.diskonMulai}
+                        </p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-[#2b1d19] mb-2">
@@ -1393,6 +1486,11 @@ export default function LanggananPage() {
                         placeholder="Pilih Tanggal Akhir"
                         minDate={formData.diskonMulai}
                       />
+                      {fieldErrors.diskonAkhir && (
+                        <p className="mt-1 text-[11px] font-medium text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                          {fieldErrors.diskonAkhir}
+                        </p>
+                      )}
                     </div>
                   </div>
                 )}

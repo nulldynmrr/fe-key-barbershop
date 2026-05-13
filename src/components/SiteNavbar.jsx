@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { Menu, X, Coins, Sparkles } from "lucide-react";
 import api from "@/utils/request";
+import { fetchHasActivePurchaseablePackage } from "@/utils/packageAvailability";
 
 const defaultNavItems = [
   { label: "Home", href: "/home" },
@@ -24,9 +25,12 @@ export default function SiteNavbar({
   ctaHref = "/ai",
   signInHref = "/login",
   showSignIn = true,
+  hideAiCta = false,
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [packagesResolved, setPackagesResolved] = useState(false);
+  const [hasActivePackage, setHasActivePackage] = useState(false);
   const pathname = usePathname();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
@@ -50,6 +54,22 @@ export default function SiteNavbar({
     }
   }, [showSignIn]);
 
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const ok = await fetchHasActivePurchaseablePackage();
+      if (cancelled) return;
+      setHasActivePackage(ok);
+      setPackagesResolved(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  /** Only after /packages resolves: show AI nav + Try AI when at least one active package exists (no flash while loading). */
+  const showAiNavAndCta = packagesResolved && hasActivePackage && !hideAiCta;
+  const visibleNavItems = navItems.filter((item) => item.href !== "/ai" || showAiNavAndCta);
 
   const isAiPage = pathname?.startsWith("/ai");
 
@@ -61,7 +81,7 @@ export default function SiteNavbar({
         </Link>
 
         <nav className="hidden items-center gap-10 lg:absolute lg:left-1/2 lg:flex lg:-translate-x-1/2" style={{ fontFamily: "Liberation Serif" }}>
-          {navItems.map((item) => {
+          {visibleNavItems.map((item) => {
             const isActive = item.active || item.label === activeLabel;
 
             return (
@@ -102,7 +122,7 @@ export default function SiteNavbar({
             )
           ) : null}
           
-          {!isAiPage && (
+          {!isAiPage && showAiNavAndCta && (
             <Link
               href={ctaHref}
               className="inline-flex h-10 items-center justify-center bg-[#4a1a1a] px-5 text-xs font-medium uppercase tracking-[0.25em] text-[#fbf7f3] shadow-[0_10px_24px_rgba(74,26,26,0.2)] transition hover:bg-[#5a2725] rounded-sm"
@@ -126,7 +146,7 @@ export default function SiteNavbar({
             </div>
           )}
 
-          {!isAiPage && (
+          {!isAiPage && showAiNavAndCta && (
             <Link
               href={ctaHref}
               className="inline-flex h-8 items-center justify-center bg-[#4a1a1a] px-3 text-[0.65rem] font-medium uppercase tracking-[0.25em] text-[#fbf7f3] transition hover:bg-[#5a2725] rounded-sm"
@@ -144,7 +164,7 @@ export default function SiteNavbar({
       {isMenuOpen && (
         <nav className="border-t border-[#e6d1c7] bg-white px-6 py-4 lg:hidden" style={{ fontFamily: "Liberation Serif" }}>
           <div className="flex flex-col gap-4">
-            {navItems.map((item) => {
+            {visibleNavItems.map((item) => {
               const isActive = item.active || item.label === activeLabel;
 
               return (

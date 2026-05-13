@@ -66,7 +66,7 @@ export default function DashboardPage() {
   const [isRecentAnalysisLoading, setIsRecentAnalysisLoading] = useState(false);
 
   const fetchDashboardData = async (page = 1) => {
-    if (page === 1) setDashboardData(null); // Full reset for main charts only on initial load
+    if (page === 1) setDashboardData(null);
     setIsRecentAnalysisLoading(true);
     try {
       const response = await api.get(`/dashboard/main?page=${page}&limit=10`);
@@ -74,7 +74,6 @@ export default function DashboardPage() {
         if (page === 1) {
           setDashboardData(response.data.data);
         } else {
-          // Only update the table part if it's a pagination request
           setDashboardData(prev => ({
             ...prev,
             recentAnalysis: response.data.data.recentAnalysis,
@@ -102,7 +101,7 @@ export default function DashboardPage() {
         ) ?? "0",
       change: dashboardData
         ? (parseFloat(dashboardData.summaryCards.users.trendPercentage) < 0.1 || dashboardData.summaryCards.users.trendDirection === "down")
-          ? "Tidak ada perubahan" 
+          ? "Tidak ada perubahan"
           : `+${Math.abs(dashboardData.summaryCards.users.trendPercentage)}%`
         : "0%",
       isPositive: dashboardData?.summaryCards.users.trendDirection === "up",
@@ -114,14 +113,14 @@ export default function DashboardPage() {
       title: "Total Pendapatan",
       value: dashboardData
         ? new Intl.NumberFormat("id-ID", {
-            style: "currency",
-            currency: "IDR",
-            minimumFractionDigits: 0,
-          }).format(dashboardData.summaryCards.pendapatan.currentValue)
+          style: "currency",
+          currency: "IDR",
+          minimumFractionDigits: 0,
+        }).format(dashboardData.summaryCards.pendapatan.currentValue)
         : "Rp0",
       change: dashboardData
         ? (parseFloat(dashboardData.summaryCards.pendapatan.trendPercentage) < 0.1 || dashboardData.summaryCards.pendapatan.trendDirection === "down")
-          ? "Tidak ada perubahan" 
+          ? "Tidak ada perubahan"
           : `+${Math.abs(dashboardData.summaryCards.pendapatan.trendPercentage)}%`
         : "0%",
       isPositive:
@@ -134,14 +133,14 @@ export default function DashboardPage() {
       title: "Pengeluaran AI",
       value: dashboardData
         ? new Intl.NumberFormat("id-ID", {
-            style: "currency",
-            currency: "IDR",
-            minimumFractionDigits: 0,
-          }).format(dashboardData.summaryCards.pengeluaranAi.currentValue)
+          style: "currency",
+          currency: "IDR",
+          minimumFractionDigits: 0,
+        }).format(dashboardData.summaryCards.pengeluaranAi.currentValue)
         : "Rp0",
       change: dashboardData
         ? (parseFloat(dashboardData.summaryCards.pengeluaranAi.trendPercentage) < 0.1 || dashboardData.summaryCards.pengeluaranAi.trendDirection === "down")
-          ? "Tidak ada perubahan" 
+          ? "Tidak ada perubahan"
           : `+${Math.abs(dashboardData.summaryCards.pengeluaranAi.trendPercentage)}%`
         : "0%",
       isPositive:
@@ -154,13 +153,13 @@ export default function DashboardPage() {
       title: "Sisa Token AI",
       value: dashboardData
         ? Intl.NumberFormat("en-US", {
-            notation: "compact",
-            maximumFractionDigits: 1,
-          }).format(dashboardData.summaryCards.sisaToken.currentValue)
+          notation: "compact",
+          maximumFractionDigits: 1,
+        }).format(dashboardData.summaryCards.sisaToken.currentValue)
         : "0",
       change: dashboardData
         ? (parseFloat(dashboardData.summaryCards.sisaToken.trendPercentage) < 0.1 || dashboardData.summaryCards.sisaToken.trendDirection === "down")
-          ? "Tidak ada perubahan" 
+          ? "Tidak ada perubahan"
           : `+${Math.abs(dashboardData.summaryCards.sisaToken.trendPercentage)}%`
         : "0%",
       isPositive: dashboardData?.summaryCards.sisaToken.trendDirection === "up",
@@ -173,14 +172,14 @@ export default function DashboardPage() {
     },
   ];
 
-  const computedMax =
-    dashboardData?.revenueChart?.length > 0
-      ? Math.max(...dashboardData.revenueChart.map((d) => d.value), 10000)
-      : 10000;
+  const maxDataValue = dashboardData?.revenueChart?.length > 0
+    ? Math.max(...dashboardData.revenueChart.map((d) => d.total || 0))
+    : 0;
+  const computedMax = maxDataValue > 0 ? maxDataValue : 10000;
 
   const barChartData = (dashboardData?.revenueChart || []).map((d) => ({
-    name: d.name || d.label || "",
-    value: d.value || 0,
+    name: d.date || "",
+    value: d.total || 0,
     max: computedMax,
   }));
 
@@ -209,23 +208,23 @@ export default function DashboardPage() {
     Lainnya: "#4A3B91",
   };
 
-  const userStatData = (dashboardData?.userStatsChart || []).map((d, i) => ({
+  const userStatData = (dashboardData?.userStats || []).map((d, i) => ({
     name: d.label,
     value: d.percentage,
     count: d.count.toLocaleString("id-ID"),
-    color: userColors[d.label] || aiColors[i % aiColors.length],
+    color: userColors[d.label] || d.color || aiColors[i % aiColors.length],
   }));
 
   return (
     <div className="space-y-6 pb-12">
       {modelAiData.some((m) => m.value <= 20) && (
-        <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl shadow-sm flex items-start gap-3">
+        <div className="bg-red-50 p-5 rounded-2xl shadow-sm flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-500">
           <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
             <h4 className="text-red-800 font-bold text-sm" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
               ⚠️ DANGER: Budget API AI Hampir / Sudah Habis!
             </h4>
-            <p className="text-red-600 text-xs mt-1" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
+            <p className="text-red-600 text-[11px] mt-1 leading-relaxed" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
               Satu atau lebih model AI memiliki sisa budget kurang dari 20%. Fitur Virtual Try-On dan analisis AI akan GAGAL jika budget habis. Segera top-up saldo provider atau ganti API Key.
             </p>
             <div className="mt-3 flex gap-2">
@@ -246,14 +245,14 @@ export default function DashboardPage() {
         {summaryData.map((item, index) => (
           <div
             key={index}
-            className="bg-white p-4 rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-[#f0e2d9] relative flex items-start gap-3"
+            className="bg-white p-5 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] relative flex items-start gap-4 transition-transform hover:scale-[1.02] duration-300"
           >
-            <div className="w-9 h-9 rounded-full bg-[#fafafa] flex items-center justify-center flex-shrink-0 overflow-hidden">
+            <div className="w-10 h-10 rounded-2xl bg-[#fafafa] flex items-center justify-center flex-shrink-0 overflow-hidden shadow-inner">
               <Image
                 src={item.image}
                 alt={item.title}
-                width={20}
-                height={20}
+                width={22}
+                height={22}
                 className="object-contain"
                 unoptimized
               />
@@ -275,12 +274,18 @@ export default function DashboardPage() {
                 className="text-[10px] text-[#8b6f66]"
                 style={{ fontFamily: "var(--font-plus-jakarta)" }}
               >
-                <span
-                  className={`font-bold ${item.isNoChange ? "text-gray-400" : item.isPositive ? "text-green-600" : "text-red-500"}`}
-                >
-                  {item.change}
-                </span>{" "}
-                {item.trendLabel}
+                {item.isNoChange ? (
+                  <span className="text-[#c4b4a8] font-medium opacity-80 italic">
+                    {item.change}
+                  </span>
+                ) : (
+                  <span
+                    className={`font-bold ${item.isPositive ? "text-emerald-600" : "text-rose-500"}`}
+                  >
+                    {item.change}
+                  </span>
+                )}{" "}
+                <span className="opacity-60">{item.trendLabel}</span>
               </p>
             </div>
             {item.badge && (
@@ -295,7 +300,7 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white p-6 rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-[#f0e2d9]">
+          <div className="bg-white p-6 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
             <h3
               className="text-lg font-bold text-[#2b1d19] mb-6"
               style={{ fontFamily: "var(--font-plus-jakarta)" }}
@@ -359,7 +364,7 @@ export default function DashboardPage() {
             )}
           </div>
 
-          <div className="bg-white p-6 rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-[#f0e2d9] overflow-hidden">
+          <div className="bg-white p-6 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
             <h3
               className="text-lg font-bold text-[#2b1d19] mb-4"
               style={{ fontFamily: "var(--font-plus-jakarta)" }}
@@ -437,11 +442,10 @@ export default function DashboardPage() {
                         </td>
                         <td className="py-4">
                           <span
-                            className={`px-4 py-1 text-[10px] font-bold rounded-md border ${
-                              row.status !== "FREE"
-                                ? "bg-[#fdf2f0] border-[#e6d1c7] text-[#4a1a1a]"
-                                : "bg-white border-gray-100 text-[#8b6f66]"
-                            }`}
+                            className={`px-4 py-1 text-[10px] font-bold rounded-md border ${row.status !== "FREE"
+                              ? "bg-[#fdf2f0] border-[#e6d1c7] text-[#4a1a1a]"
+                              : "bg-white border-gray-100 text-[#8b6f66]"
+                              }`}
                             style={{ fontFamily: "var(--font-be-vietnam)" }}
                           >
                             {row.status}
@@ -455,7 +459,7 @@ export default function DashboardPage() {
             )}
 
             {dashboardData?.recentAnalysisMeta && dashboardData.recentAnalysisMeta.totalPages > 1 && (
-              <div className="mt-6 flex items-center justify-between border-t border-[#f5ebe6] pt-4">
+              <div className="mt-6 flex items-center justify-between border-t border-[#fcf7f4] pt-4">
                 <p className="text-[10px] text-[#8b6f66]">
                   Menampilkan {dashboardData.recentAnalysis.length} dari {dashboardData.recentAnalysisMeta.total} data
                 </p>
@@ -463,7 +467,7 @@ export default function DashboardPage() {
                   <button
                     onClick={() => setRecentAnalysisPage(prev => Math.max(1, prev - 1))}
                     disabled={recentAnalysisPage === 1 || isRecentAnalysisLoading}
-                    className="p-1.5 rounded-lg border border-[#f0e2d9] text-[#8b6f66] disabled:opacity-30 hover:bg-[#fafafa] transition-all"
+                    className="p-1.5 rounded-lg bg-[#fafafa] text-[#8b6f66] disabled:opacity-30 hover:bg-[#f5ece8] transition-all"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
@@ -473,7 +477,7 @@ export default function DashboardPage() {
                   <button
                     onClick={() => setRecentAnalysisPage(prev => Math.min(dashboardData.recentAnalysisMeta.totalPages, prev + 1))}
                     disabled={recentAnalysisPage === dashboardData.recentAnalysisMeta.totalPages || isRecentAnalysisLoading}
-                    className="p-1.5 rounded-lg border border-[#f0e2d9] text-[#8b6f66] disabled:opacity-30 hover:bg-[#fafafa] transition-all"
+                    className="p-1.5 rounded-lg bg-[#fafafa] text-[#8b6f66] disabled:opacity-30 hover:bg-[#f5ece8] transition-all"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </button>
@@ -484,7 +488,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="space-y-6">
-          <div className="bg-white p-6 rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-[#f0e2d9]">
+          <div className="bg-white p-6 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
             <h3
               className="text-lg font-bold text-[#2b1d19] mb-2"
               style={{ fontFamily: "var(--font-plus-jakarta)" }}
@@ -553,7 +557,7 @@ export default function DashboardPage() {
             )}
           </div>
 
-          <div className="bg-white p-6 rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-[#f0e2d9]">
+          <div className="bg-white p-6 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
             <h3
               className="text-lg font-bold text-[#2b1d19] mb-2"
               style={{ fontFamily: "var(--font-plus-jakarta)" }}

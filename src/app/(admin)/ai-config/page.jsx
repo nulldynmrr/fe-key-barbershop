@@ -24,17 +24,15 @@ const ToggleSwitch = ({ checked, onChange, disabled }) => {
       type="button"
       onClick={onChange}
       disabled={disabled}
-      className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-        checked ? "bg-[#86efac]" : "bg-[#fca5a5]"
-      } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+      className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${checked ? "bg-[#86efac]" : "bg-[#fca5a5]"
+        } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
       role="switch"
       aria-checked={checked}
     >
       <span
         aria-hidden="true"
-        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-          checked ? "translate-x-4" : "translate-x-0"
-        }`}
+        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${checked ? "translate-x-4" : "translate-x-0"
+          }`}
       />
     </button>
   );
@@ -700,11 +698,10 @@ export default function AiConfigPage() {
                       </td>
                       <td className="py-5 px-4">
                         <span
-                          className={`px-3 py-1 rounded-md text-[10px] font-bold border ${
-                            row.userStatus !== "FREE"
-                              ? "bg-[#fdf2f0] border-[#e6d1c7] text-[#4a1a1a]"
-                              : "bg-white border-gray-100 text-[#8b6f66]"
-                          }`}
+                          className={`px-3 py-1 rounded-md text-[10px] font-bold border ${row.userStatus !== "FREE"
+                            ? "bg-[#fdf2f0] border-[#e6d1c7] text-[#4a1a1a]"
+                            : "bg-white border-gray-100 text-[#8b6f66]"
+                            }`}
                           style={{ fontFamily: "var(--font-plus-jakarta)" }}
                         >
                           {row.userStatus || "FREE"}
@@ -734,7 +731,7 @@ export default function AiConfigPage() {
                       </td>
                       <td className="py-5 px-4">
                         <span
-                          className="inline-flex items-center px-3 py-1 rounded border border-[#e6d1c7] bg-[#fdf2f0] text-[10px] font-semibold text-[#8b1a1a]"
+                          className="inline-flex items-center px-3 py-1 rounded border border-emerald-100 bg-emerald-50 text-[10px] font-semibold text-emerald-700"
                           style={{ fontFamily: "var(--font-plus-jakarta)" }}
                         >
                           +${row.profit || "0.00000"}
@@ -756,7 +753,6 @@ export default function AiConfigPage() {
             </table>
           </div>
 
-          {/* Pagination UI */}
           {logsPagination.totalPages > 1 && (
             <div className="px-6 py-4 border-t border-[#f0e2d9] bg-[#fafafa] flex items-center justify-between">
               <p
@@ -803,11 +799,10 @@ export default function AiConfigPage() {
                           key={pageNum}
                           onClick={() => fetchLogs(pageNum)}
                           disabled={isLogsLoading}
-                          className={`min-w-[28px] h-7 text-[11px] font-bold rounded-md border transition-all ${
-                            logsPagination.currentPage === pageNum
-                              ? "bg-[#4a1a1a] border-[#4a1a1a] text-white"
-                              : "bg-white border-[#e6d1c7] text-[#8b6f66] hover:border-[#4a1a1a] hover:text-[#4a1a1a]"
-                          }`}
+                          className={`min-w-[28px] h-7 text-[11px] font-bold rounded-md border transition-all ${logsPagination.currentPage === pageNum
+                            ? "bg-[#4a1a1a] border-[#4a1a1a] text-white"
+                            : "bg-white border-[#e6d1c7] text-[#8b6f66] hover:border-[#4a1a1a] hover:text-[#4a1a1a]"
+                            }`}
                           style={{ fontFamily: "var(--font-plus-jakarta)" }}
                         >
                           {pageNum}
@@ -842,7 +837,6 @@ export default function AiConfigPage() {
         </div>
       </section>
 
-      {/* Modal Tambah/Edit API */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div
@@ -935,11 +929,10 @@ export default function AiConfigPage() {
                           pricingUnit: "1M_TOKENS",
                         })
                       }
-                      className={`px-4 py-3 rounded-lg border text-sm font-medium text-left transition-all ${
-                        formData.typeAi === "LLM"
-                          ? "border-[#4a1a1a] bg-[#fafafa] text-[#2b1d19]"
-                          : "border-gray-200 text-gray-500 hover:border-gray-300"
-                      }`}
+                      className={`px-4 py-3 rounded-lg border text-sm font-medium text-left transition-all ${formData.typeAi === "LLM"
+                        ? "border-[#4a1a1a] bg-[#fafafa] text-[#2b1d19]"
+                        : "border-gray-200 text-gray-500 hover:border-gray-300"
+                        }`}
                     >
                       LLM (Analisis Wajah)
                     </button>
@@ -952,11 +945,10 @@ export default function AiConfigPage() {
                           pricingUnit: "IMAGE",
                         })
                       }
-                      className={`px-4 py-3 rounded-lg border text-sm font-medium text-left transition-all ${
-                        formData.typeAi === "IMAGE_GEN"
-                          ? "border-[#4a1a1a] bg-[#fafafa] text-[#2b1d19]"
-                          : "border-gray-200 text-gray-500 hover:border-gray-300"
-                      }`}
+                      className={`px-4 py-3 rounded-lg border text-sm font-medium text-left transition-all ${formData.typeAi === "IMAGE_GEN"
+                        ? "border-[#4a1a1a] bg-[#fafafa] text-[#2b1d19]"
+                        : "border-gray-200 text-gray-500 hover:border-gray-300"
+                        }`}
                     >
                       Generate Image
                     </button>

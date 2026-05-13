@@ -148,7 +148,15 @@ export default function AiPage() {
             router.push("/ai/busy");
             return;
           } else {
-            showToast(err.response?.data?.message || err.message || "Failed to analyze photo", "error");
+            const message = err.response?.data?.message || err.message || "";
+            if (message.toLowerCase().includes("credit") || message.toLowerCase().includes("koin")) {
+              showToast(message, "error");
+              setTimeout(() => {
+                router.push("/service#ai-pricing");
+              }, 2000);
+            } else {
+              showToast(message || "Failed to analyze photo", "error");
+            }
           }
           setIsAnalyzing(false);
           if (fileInputRef.current) fileInputRef.current.value = "";
@@ -158,7 +166,15 @@ export default function AiPage() {
 
     } catch (err) {
       console.error(err);
-      showToast(err.response?.data?.message || err.message || "Failed to analyze photo", "error");
+      const message = err.response?.data?.message || err.message || "";
+      if (message.toLowerCase().includes("credit") || message.toLowerCase().includes("koin")) {
+        showToast(message, "error");
+        setTimeout(() => {
+          router.push("/service#ai-pricing");
+        }, 2000);
+      } else {
+        showToast(message || "Failed to analyze photo", "error");
+      }
       setIsAnalyzing(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }

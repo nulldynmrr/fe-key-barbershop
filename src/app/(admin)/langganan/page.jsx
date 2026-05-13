@@ -105,6 +105,7 @@ export default function LanggananPage() {
   const [isCalculatingKoin, setIsCalculatingKoin] = useState(false);
   const [estimasiKoinIdeal, setEstimasiKoinIdeal] = useState(0);
   const [showHppDetail, setShowHppDetail] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   useEffect(() => {
     fetchPackages();
@@ -322,6 +323,7 @@ export default function LanggananPage() {
     });
     setIsEditing(false);
     setEditingId(null);
+    setFieldErrors({});
     setIsModalOpen(true);
   };
 
@@ -359,6 +361,7 @@ export default function LanggananPage() {
     });
     setEditingId(pkg.id);
     setIsEditing(true);
+    setFieldErrors({});
     setIsModalOpen(true);
   };
 
@@ -394,6 +397,7 @@ export default function LanggananPage() {
     }
 
     setIsSubmitting(true);
+    setFieldErrors({});
     try {
       const payload = {
         namaPaket: formData.namaPaket,
@@ -449,7 +453,15 @@ export default function LanggananPage() {
       }
     } catch (err) {
       if (err?.response?.data?.errors) {
-        showToast(err.response.data.errors[0].message, "error");
+        const errors = err.response.data.errors;
+        const mappedErrors = {};
+        errors.forEach((e) => {
+          if (e.path) {
+            mappedErrors[e.path[0]] = e.message;
+          }
+        });
+        setFieldErrors(mappedErrors);
+        showToast("Ada kesalahan validasi. Periksa kembali form Anda.", "error");
       } else {
         showToast(err?.response?.data?.message || "Gagal menyimpan paket", "error");
       }
@@ -643,9 +655,14 @@ export default function LanggananPage() {
                       name="namaPaket"
                       value={formData.namaPaket}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm"
+                      className={`w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm ${fieldErrors.namaPaket ? "border-red-500 bg-red-50" : "border-gray-200"}`}
                       placeholder="Starter Pack"
                     />
+                    {fieldErrors.namaPaket && (
+                      <p className="mt-1 text-[11px] font-medium text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                        {fieldErrors.namaPaket}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-[#2b1d19] mb-2">
@@ -656,9 +673,14 @@ export default function LanggananPage() {
                       name="jumlahKoin"
                       value={formData.jumlahKoin}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm"
+                      className={`w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm ${fieldErrors.jumlahKoin ? "border-red-500 bg-red-50" : "border-gray-200"}`}
                       placeholder="100"
                     />
+                    {fieldErrors.jumlahKoin && (
+                      <p className="mt-1 text-[11px] font-medium text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                        {fieldErrors.jumlahKoin}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -670,9 +692,14 @@ export default function LanggananPage() {
                     name="deskripsi"
                     value={formData.deskripsi}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm min-h-[80px]"
+                    className={`w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm min-h-[80px] ${fieldErrors.deskripsi ? "border-red-500 bg-red-50" : "border-gray-200"}`}
                     placeholder="Paket hemat untuk memulai analisis wajah Anda dengan kredit yang cukup"
                   />
+                  {fieldErrors.deskripsi && (
+                    <p className="mt-1 text-[11px] font-medium text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                      {fieldErrors.deskripsi}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -1004,6 +1031,11 @@ export default function LanggananPage() {
                         })}
                       </div>
                     )}
+                    {fieldErrors.llmModelId && (
+                      <p className="mt-2 text-[11px] font-medium text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                        {fieldErrors.llmModelId}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -1085,6 +1117,11 @@ export default function LanggananPage() {
                           );
                         })}
                       </div>
+                    )}
+                    {fieldErrors.imageModelId && (
+                      <p className="mt-2 text-[11px] font-medium text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                        {fieldErrors.imageModelId}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -1204,6 +1241,11 @@ export default function LanggananPage() {
                         <option value="TAHUN">TAHUN</option>
                       </select>
                     </div>
+                    {(fieldErrors.durasi_value || fieldErrors.durasi_unit) && (
+                      <p className="mt-1 text-[11px] font-medium text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                        {fieldErrors.durasi_value || fieldErrors.durasi_unit}
+                      </p>
+                    )}
                   </div>
                 )}
 
@@ -1339,9 +1381,14 @@ export default function LanggananPage() {
                       name="hargaNominal"
                       value={formData.hargaNominal}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm"
+                      className={`w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm ${fieldErrors.hargaNominal ? "border-red-500 bg-red-50" : "border-gray-200"}`}
                       placeholder="Rp25.000"
                     />
+                    {fieldErrors.hargaNominal && (
+                      <p className="mt-1 text-[11px] font-medium text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                        {fieldErrors.hargaNominal}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-[#2b1d19] mb-2">
@@ -1367,9 +1414,14 @@ export default function LanggananPage() {
                         name="hargaDiskon"
                         value={formData.hargaDiskon}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm"
+                        className={`w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm ${fieldErrors.hargaDiskon ? "border-red-500 bg-red-50" : "border-gray-200"}`}
                         placeholder="Rp23.000"
                       />
+                      {fieldErrors.hargaDiskon && (
+                        <p className="mt-1 text-[11px] font-medium text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                          {fieldErrors.hargaDiskon}
+                        </p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-[#2b1d19] mb-2">
@@ -1381,6 +1433,11 @@ export default function LanggananPage() {
                         onChange={handleInputChange}
                         placeholder="Pilih Tanggal Mulai"
                       />
+                      {fieldErrors.diskonMulai && (
+                        <p className="mt-1 text-[11px] font-medium text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                          {fieldErrors.diskonMulai}
+                        </p>
+                      )}
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-[#2b1d19] mb-2">
@@ -1393,6 +1450,11 @@ export default function LanggananPage() {
                         placeholder="Pilih Tanggal Akhir"
                         minDate={formData.diskonMulai}
                       />
+                      {fieldErrors.diskonAkhir && (
+                        <p className="mt-1 text-[11px] font-medium text-red-600 animate-in fade-in slide-in-from-top-1 duration-200">
+                          {fieldErrors.diskonAkhir}
+                        </p>
+                      )}
                     </div>
                   </div>
                 )}

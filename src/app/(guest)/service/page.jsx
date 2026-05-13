@@ -122,13 +122,17 @@ function PricingCard({ pkg }) {
         </div>
       )}
 
-      <p className="text-xs uppercase tracking-wider text-[#d8b9b1]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
-        {pkg.tipe || pkg.typeValue}
-      </p>
-
-      <h3 className="mt-2 text-2xl font-semibold text-[#f7e7d8]" style={{ fontFamily: "var(--font-noto-serif)" }}>
-        {pkg.nama || pkg.namaPaket}
-      </h3>
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+        <h3 className="text-2xl font-semibold text-[#f7e7d8] flex-1 min-w-[180px]" style={{ fontFamily: "var(--font-noto-serif)" }}>
+          {pkg.nama || pkg.namaPaket}
+        </h3>
+        <span 
+          className="shrink-0 px-2 py-1 rounded border border-[#d8b9b1]/20 bg-[#d8b9b1]/10 text-[9px] uppercase tracking-widest text-[#d8b9b1] mt-1" 
+          style={{ fontFamily: "var(--font-be-vietnam)" }}
+        >
+          {pkg.tipe || pkg.typeValue}
+        </span>
+      </div>
 
       <div className="mt-3 flex items-baseline gap-2 text-[#f7e7d8]" style={{ fontFamily: "var(--font-noto-serif)" }}>
         <span className="text-3xl font-bold">{pkg.koin || pkg.jumlahKoin}</span>
@@ -204,14 +208,32 @@ export default function ServicesPage() {
     try {
       const res = await api.get("/packages", { page: 1, limit: 10 });
       if (res.data && res.data.success) {
-        const allPackages = [
+        let allPackages = [
           ...(res.data.data.topup_koin || []),
           ...(res.data.data.langganan_premium || [])
         ];
 
+        // 1. Filter: Hanya yang isActive/status AKTIF
+        allPackages = allPackages.filter(pkg => 
+          pkg.is_active === true || 
+          pkg.is_active === 1 || 
+          pkg.status === "AKTIF"
+        );
+
+        // 2. Sort awal berdasarkan harga
         allPackages.sort((a, b) => (a.harga_bayar || a.hargaNominal) - (b.harga_bayar || b.hargaNominal));
 
-        setPackages(allPackages);
+        // 3. Logika Promo di Tengah
+        const promoPackages = allPackages.filter(pkg => pkg.is_promo);
+        const normalPackages = allPackages.filter(pkg => !pkg.is_promo);
+
+        const midIndex = Math.floor(normalPackages.length / 2);
+        const left = normalPackages.slice(0, midIndex);
+        const right = normalPackages.slice(midIndex);
+
+        const reorderedPackages = [...left, ...promoPackages, ...right];
+
+        setPackages(reorderedPackages);
       }
     } catch (err) {
       console.error("Failed to fetch packages:", err);
@@ -245,7 +267,7 @@ export default function ServicesPage() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-6 pb-20 lg:px-10">
+        <section id="ai-pricing" className="mx-auto max-w-6xl px-6 pb-20 lg:px-10">
           <div className="text-center">
             <p className="text-xl uppercase tracking-[0.5em] text-[#C57E7B]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
               AI-Enhanced Experience

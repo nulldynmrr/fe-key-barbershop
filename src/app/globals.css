@@ -98,6 +98,7 @@ body {
     opacity: 0;
     transform: translate3d(0, 16px, 0);
   }
+
   to {
     opacity: 1;
     transform: translate3d(0, 0, 0);
@@ -108,15 +109,26 @@ body {
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
 }
 
 @keyframes sway {
-  0%, 100% { transform: rotate(0deg) translateY(-2px); }
-  25% { transform: rotate(-12deg) translateY(-4px) scale(1.05); }
-  75% { transform: rotate(12deg) translateY(-4px) scale(1.05); }
+
+  0%,
+  100% {
+    transform: rotate(0deg) translateY(-2px);
+  }
+
+  25% {
+    transform: rotate(-12deg) translateY(-4px) scale(1.05);
+  }
+
+  75% {
+    transform: rotate(12deg) translateY(-4px) scale(1.05);
+  }
 }
 
 
@@ -135,34 +147,34 @@ body {
   }
 
   @keyframes border-rotate {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+      transform: rotate(0deg);
+    }
+
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   .exclusive-border-container {
     position: relative;
-    padding: 2px;
+    padding: 1px;
     overflow: hidden;
     display: inline-flex;
-    border-radius: 2px;
   }
 
   .exclusive-border-glow {
     position: absolute;
-    width: 250%;
-    height: 250%;
-    top: -75%;
-    left: -75%;
-    background: conic-gradient(
-      from 0deg,
-      transparent 50%,
-      #fbf7f3 70%,
-      #C59B8F 90%,
-      transparent 100%
-    );
-    animation: border-rotate 3s linear infinite;
+    width: 200%;
+    height: 200%;
+    top: -50%;
+    left: -50%;
+    background: conic-gradient(from 0deg,
+        transparent 60%,
+        rgba(251, 247, 243, 0.8) 80%,
+        transparent 100%);
+    animation: border-rotate 4s linear infinite;
   }
-
 
 
 
@@ -177,7 +189,6 @@ body {
     background-size: cover;
   }
 
-  /* Section separator using the provided key logo. Put separator image at /public/images/separator.png */
   .section-sep {
     width: 100%;
     height: 84px;
@@ -185,13 +196,12 @@ body {
     background-image: url("/images/separator.png");
     background-repeat: no-repeat;
     background-position: center center;
-    background-size: auto 64px; /* scale height, keep aspect */
+    background-size: auto 64px;
     margin-top: 0.5rem;
     margin-bottom: 0.5rem;
     pointer-events: none;
   }
 
-  /* Separator component styles (lines + centered logo) */
   .separator {
     width: 100%;
     display: flex;
@@ -221,7 +231,6 @@ body {
     transform: translateY(-2px);
   }
 
-  /* About section tweaks */
   .about-number {
     font-family: var(--font-playfair);
     font-size: 160px;
@@ -300,9 +309,11 @@ body {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
   html {
     @apply font-sans;
   }

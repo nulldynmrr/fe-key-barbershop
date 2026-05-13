@@ -11,7 +11,7 @@ export const aiConfigService = {
   toggleModelStatus: (id, isActive) => api.patch(`/ai-config/models/${id}/status`, { isActive }),
   testConnection: (data) => api.post("/ai-config/models/test-connection", data),
 
-  getLogs: (page = 1, limit = 10) => api.get("/ai-config/logs", { params: { page, limit } }),
+  getLogs: (page = 1, limit = 10) => api.get("/ai-config/logs", { page, limit }),
 
   getFeaturePricing: () => api.get("/ai-config/feature-pricing"),
   updateFeaturePricing: (id, data) => api.put(`/ai-config/feature-pricing/${id}`, data),

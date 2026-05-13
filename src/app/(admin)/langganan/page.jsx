@@ -27,6 +27,17 @@ import { aiConfigService } from "@/services/aiConfigService";
 import { MinimalDatePicker } from "@/components/ui/MinimalDatePicker";
 import { useToast } from "@/contexts/ToastContext";
 
+/** Tanggal promo dari API (ISO) → yyyy-mm-dd untuk MinimalDatePicker */
+function isoDateToYmd(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 const ToggleSwitch = ({ checked, onChange, disabled }) => {
   return (
     <button
@@ -337,27 +348,46 @@ export default function LanggananPage() {
         ? activeModels.image_gen[0].id || activeModels.image_gen[0]._id
         : "";
 
+    const promoFromDb = !!pkg.promoAktif;
+    const hargaDiskonEdit =
+      promoFromDb && pkg.hargaDiskon != null && pkg.hargaDiskon !== ""
+        ? String(pkg.hargaDiskon)
+        : "";
+
     setFormData({
       ...initialFormState,
-      namaPaket: pkg.nama,
+      namaPaket: pkg.nama ?? "",
       typeValue: pkg.tipe,
-      jumlahKoin: pkg.koin,
-      hargaNominal: pkg.harga_asli,
-      promoAktif: pkg.is_promo,
-      hargaDiskon: pkg.is_promo ? pkg.harga_bayar : "",
+      jumlahKoin: pkg.koin != null ? String(pkg.koin) : "",
+      deskripsi: pkg.deskripsi ?? "",
+      hargaNominal: pkg.harga_asli != null ? String(pkg.harga_asli) : "",
+      promoAktif: promoFromDb,
+      hargaDiskon: hargaDiskonEdit,
+      diskonMulai: isoDateToYmd(pkg.diskonMulai),
+      diskonAkhir: isoDateToYmd(pkg.diskonAkhir),
       llmModelId: pkg.llmModelId || defaultLlm,
       imageModelId: pkg.imageModelId || defaultImage,
-      featStandardScan: true,
-      featFaceHeatmap: pkg.featFaceHeatmap || false,
-      featSymmetry: pkg.featSymmetry || false,
-      featAdvMapping: pkg.featAdvMapping || false,
-      featHairAnalysis: pkg.featHairAnalysis || false,
-      featRiskAnalysis: pkg.featRiskAnalysis || false,
-      featBarberInstructions: pkg.featBarberInstructions || false,
-      featVirtualTryOn: pkg.featVirtualTryOn || false,
-      virtualTryOnLimit: pkg.virtualTryOnLimit || 1,
-      featHistory: pkg.featHistory || false,
-      featHairstyleTrend: pkg.featHairstyleTrend || false,
+      featStandardScan: pkg.featStandardScan !== false,
+      featFaceHeatmap: !!pkg.featFaceHeatmap,
+      featSymmetry: !!pkg.featSymmetry,
+      featAdvMapping: !!pkg.featAdvMapping,
+      featHairAnalysis: !!pkg.featHairAnalysis,
+      featRiskAnalysis: !!pkg.featRiskAnalysis,
+      featBarberInstructions: !!pkg.featBarberInstructions,
+      featVirtualTryOn: !!pkg.featVirtualTryOn,
+      virtualTryOnLimit: pkg.virtualTryOnLimit ?? 1,
+      featHistory: !!pkg.featHistory,
+      featHairstyleTrend: !!(pkg.featHairstyleTrend ?? pkg.featTrendAnalysis),
+      durasi_value: pkg.durasi_value ?? initialFormState.durasi_value,
+      durasi_unit: pkg.durasi_unit ?? initialFormState.durasi_unit,
+      hppIdeal:
+        pkg.hppIdeal != null && pkg.hppIdeal !== ""
+          ? Number(pkg.hppIdeal)
+          : 0,
+      hppBreakdown: pkg.hppBreakdown ?? null,
+      estimasiModalApi: 0,
+      estimasiAksi: 0,
+      estimasiTokenPerAksi: 0,
     });
     setEditingId(pkg.id);
     setIsEditing(true);
@@ -418,6 +448,7 @@ export default function LanggananPage() {
         featHistory: formData.featHistory,
         featHairstyleTrend: formData.featHairstyleTrend,
         hppIdeal: Number(formData.hppIdeal),
+        hppBreakdown: formData.hppBreakdown ?? null,
         hargaNominal: Number(formData.hargaNominal),
         promoAktif: formData.promoAktif,
       };
@@ -580,11 +611,16 @@ export default function LanggananPage() {
                         <div className="flex flex-col items-center justify-center gap-2">
                           {pkg.status === "AKTIF" ? (
                             <span className="bg-[#bbf7d0] text-[#166534] text-[10px] font-bold px-2 py-1 rounded-md flex items-center justify-center w-fit mx-auto gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#166534]"></span> AKTIF
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#166534]"></span>{" "}
+                              AKTIF
                             </span>
                           ) : (
-                            <span className="bg-[#fecaca] text-[#991b1b] text-[10px] font-bold px-2 py-1 rounded-md flex items-center justify-center w-fit mx-auto gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#991b1b]"></span> NONAKTIF
+                            <span
+                              className="bg-[#fecaca] text-[#991b1b] text-[10px] font-bold px-2 py-1 rounded-md flex items-center justify-center w-fit mx-auto gap-1 cursor-help"
+                              title="Paket nonaktif otomatis karena Model AI terkait sedang OFF atau budget habis"
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#991b1b]"></span>{" "}
+                              NONAKTIF
                             </span>
                           )}
                         </div>
@@ -612,7 +648,7 @@ export default function LanggananPage() {
                 ) : (
                   <tr>
                     <td
-                      colSpan="7"
+                      colSpan="8"
                       className="px-6 py-8 text-center text-gray-500"
                     >
                       Belum ada paket yang tersedia

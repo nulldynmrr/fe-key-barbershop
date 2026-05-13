@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import Image from "next/image";
@@ -10,6 +10,7 @@ import SeparatorKey from "../../../components/SeparatorKey";
 import SiteFooter from "@/components/SiteFooter";
 import SiteNavbar from "@/components/SiteNavbar";
 import SocialGallery from "@/components/SocialGallery";
+import { fetchHasActivePurchaseablePackage } from "@/utils/packageAvailability";
 
 
 const navItems = [
@@ -71,6 +72,9 @@ function SectionCard({ title, description, className = "", titleClassName = "", 
 }
 
 export default function HomePage() {
+  const [packagesChecked, setPackagesChecked] = useState(false);
+  const [hasActivePackage, setHasActivePackage] = useState(true);
+
   useEffect(() => {
     AOS.init({
       duration: 1000,
@@ -79,6 +83,23 @@ export default function HomePage() {
       offset: 100,
     });
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const ok = await fetchHasActivePurchaseablePackage();
+      if (!cancelled) {
+        setHasActivePackage(ok);
+        setPackagesChecked(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const showAiEntry = !packagesChecked || hasActivePackage;
+  const hideAiCta = packagesChecked && !hasActivePackage;
 
   return (
 
@@ -89,7 +110,7 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(74,26,26,0.38)_80%,rgba(74,26,26,0.3)_20%,rgba(254,248,243,0.65)_100%)]" />
         </div>
 
-        <SiteNavbar activeLabel="Home" />
+        <SiteNavbar activeLabel="Home" hideAiCta={hideAiCta} />
 
         <div className="relative mx-auto flex min-h-[min(100svh,58rem)] max-w-7xl flex-col items-center justify-center px-6 pb-24 pt-32 text-center lg:px-10 lg:pt-36">
           <div className="mb-6 flex items-center gap-4" data-aos="fade-down">
@@ -126,6 +147,7 @@ export default function HomePage() {
             data-aos="fade-up"
             data-aos-delay="600"
           >
+            {showAiEntry ? (
             <div className="exclusive-border-container group shadow-[0_0_20px_rgba(74,26,26,0.15)] hover:shadow-[0_0_30px_rgba(74,26,26,0.3)] transition-all">
               <div className="exclusive-border-glow"></div>
               <Link
@@ -136,6 +158,7 @@ export default function HomePage() {
                 Start AI Recommendation
               </Link>
             </div>
+            ) : null}
 
             <Link
               href="/service"
@@ -201,6 +224,7 @@ export default function HomePage() {
                 description="Our intelligent system analyzes your facial structure and hair characteristics to recommend the most suitable hairstyle for you."
                 descriptionClassName="text-[#f3ded6]"
               >
+                {showAiEntry ? (
                 <Link
                   href="/user/ai-analyze"
                   className="mt-8 inline-flex items-center gap-2 border-b border-white/30 pb-1 text-[0.72rem] uppercase tracking-[0.38em] text-[#fbf7f3] transition hover:border-white/70"
@@ -208,6 +232,11 @@ export default function HomePage() {
                 >
                   Discover your look
                 </Link>
+                ) : (
+                  <p className="mt-8 text-[0.72rem] uppercase tracking-[0.38em] text-[#f3ded6]/70" style={{ fontFamily: "var(--font-be-vietnam)" }}>
+                    AI packages unavailable — check back soon
+                  </p>
+                )}
               </SectionCard>
             </div>
           </div>

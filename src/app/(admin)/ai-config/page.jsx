@@ -731,7 +731,7 @@ export default function AiConfigPage() {
                       </td>
                       <td className="py-5 px-4">
                         <span
-                          className="inline-flex items-center px-3 py-1 rounded border border-[#e6d1c7] bg-[#fdf2f0] text-[10px] font-semibold text-[#8b1a1a]"
+                          className="inline-flex items-center px-3 py-1 rounded border border-emerald-100 bg-emerald-50 text-[10px] font-semibold text-emerald-700"
                           style={{ fontFamily: "var(--font-plus-jakarta)" }}
                         >
                           +${row.profit || "0.00000"}

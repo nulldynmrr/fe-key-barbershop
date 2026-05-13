@@ -2,13 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Camera, X, RefreshCw } from "lucide-react";
+import { Camera, X, RefreshCw, Loader2 } from "lucide-react";
 
 import { aiScanService } from "@/services/aiScanService";
 import { useToast } from "@/contexts/ToastContext";
 
 import Cookies from "js-cookie";
 import { saveUserAuth } from "@/utils/request";
+import { fetchHasActivePurchaseablePackage } from "@/utils/packageAvailability";
 import AILoadingModal from "@/components/AILoadingModal";
 
 export default function AiCameraPage() {
@@ -16,6 +17,7 @@ export default function AiCameraPage() {
   const { showToast } = useToast();
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
+  const [packageGateOk, setPackageGateOk] = useState(null);
   const [stream, setStream] = useState(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -32,8 +34,26 @@ export default function AiCameraPage() {
     }
   }, [isApiDone, isAnimationDone, router, stream]);
 
-  // Request camera access on mount
   useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const ok = await fetchHasActivePurchaseablePackage();
+      if (cancelled) return;
+      if (!ok) {
+        router.replace("/ai/busy");
+        return;
+      }
+      setPackageGateOk(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
+
+  // Request camera access once packages allow AI purchase
+  useEffect(() => {
+    if (packageGateOk !== true) return;
+
     async function setupCamera() {
       try {
         const mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -53,11 +73,14 @@ export default function AiCameraPage() {
 
     // Cleanup stream on unmount
     return () => {
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
-      }
+      setStream((prev) => {
+        if (prev) {
+          prev.getTracks().forEach((track) => track.stop());
+        }
+        return null;
+      });
     };
-  }, []);
+  }, [packageGateOk]);
 
   const handleClose = () => {
     if (stream) {
@@ -165,6 +188,14 @@ export default function AiCameraPage() {
     setIsAnimationDone(false);
     setIsCapturing(false);
   };
+
+  if (packageGateOk !== true) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-black text-white">
+        <Loader2 className="h-8 w-8 animate-spin" aria-hidden />
+      </main>
+    );
+  }
 
   return (
     <main className="relative h-screen w-screen overflow-hidden bg-black text-white">

@@ -1,13 +1,129 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { Home, Cpu, Tags, Users, ReceiptText, Bell, Share2, LogOut, User, Settings, X, CheckCircle } from "lucide-react";
+import { Home, Cpu, Tags, Users, ReceiptText, Bell, Share2, LogOut, User, Settings, X, CheckCircle, MessageSquareText } from "lucide-react";
 import { ToastProvider, useToast } from "@/contexts/ToastContext";
 import { logoutAdmin } from "@/utils/request";
-import { getAdminProfile, requestAdminOTP, getNotifications, updateAdminProfile, markNotificationRead, markAllNotificationsRead } from "@/services/adminService";
+import { getAdminProfile, requestAdminOTP, getNotifications, updateAdminProfile, markNotificationRead, markAllNotificationsRead, resolveUserEmail } from "@/services/adminService";
+
+function UserEmailResolver({ userId }) {
+  const [email, setEmail] = useState(userId);
+  const [isLoading, setIsLoading] = useState(false);
+  const resolvedCache = useRef({});
+
+  useEffect(() => {
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) {
+      return;
+    }
+
+    if (resolvedCache.current[userId]) {
+      setEmail(resolvedCache.current[userId]);
+      return;
+    }
+
+    const resolve = async () => {
+      setIsLoading(true);
+      try {
+        const res = await resolveUserEmail(userId);
+        if (res.success && res.email) {
+          setEmail(res.email);
+          resolvedCache.current[userId] = res.email;
+        }
+      } catch (err) {
+        console.error("Failed to resolve email:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    resolve();
+  }, [userId]);
+
+  if (isLoading) return <span className="opacity-40 animate-pulse">Resolving...</span>;
+  return <span>{email}</span>;
+}
+
+function parseNotificationTitle(title) {
+  const t = (title || "").trim();
+  if (/^CRITICAL\s*:/i.test(t)) {
+    return {
+      severity: "critical",
+      badge: "Critical",
+      displayTitle: t.replace(/^CRITICAL\s*:\s*/i, "").trim(),
+    };
+  }
+  if (/^WARNING\s*:/i.test(t)) {
+    return {
+      severity: "warning",
+      badge: "Warning",
+      displayTitle: t.replace(/^WARNING\s*:\s*/i, "").trim(),
+    };
+  }
+  if (/^INFO\s*:/i.test(t)) {
+    return {
+      severity: "info",
+      badge: "Info",
+      displayTitle: t.replace(/^INFO\s*:\s*/i, "").trim(),
+    };
+  }
+  return { severity: "default", badge: null, displayTitle: t };
+}
+
+function parseNotificationMessage(message) {
+  const raw = (message || "").trim();
+  const detailIdx = raw.search(/\bDetail:\s*/i);
+  if (detailIdx < 0) return { lead: raw, fields: [] };
+
+  const lead = raw.slice(0, detailIdx).trim().replace(/\.\s*$/, "");
+  let s = raw.slice(detailIdx).trim();
+
+  const order = ["Detail", "Model", "Error", "User"];
+  const fields = [];
+
+  for (let i = 0; i < order.length; i++) {
+    const label = order[i];
+    const headerRe = new RegExp(`^${label}:\\s*`, "i");
+    if (!headerRe.test(s)) continue;
+    s = s.replace(headerRe, "");
+    const nextLabel = order[i + 1];
+    let valueEnd = s.length;
+    if (nextLabel) {
+      const nextRe = new RegExp(`\\s+${nextLabel}:\\s*`, "i");
+      const match = s.match(nextRe);
+      if (match && match.index != null) valueEnd = match.index;
+    }
+    let value = s.slice(0, valueEnd).trim().replace(/\.\s*$/, "");
+    fields.push({ key: label, value });
+    s = s.slice(valueEnd).trim();
+  }
+
+  if (fields.length === 0 && detailIdx >= 0) {
+    const rest = raw.slice(detailIdx).replace(/^Detail:\s*/i, "").trim();
+    if (rest) fields.push({ key: "Detail", value: rest });
+  }
+
+  return { lead, fields };
+}
+
+function highlightErrorText(text) {
+  if (!text) return null;
+  const parts = text.split(/(\b(?:[45]\d{2})\b)/g);
+  return parts.map((part, i) =>
+    /^(?:[45]\d{2})$/.test(part) ? (
+      <mark
+        key={i}
+        className="rounded px-1 py-0.5 font-semibold text-[#4a1a1a] bg-[#fde68a]/90 ring-1 ring-amber-200/80"
+      >
+        {part}
+      </mark>
+    ) : (
+      <span key={i}>{part}</span>
+    ),
+  );
+}
 
 function AdminLayoutContent({ children }) {
   const pathname = usePathname();
@@ -20,7 +136,9 @@ function AdminLayoutContent({ children }) {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
 
-  // Form states
+  const notifDropdownRef = useRef(null);
+  const profileDropdownRef = useRef(null);
+
   const [updateForm, setUpdateForm] = useState({ nama: "", password: "", otp: "" });
   const [isUpdating, setIsUpdating] = useState(false);
   const [isRequestingOTP, setIsRequestingOTP] = useState(false);
@@ -33,11 +151,32 @@ function AdminLayoutContent({ children }) {
     { name: "Transaksi", href: "/transaksi", icon: ReceiptText },
     { name: "Barbers", href: "/barbers", icon: Users },
     { name: "Media Social", href: "/media-social", icon: Share2 },
+    { name: "Feedbacks", href: "/feedbacks", icon: MessageSquareText },
   ];
 
   useEffect(() => {
     fetchInitialData();
   }, []);
+
+  useEffect(() => {
+    if (!showNotifDropdown && !showProfileDropdown) return;
+
+    function handlePointerDown(event) {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (notifDropdownRef.current?.contains(target)) return;
+      if (profileDropdownRef.current?.contains(target)) return;
+      setShowNotifDropdown(false);
+      setShowProfileDropdown(false);
+    }
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("touchstart", handlePointerDown, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("touchstart", handlePointerDown);
+    };
+  }, [showNotifDropdown, showProfileDropdown]);
 
   const fetchInitialData = async () => {
     try {
@@ -201,8 +340,7 @@ function AdminLayoutContent({ children }) {
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Notification Dropdown */}
-            <div className="relative">
+            <div className="relative" ref={notifDropdownRef}>
               <button
                 onClick={() => {
                   setShowNotifDropdown(!showNotifDropdown);
@@ -219,33 +357,133 @@ function AdminLayoutContent({ children }) {
               </button>
 
               {showNotifDropdown && (
-                <div className="absolute right-0 mt-3 w-80 bg-white rounded-2xl shadow-2xl border border-[#e6d1c7] overflow-hidden z-50 animate-in fade-in zoom-in duration-200">
-                  <div className="px-4 py-3 border-b border-[#f0e6e1] flex justify-between items-center bg-[#fafafa]">
-                    <h3 className="font-bold text-sm">Notifikasi</h3>
+                <div className="absolute right-0 mt-3 w-[min(22rem,calc(100vw-2rem))] sm:w-96 bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] overflow-hidden z-50 animate-in fade-in zoom-in duration-200">
+                  <div className="px-5 py-4 flex justify-between items-center gap-3 bg-[#fffcfb]">
+                    <h3 className="font-bold text-sm text-[#4a1a1a]" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
+                      Notifikasi
+                    </h3>
                     {unreadCount > 0 && (
                       <button
+                        type="button"
                         onClick={handleMarkAllRead}
-                        className="text-[11px] text-[#8b6f66] hover:text-[#4a1a1a] font-medium"
+                        className="shrink-0 text-[11px] text-[#8b6f66] hover:text-[#4a1a1a] font-medium underline-offset-2 hover:underline"
                       >
                         Tandai semua dibaca
                       </button>
                     )}
                   </div>
-                  <div className="max-h-96 overflow-y-auto p-2">
+                  <div className="max-h-[min(24rem,70vh)] overflow-y-auto overscroll-contain p-2 space-y-2">
                     {notifications.length > 0 ? (
-                      notifications.map((n) => (
-                        <div
-                          key={n.id}
-                          className={`px-4 py-3 border-b border-[#f9f5f3] hover:bg-[#faf9f8] transition-colors relative ${!n.is_read ? 'bg-[#fffcfb]' : ''}`}
-                        >
-                          {!n.is_read && <div className="absolute left-1 top-4 w-2 h-2 p-1 bg-green-600 rounded-full" />}
-                          <p className="text-xs font-bold mb-0.5">{n.title}</p>
-                          <p className="text-[11px] text-[#8b6f66] leading-relaxed">{n.message}</p>
-                          <span className="text-[9px] text-[#d8c8bc] mt-1 block">
-                            {new Date(n.created_at).toLocaleString('id-ID', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })}
-                          </span>
-                        </div>
-                      ))
+                      notifications.map((n) => {
+                        const titleParts = parseNotificationTitle(n.title);
+                        const bodyParts = parseNotificationMessage(n.message);
+                        const badgeClass =
+                          titleParts.severity === "critical"
+                            ? "bg-[#fef2f2] text-[#b91c1c] ring-1 ring-red-200/80"
+                            : titleParts.severity === "warning"
+                              ? "bg-[#fffbeb] text-[#b45309] ring-1 ring-amber-200/80"
+                              : titleParts.severity === "info"
+                                ? "bg-[#eff6ff] text-[#1d4ed8] ring-1 ring-sky-200/70"
+                                : "";
+
+                        return (
+                          <article
+                            key={n.id}
+                            className={`group relative rounded-2xl transition-all duration-300 ${!n.is_read
+                              ? "bg-[#fffcfb]"
+                              : "bg-white hover:bg-[#faf9f8]"
+                              }`}
+                          >
+                            <div className="p-4">
+                              <div className="flex gap-4">
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex flex-col gap-1 mb-4">
+                                    <div className="flex items-center justify-between gap-2">
+                                      <div className="flex items-center gap-2">
+                                        {titleParts.badge && (
+                                          <span
+                                            className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[8px] font-black uppercase tracking-[0.1em] ${badgeClass}`}
+                                            style={{ fontFamily: "var(--font-be-vietnam)" }}
+                                          >
+                                            {titleParts.badge}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="flex items-center gap-1.5">
+                                        <time
+                                          className="text-[9px] font-medium text-[#c4b4a8]"
+                                          dateTime={n.created_at}
+                                          style={{ fontFamily: "var(--font-be-vietnam)" }}
+                                        >
+                                          {new Date(n.created_at).toLocaleString("id-ID", {
+                                            hour: "2-digit",
+                                            minute: "2-digit"
+                                          })}
+                                        </time>
+                                        {!n.is_read && (
+                                          <span className="h-1.5 w-1.5 rounded-full bg-[#c57e7b]" />
+                                        )}
+                                      </div>
+                                    </div>
+                                    <h4
+                                      className="text-[13px] font-bold leading-tight text-[#2b1d19]"
+                                      style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                                    >
+                                      {titleParts.displayTitle || n.title}
+                                    </h4>
+                                  </div>
+
+                                  <div className="space-y-4">
+                                    {bodyParts.lead && (
+                                      <p
+                                        className="text-[11.5px] leading-relaxed text-[#8b6f66]"
+                                        style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                                      >
+                                        {bodyParts.lead}
+                                      </p>
+                                    )}
+
+                                    {bodyParts.fields.length > 0 && (
+                                      <div className="grid grid-cols-1 gap-3 mt-1">
+                                        {bodyParts.fields.map((f) => (
+                                          <div
+                                            key={`${n.id}-${f.key}`}
+                                            className="flex flex-col gap-0.5"
+                                          >
+                                            <span
+                                              className="text-[8px] font-black uppercase tracking-[0.2em] text-[#c4b4a8]"
+                                              style={{ fontFamily: "var(--font-be-vietnam)" }}
+                                            >
+                                              {f.key}
+                                            </span>
+                                            <p
+                                              className={`text-[11px] leading-snug text-[#4a1a1a] font-medium ${f.key === "User" ? "font-mono text-[10px] opacity-60 break-all" : ""}`}
+                                              style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                                            >
+                                              {f.key === "Error" ? highlightErrorText(f.value) :
+                                                f.key === "User" ? <UserEmailResolver userId={f.value} /> :
+                                                  f.value}
+                                            </p>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+
+                                    {!bodyParts.lead && bodyParts.fields.length === 0 && (
+                                      <p
+                                        className="text-[11.5px] leading-relaxed text-[#8b6f66]"
+                                        style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                                      >
+                                        {n.message}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </article>
+                        );
+                      })
                     ) : (
                       <div className="px-4 py-10 text-center text-[#d8c8bc]">
                         <Bell className="h-8 w-8 mx-auto mb-2 opacity-20" />
@@ -258,7 +496,7 @@ function AdminLayoutContent({ children }) {
             </div>
 
             {/* Profile Dropdown */}
-            <div className="relative">
+            <div className="relative" ref={profileDropdownRef}>
               <button
                 onClick={() => {
                   setShowProfileDropdown(!showProfileDropdown);
@@ -331,8 +569,17 @@ function AdminLayoutContent({ children }) {
 
       {/* Update Profile Modal */}
       {showUpdateModal && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[100] animate-in fade-in duration-300">
-          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-500 border border-[#e6d1c7]">
+        <div
+          role="presentation"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in duration-300"
+          onClick={() => setShowUpdateModal(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 duration-500 border border-[#e6d1c7]"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="px-8 py-6 border-b border-[#f0e6e1] flex justify-between items-center bg-[#fafafa]">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-[#ede8e0] rounded-xl">

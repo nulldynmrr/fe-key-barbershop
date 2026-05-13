@@ -243,6 +243,8 @@ export default function ServicesPage() {
     }
   };
 
+  const showAiPricingSection = isLoading || !!error || packages.length > 0;
+
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#4A1A1A] text-[#f7f1ea] scroll-smooth">
       <SiteNavbar activeLabel="Services" />
@@ -267,6 +269,7 @@ export default function ServicesPage() {
           </div>
         </section>
 
+        {showAiPricingSection ? (
         <section id="ai-pricing" className="mx-auto max-w-6xl px-6 pb-20 lg:px-10">
           <div className="text-center">
             <p className="text-xl uppercase tracking-[0.5em] text-[#C57E7B]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
@@ -290,12 +293,7 @@ export default function ServicesPage() {
               <div className="text-center py-12 border border-[#8b6f59]/30 bg-[#FFFFFF]/3 rounded-lg">
                 <p className="text-[#c57e7b]">{error}</p>
               </div>
-            ) : packages.length === 0 ? (
-              <div className="text-center py-12 border border-[#8b6f59]/30 bg-[#FFFFFF]/3 rounded-lg">
-                <p className="text-[#d8b9b1]">No packages available at the moment. Please check back later.</p>
-              </div>
             ) : (
-
               <div className={
                 packages.length === 1
                   ? "flex justify-center"
@@ -310,6 +308,7 @@ export default function ServicesPage() {
             )}
           </div>
         </section>
+        ) : null}
       </div>
       <SiteFooter />
     </main>

@@ -4,6 +4,11 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Hindari geser horizontal saat scrollbar muncul/hilang (mis. saat menu mobile). */
+html {
+  scrollbar-gutter: stable;
+}
+
 :root {
   --kb-cream: #f8f1ea;
   --kb-sand: #efe2d7;
@@ -221,6 +226,17 @@ body {
     align-items: center;
     justify-content: center;
     padding: 0 14px;
+    cursor: pointer;
+  }
+
+  @keyframes sep-sway-smooth {
+    from {
+      transform: translateY(-2px) rotate(-5deg);
+    }
+
+    to {
+      transform: translateY(-2px) rotate(5deg);
+    }
   }
 
   .sep-img {
@@ -229,6 +245,14 @@ body {
     width: auto;
     filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.18));
     transform: translateY(-2px);
+    transform-origin: 50% 88%;
+    transition: filter 0.45s ease;
+    will-change: transform;
+  }
+
+  .sep-img-wrapper:hover .sep-img {
+    animation: sep-sway-smooth 0.72s ease-in-out infinite alternate;
+    filter: drop-shadow(0 14px 28px rgba(74, 26, 26, 0.28));
   }
 
   .about-number {

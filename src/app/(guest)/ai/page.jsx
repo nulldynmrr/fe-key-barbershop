@@ -11,6 +11,7 @@ import SiteNavbar from "../../../components/SiteNavbar";
 import { aiScanService } from "../../../services/aiScanService";
 import { useToast } from "../../../contexts/ToastContext";
 import { saveUserAuth } from "../../../utils/request";
+import { fetchHasActivePurchaseablePackage } from "../../../utils/packageAvailability";
 import Cookies from "js-cookie";
 import AILoadingModal from "../../../components/AILoadingModal";
 
@@ -63,6 +64,7 @@ export default function AiPage() {
   const router = useRouter();
   const { showToast } = useToast();
   const fileInputRef = useRef(null);
+  const [packageGateOk, setPackageGateOk] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isApiDone, setIsApiDone] = useState(false);
   const [isAnimationDone, setIsAnimationDone] = useState(false);
@@ -85,6 +87,22 @@ export default function AiPage() {
       router.push("/ai/result?mode=upload");
     }
   }, [isApiDone, isAnimationDone, router]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const ok = await fetchHasActivePurchaseablePackage();
+      if (cancelled) return;
+      if (!ok) {
+        router.replace("/ai/busy");
+        return;
+      }
+      setPackageGateOk(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
 
   const handleCameraClick = () => {
     router.push("/ai/camera");
@@ -224,6 +242,20 @@ export default function AiPage() {
     setIsAnimationDone(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
+
+  if (packageGateOk !== true) {
+    return (
+      <main className="min-h-screen overflow-x-hidden bg-[#FBF7F3] text-[#2B1D19]">
+        <SiteNavbar activeLabel="AI Feature" />
+        <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 px-6">
+          <Loader2 className="h-8 w-8 animate-spin text-[#4a1a1a]" aria-hidden />
+          <p className="text-sm text-[#6e5851]" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
+            Loading…
+          </p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#FBF7F3] text-[#2B1D19] scroll-smooth">

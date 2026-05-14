@@ -183,12 +183,11 @@ export default function MediaSocialPage() {
                   <div className="aspect-video bg-black relative">
                     {item.thumbnail ? (
                       <div className="w-full h-full relative">
-                        <Image 
-                          src={`${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000").replace(/\/api\/v1\/?$/, "")}${item.thumbnail}`} 
-                          alt={item.title} 
-                          fill 
-                          className="object-cover" 
-                          unoptimized={true}
+                        <Image
+                          src={`${(process.env.NEXT_PUBLIC_API_URL).replace(/\/api\/v1\/?$/, "")}${item.thumbnail}`}
+                          alt={item.title}
+                          fill
+                          className="object-cover"
                         />
 
                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
@@ -207,9 +206,9 @@ export default function MediaSocialPage() {
                       <div className="w-full h-full flex flex-col items-center justify-center text-[#8b6f66] bg-[#fdf2f0] p-6 text-center">
                         <Video className="w-10 h-10 mb-2 opacity-20" />
                         <p className="text-xs font-medium">Link tidak dapat di-preview secara langsung</p>
-                        <a 
-                          href={item.link} 
-                          target="_blank" 
+                        <a
+                          href={item.link}
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="mt-3 text-[10px] flex items-center gap-1 text-[#4a1a1a] font-bold hover:underline"
                         >
@@ -217,7 +216,7 @@ export default function MediaSocialPage() {
                         </a>
                       </div>
                     )}
-                    
+
                     <button
                       onClick={() => handleDelete(item.id)}
                       className="absolute top-3 right-3 p-2 bg-white/90 hover:bg-red-50 text-red-600 rounded-full shadow-lg backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100 z-10"
@@ -239,13 +238,13 @@ export default function MediaSocialPage() {
                         {getSocialIcon(item.link)}
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-2 text-[10px] text-[#8b6f66] bg-[#fafafa] p-2 rounded-lg border border-[#f5f5f5]">
                       <LinkIcon className="w-3 h-3 shrink-0" />
                       <span className="truncate flex-1">{item.link}</span>
-                      <a 
-                        href={item.link} 
-                        target="_blank" 
+                      <a
+                        href={item.link}
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="hover:text-[#4a1a1a]"
                       >
@@ -345,7 +344,7 @@ export default function MediaSocialPage() {
                   <label className="block text-xs font-bold text-[#2b1d19] uppercase tracking-wider mb-2">
                     Thumbnail (Ukuran Story IG 9:16)
                   </label>
-                  <div 
+                  <div
                     onClick={() => fileInputRef.current?.click()}
                     className={`relative aspect-[9/16] max-h-64 mx-auto rounded-xl border-2 border-dashed transition-all cursor-pointer flex flex-col items-center justify-center overflow-hidden
                       ${imagePreview ? 'border-[#4a1a1a] bg-[#fdf2f0]' : 'border-gray-200 bg-gray-50 hover:bg-gray-100'}`}

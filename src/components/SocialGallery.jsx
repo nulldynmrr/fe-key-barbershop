@@ -53,15 +53,12 @@ function SocialVideoCard({ item, index, isActive, onSetActive, onClearActive }) 
 
         {thumbnailUrl && (
           <div className={`absolute inset-0 z-10 transition-opacity duration-500 pointer-events-none ${isActive ? "opacity-0" : "opacity-100"}`}>
-
             <Image
-              src={thumbnailUrl}
-              alt={`Gallery ${index}`}
+              src={thumbError ? getThumbnailUrl(url) : thumbnailUrl}
+              alt={item.title || `Gallery ${index}`}
               fill
               className="object-cover transition-transform duration-700 group-hover:scale-110"
-              onLoadingComplete={() => setThumbError(false)}
               onError={() => setThumbError(true)}
-              unoptimized={thumbnailUrl.includes('localhost') || thumbnailUrl.includes('127.0.0.1')}
             />
           </div>
         )}

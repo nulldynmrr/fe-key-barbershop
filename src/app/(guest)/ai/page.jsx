@@ -125,7 +125,8 @@ export default function AiPage() {
       
       try {
         const res = await aiScanService.guestLogin({ device_cookie: deviceId });
-        const { token: authToken, user } = res.data || {};
+        const body = res.data;
+        const { token: authToken, user } = body.data || {};
         
         if (authToken && user) {
           saveUserAuth(authToken, user);
@@ -164,6 +165,28 @@ export default function AiPage() {
     processFile(file);
   };
 
+  const compressForStorage = (base64Str, maxWidth = 800) => {
+    return new Promise((resolve) => {
+      const img = new window.Image();
+      img.src = base64Str;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let width = img.width;
+        let height = img.height;
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", 0.7));
+      };
+      img.onerror = () => resolve(base64Str);
+    });
+  };
+
   const processFile = async (file) => {
     if (!file) return;
 
@@ -189,7 +212,12 @@ export default function AiPage() {
       const reader = new FileReader();
       reader.onloadend = async () => {
         try {
-          sessionStorage.setItem("aiOriginalImage", reader.result);
+          const compressed = await compressForStorage(reader.result);
+          try {
+            sessionStorage.setItem("aiOriginalImage", compressed);
+          } catch (storageErr) {
+            console.warn("Session storage quota exceeded even after compression.");
+          }
 
           const formData = new FormData();
           formData.append("foto", file);
@@ -205,7 +233,17 @@ export default function AiPage() {
           }
 
           const analysisRes = await aiScanService.analyzeFace(formData);
-          sessionStorage.setItem("aiAnalysisResult", JSON.stringify(analysisRes.data?.data));
+          try {
+            sessionStorage.setItem("aiAnalysisResult", JSON.stringify(analysisRes.data?.data));
+          } catch (storageErr) {
+            // If saving result fails, try clearing the preview image to make room
+            sessionStorage.removeItem("aiOriginalImage");
+            try {
+              sessionStorage.setItem("aiAnalysisResult", JSON.stringify(analysisRes.data?.data));
+            } catch (finalErr) {
+              console.error("Critical: Cannot save analysis result to session storage.");
+            }
+          }
 
           // Sync credit to localStorage
           const newCredit = analysisRes.data?.usage_info?.credit_after;
@@ -224,7 +262,7 @@ export default function AiPage() {
         } catch (err) {
           console.error(err);
           const errCode = err.response?.data?.errorCode;
-          if (errCode === "SERVICE_UNAVAILABLE" || err.response?.status === 503) {
+          if (errCode === "SERVICE_UNAVAILABLE" || err.response?.status === 503 || err.response?.status === 429) {
             router.push("/ai/busy");
             return;
           } else {
@@ -253,7 +291,7 @@ export default function AiPage() {
       }
 
       const errCode = err.response?.data?.errorCode;
-      if (errCode === "SERVICE_UNAVAILABLE" || err.response?.status === 503) {
+      if (errCode === "SERVICE_UNAVAILABLE" || err.response?.status === 503 || err.response?.status === 429) {
         router.push("/ai/busy");
         return;
       }

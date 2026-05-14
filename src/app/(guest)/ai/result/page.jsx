@@ -319,11 +319,21 @@ export default function AiResultPage() {
                 </div>
               </div>
               <h1 className="text-3xl font-semibold leading-tight tracking-tight text-[#F3E8DE] sm:text-4xl lg:text-5xl font-serif">
-                AI Recommendation Results
+                {data.kualitas_foto_ok === false ? "Analisis Belum Lengkap" : "Hasil Rekomendasi AI"}
               </h1>
               <p className="mx-auto mt-6 max-w-2xl text-sm leading-7 text-[#D2C3BD] font-light">
-                Our proprietary engine has synthesized your biometric data to curate hairstyles that optimize your natural proportions.
+                {data.kualitas_foto_ok === false
+                  ? (data.alasan_kualitas || "Wajah tidak terdeteksi dengan jelas. Silakan coba lagi dengan foto yang lebih baik.")
+                  : "AI kami telah menganalisis data biometrik Anda untuk merekomendasikan gaya rambut yang paling sesuai dengan proporsi wajah Anda."}
               </p>
+              {data.kualitas_foto_ok === false && (
+                <button
+                  onClick={() => router.push("/ai")}
+                  className="mt-8 bg-[#C59B8F] text-[#2B1D19] px-8 py-3 text-xs font-bold uppercase tracking-widest rounded-sm hover:bg-[#D4B4A9] transition-colors"
+                >
+                  Coba Lagi
+                </button>
+              )}
             </div>
           </section>
 
@@ -344,93 +354,94 @@ export default function AiResultPage() {
               {(() => {
                 const mainCount = aiImageUrls.length > 0 ? Math.min(aiImageUrls.length, 5) : 2;
                 const gridClass = mainCount === 1 ? "grid-cols-1" :
-                                  mainCount === 2 ? "grid-cols-1 md:grid-cols-2" :
-                                  mainCount === 4 ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-4" :
-                                  "grid-cols-1 md:grid-cols-2 lg:grid-cols-3";
+                  mainCount === 2 ? "grid-cols-1 md:grid-cols-2" :
+                    mainCount === 4 ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-4" :
+                      "grid-cols-1 md:grid-cols-2 lg:grid-cols-3";
                 return (
                   <div className={`grid ${gridClass} gap-6`}>
                     {styles.slice(0, mainCount).map((style, idx) => {
-                  const hasImage = idx < aiImageUrls.length;
-                  const isSelected = selectedStyleIndex === idx;
-                  const isLocked = isPremiumLocked && idx > 0;
+                      const hasImage = idx < aiImageUrls.length;
+                      const isSelected = selectedStyleIndex === idx;
+                      const isLocked = isPremiumLocked && idx > 0;
 
-                  return (
-                    <div
-                      key={idx}
-                      onClick={() => {
-                        if (isLocked) {
-                          router.push('/service');
-                          return;
-                        }
-                        if (hasImage) {
-                          setSelectedStyleIndex(idx);
-                          window.scrollTo({ top: 0, behavior: 'smooth' });
-                        }
-                      }}
-                      className={`bg-[#2B1615] rounded-sm border ${isSelected ? 'border-[#C59B8F] shadow-[0_0_20px_rgba(197,155,143,0.3)]' : 'border-[#3A1E1E]'} flex flex-col relative h-[500px] md:h-[650px] overflow-hidden group hover:border-[#C59B8F] transition-all duration-700 ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} ${isLocked ? 'cursor-pointer' : (hasImage ? 'cursor-pointer' : 'cursor-default opacity-90')}`}
-                    >
-                      {isLocked && (
-                        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-[#2B1D19]/60 backdrop-blur-md transition-all group-hover:bg-[#2B1D19]/40">
-                          <Lock className="w-12 h-12 text-[#C59B8F] mb-3 drop-shadow-lg" />
-                          <p className="text-[0.6rem] text-[#F3E8DE] uppercase tracking-[0.2em] font-bold">Premium Style Locked</p>
-                          <p className="text-[0.5rem] text-[#D2C3BD] mt-1 uppercase tracking-widest">Upgrade to view</p>
-                        </div>
-                      )}
-                      
-                      {hasImage && !isLocked && (
-                        <div className="relative h-[60%] w-full shrink-0 overflow-hidden">
-                          <img 
-                            src={aiImageUrls[idx].startsWith("data:") || aiImageUrls[idx].startsWith("http") ? aiImageUrls[idx] : `${(process.env.NEXT_PUBLIC_API_URL || "").replace("/api/v1", "")}${aiImageUrls[idx]}`}
-                            className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                            alt={style.nama_gaya}
-                          />
-                          <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#1F0D0D] to-transparent z-10 pointer-events-none"></div>
-                        </div>
-                      )}
-                      
-                      {(!hasImage || isLocked) && (
-                        <div className={`absolute inset-0 bg-gradient-to-b from-[#2B1615]/20 via-[#2B1615]/80 to-[#1F0D0D] z-0 ${isLocked ? 'blur-xl' : ''}`}></div>
-                      )}
-
-                      <div className={`relative z-10 p-6 md:px-8 md:pb-8 flex flex-col ${hasImage && !isLocked ? 'flex-1 justify-between bg-[#1F0D0D] pt-2' : 'h-full justify-end'} transition-transform duration-700 ${!isLocked && !hasImage ? 'group-hover:-translate-y-2' : ''} ${isLocked ? 'blur-sm grayscale' : ''}`}>
-                        <div className="flex justify-between items-end border-b border-[#3A1E1E] pb-4 mb-4">
-                          <div>
-                            <p className="text-[0.55rem] md:text-[0.6rem] uppercase tracking-widest text-[#C59B8F] mb-1 font-bold">
-                              {idx === 0 ? "TOP RECOMMENDATION" : `RECOMMENDATION #${idx + 1}`}
-                            </p>
-                            <h3 className="text-xl md:text-3xl text-[#F3E8DE] font-serif font-medium leading-tight">{style.nama_gaya}</h3>
-                          </div>
-                          <div className="bg-[#592D2D] rounded-sm flex flex-col items-center justify-center px-3 py-1.5 md:px-4 md:py-2 shadow-lg group-hover:scale-105 transition-transform duration-500">
-                            <span className="text-lg md:text-xl font-bold text-[#F3E8DE]">{style.match_score ? `${style.match_score}%` : "-"}</span>
-                            <span className="text-[0.4rem] md:text-[0.45rem] uppercase tracking-widest text-[#D2C3BD]">MATCH</span>
-                          </div>
-                        </div>
-
-                        <div className="space-y-2 flex-1">
-                          <p className="text-[0.55rem] md:text-[0.6rem] uppercase tracking-widest text-[#A68A82] font-semibold">WHY IT WORKS</p>
-                          <p className="text-[0.7rem] md:text-[0.8rem] text-[#D2C3BD] leading-relaxed line-clamp-3">
-                            {style.alasan || "Perfect for your face shape and natural features."}
-                          </p>
-                        </div>
-
-                        <div className="mt-4 pt-4 border-t border-[#3A1E1E]/50 flex justify-between items-center">
-                          <div className="flex items-center gap-1.5 text-[#8A9A5B]">
-                            <Sparkles className="w-3 h-3 md:w-4 md:h-4 animate-pulse" />
-                            <span className="text-[0.55rem] md:text-[0.65rem] font-bold tracking-wider uppercase">Premium Image Available</span>
-                          </div>
-                          {isSelected ? (
-                            <span className="text-[0.55rem] md:text-[0.6rem] border border-[#C59B8F] text-[#C59B8F] px-3 py-1 md:px-4 md:py-1.5 rounded-sm font-bold uppercase tracking-wider bg-[#C59B8F]/10">Viewing</span>
-                          ) : (
-                            <span className="text-[0.55rem] md:text-[0.6rem] bg-[#C59B8F] text-[#2B1615] px-3 py-1 md:px-4 md:py-1.5 rounded-sm font-bold uppercase tracking-wider group-hover:bg-[#d4b4a9] transition-colors">View Image</span>
+                      return (
+                        <div
+                          key={idx}
+                          onClick={() => {
+                            if (isLocked) {
+                              router.push('/service');
+                              return;
+                            }
+                            if (hasImage) {
+                              setSelectedStyleIndex(idx);
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }
+                          }}
+                          className={`bg-[#2B1615] rounded-sm border ${isSelected ? 'border-[#C59B8F] shadow-[0_0_20px_rgba(197,155,143,0.3)]' : 'border-[#3A1E1E]'} flex flex-col relative h-[500px] md:h-[650px] overflow-hidden group hover:border-[#C59B8F] transition-all duration-700 ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} ${isLocked ? 'cursor-pointer' : (hasImage ? 'cursor-pointer' : 'cursor-default opacity-90')}`}
+                        >
+                          {isLocked && (
+                            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-[#2B1D19]/60 backdrop-blur-md transition-all group-hover:bg-[#2B1D19]/40">
+                              <Lock className="w-12 h-12 text-[#C59B8F] mb-3 drop-shadow-lg" />
+                              <p className="text-[0.6rem] text-[#F3E8DE] uppercase tracking-[0.2em] font-bold">Premium Style Locked</p>
+                              <p className="text-[0.5rem] text-[#D2C3BD] mt-1 uppercase tracking-widest">Upgrade to view</p>
+                            </div>
                           )}
-                        </div>
-                      </div>
 
-                    </div>
-                  );
-                })}
-              </div>
-              );})()}
+                          {hasImage && !isLocked && (
+                            <div className="relative h-[60%] w-full shrink-0 overflow-hidden">
+                              <img
+                                src={aiImageUrls[idx].startsWith("data:") || aiImageUrls[idx].startsWith("http") ? aiImageUrls[idx] : `${(process.env.NEXT_PUBLIC_API_URL || "").replace("/api/v1", "")}${aiImageUrls[idx]}`}
+                                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                alt={style.nama_gaya}
+                              />
+                              <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#1F0D0D] to-transparent z-10 pointer-events-none"></div>
+                            </div>
+                          )}
+
+                          {(!hasImage || isLocked) && (
+                            <div className={`absolute inset-0 bg-gradient-to-b from-[#2B1615]/20 via-[#2B1615]/80 to-[#1F0D0D] z-0 ${isLocked ? 'blur-xl' : ''}`}></div>
+                          )}
+
+                          <div className={`relative z-10 p-6 md:px-8 md:pb-8 flex flex-col ${hasImage && !isLocked ? 'flex-1 justify-between bg-[#1F0D0D] pt-2' : 'h-full justify-end'} transition-transform duration-700 ${!isLocked && !hasImage ? 'group-hover:-translate-y-2' : ''} ${isLocked ? 'blur-sm grayscale' : ''}`}>
+                            <div className="flex justify-between items-end border-b border-[#3A1E1E] pb-4 mb-4">
+                              <div>
+                                <p className="text-[0.55rem] md:text-[0.6rem] uppercase tracking-widest text-[#C59B8F] mb-1 font-bold">
+                                  {idx === 0 ? "TOP RECOMMENDATION" : `RECOMMENDATION #${idx + 1}`}
+                                </p>
+                                <h3 className="text-xl md:text-3xl text-[#F3E8DE] font-serif font-medium leading-tight">{style.nama_gaya}</h3>
+                              </div>
+                              <div className="bg-[#592D2D] rounded-sm flex flex-col items-center justify-center px-3 py-1.5 md:px-4 md:py-2 shadow-lg group-hover:scale-105 transition-transform duration-500">
+                                <span className="text-lg md:text-xl font-bold text-[#F3E8DE]">{style.match_score ? `${style.match_score}%` : "-"}</span>
+                                <span className="text-[0.4rem] md:text-[0.45rem] uppercase tracking-widest text-[#D2C3BD]">MATCH</span>
+                              </div>
+                            </div>
+
+                            <div className="space-y-2 flex-1">
+                              <p className="text-[0.55rem] md:text-[0.6rem] uppercase tracking-widest text-[#A68A82] font-semibold">WHY IT WORKS</p>
+                              <p className="text-[0.7rem] md:text-[0.8rem] text-[#D2C3BD] leading-relaxed line-clamp-3">
+                                {style.alasan || "Perfect for your face shape and natural features."}
+                              </p>
+                            </div>
+
+                            <div className="mt-4 pt-4 border-t border-[#3A1E1E]/50 flex justify-between items-center">
+                              <div className="flex items-center gap-1.5 text-[#8A9A5B]">
+                                <Sparkles className="w-3 h-3 md:w-4 md:h-4 animate-pulse" />
+                                <span className="text-[0.55rem] md:text-[0.65rem] font-bold tracking-wider uppercase">Premium Image Available</span>
+                              </div>
+                              {isSelected ? (
+                                <span className="text-[0.55rem] md:text-[0.6rem] border border-[#C59B8F] text-[#C59B8F] px-3 py-1 md:px-4 md:py-1.5 rounded-sm font-bold uppercase tracking-wider bg-[#C59B8F]/10">Viewing</span>
+                              ) : (
+                                <span className="text-[0.55rem] md:text-[0.6rem] bg-[#C59B8F] text-[#2B1615] px-3 py-1 md:px-4 md:py-1.5 rounded-sm font-bold uppercase tracking-wider group-hover:bg-[#d4b4a9] transition-colors">View Image</span>
+                              )}
+                            </div>
+                          </div>
+
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
 
               {(() => {
                 const mainCount = aiImageUrls.length > 0 ? Math.min(aiImageUrls.length, 5) : 2;
@@ -444,30 +455,30 @@ export default function AiResultPage() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       {styles.slice(mainCount).map((style, idx) => (
-                        <div 
-                          key={idx + mainCount} 
+                        <div
+                          key={idx + mainCount}
                           onClick={() => isPremiumLocked && router.push('/service')}
-                          className={`p-6 border border-[#3A1E1E] bg-[#211111] hover:border-[#C59B8F]/30 transition-all duration-500 group/alt relative overflow-hidden ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'} ${isPremiumLocked ? 'cursor-pointer' : ''}`} 
+                          className={`p-6 border border-[#3A1E1E] bg-[#211111] hover:border-[#C59B8F]/30 transition-all duration-500 group/alt relative overflow-hidden ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'} ${isPremiumLocked ? 'cursor-pointer' : ''}`}
                           style={{ transitionDelay: `${idx * 100}ms` }}
                         >
-                        {isPremiumLocked && (
-                          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#2B1D19]/70 backdrop-blur-sm">
-                            <Lock className="w-6 h-6 text-[#C59B8F] mb-2" />
-                            <span className="text-[0.45rem] text-[#D2C3BD] uppercase tracking-widest font-bold">Locked</span>
+                          {isPremiumLocked && (
+                            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#2B1D19]/70 backdrop-blur-sm">
+                              <Lock className="w-6 h-6 text-[#C59B8F] mb-2" />
+                              <span className="text-[0.45rem] text-[#D2C3BD] uppercase tracking-widest font-bold">Locked</span>
+                            </div>
+                          )}
+                          <div className={isPremiumLocked ? "blur-md grayscale opacity-40 select-none" : ""}>
+                            <div className="flex justify-between items-start mb-4">
+                              <span className="text-[0.55rem] text-[#A68A82] font-bold tracking-widest uppercase">RECOMMENDATION #{idx + mainCount + 1}</span>
+                              <span className="text-xs font-bold text-[#F3E8DE] bg-[#3A1E1E] px-2 py-1 rounded-sm">{style.match_score}%</span>
+                            </div>
+                            <h5 className="text-lg text-[#F3E8DE] font-serif mb-3 group-hover/alt:text-[#C59B8F] transition-colors">{style.nama_gaya}</h5>
+                            <p className="text-[0.7rem] text-[#A68A82] leading-relaxed mb-4 line-clamp-2 italic">"{style.alasan}"</p>
                           </div>
-                        )}
-                        <div className={isPremiumLocked ? "blur-md grayscale opacity-40 select-none" : ""}>
-                          <div className="flex justify-between items-start mb-4">
-                            <span className="text-[0.55rem] text-[#A68A82] font-bold tracking-widest uppercase">RECOMMENDATION #{idx + mainCount + 1}</span>
-                            <span className="text-xs font-bold text-[#F3E8DE] bg-[#3A1E1E] px-2 py-1 rounded-sm">{style.match_score}%</span>
-                          </div>
-                          <h5 className="text-lg text-[#F3E8DE] font-serif mb-3 group-hover/alt:text-[#C59B8F] transition-colors">{style.nama_gaya}</h5>
-                          <p className="text-[0.7rem] text-[#A68A82] leading-relaxed mb-4 line-clamp-2 italic">"{style.alasan}"</p>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
                 );
               })()}
 
@@ -503,7 +514,7 @@ export default function AiResultPage() {
 
             <div className="relative mt-8">
               {isPremiumLocked && (
-                <div 
+                <div
                   className="absolute inset-0 z-50 flex flex-col items-center justify-center cursor-pointer backdrop-blur-sm bg-[#2B1D19]/40 rounded-sm"
                   onClick={() => router.push('/service')}
                 >
@@ -519,7 +530,7 @@ export default function AiResultPage() {
                   </div>
                 </div>
               )}
-              
+
               <div className={isPremiumLocked ? "blur-[8px] pointer-events-none select-none opacity-40 transition-all duration-1000" : ""}>
 
                 <div className={`transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
@@ -527,55 +538,55 @@ export default function AiResultPage() {
                     FACIAL ANALYSIS <span className="text-[#C59B8F]">OVERVIEW</span>
                   </h2>
 
-                <div className="grid grid-cols-1 lg:grid-cols-[62fr_38fr] gap-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-[62fr_38fr] gap-4">
 
 
-                <div className="w-full flex flex-col gap-4">
-                  <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm p-6 hover:border-[#C59B8F]/40 transition-colors group">
-                    <p className="text-[0.65rem] text-[#A68A82] mb-2 uppercase tracking-widest font-bold">Face Shape</p>
-                    <h3 className="text-2xl text-[#F3E8DE] font-serif mb-4">{data.bentuk_wajah || "-"}</h3>
-                    <div className="flex items-center gap-5">
-                      <div className="shrink-0 group-hover:rotate-12 transition-transform duration-500">
-                        <svg width="40" height="50" viewBox="0 0 40 50">
-                          <ellipse cx="20" cy="25" rx="16" ry="22" fill="none" stroke="#C59B8F" strokeWidth="1.5" strokeDasharray="4 4" className="animate-pulse" />
-                        </svg>
+                    <div className="w-full flex flex-col gap-4">
+                      <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm p-6 hover:border-[#C59B8F]/40 transition-colors group">
+                        <p className="text-[0.65rem] text-[#A68A82] mb-2 uppercase tracking-widest font-bold">Face Shape</p>
+                        <h3 className="text-2xl text-[#F3E8DE] font-serif mb-4">{data.bentuk_wajah || "-"}</h3>
+                        <div className="flex items-center gap-5">
+                          <div className="shrink-0 group-hover:rotate-12 transition-transform duration-500">
+                            <svg width="40" height="50" viewBox="0 0 40 50">
+                              <ellipse cx="20" cy="25" rx="16" ry="22" fill="none" stroke="#C59B8F" strokeWidth="1.5" strokeDasharray="4 4" className="animate-pulse" />
+                            </svg>
+                          </div>
+                          <p className="text-[0.7rem] text-[#D2C3BD] leading-relaxed italic">
+                            {data.deskripsi_bentuk_wajah || `Your ${data.bentuk_wajah || "-"} face shape provides a strong foundation for the selected styles.`}
+                          </p>
+                        </div>
                       </div>
-                      <p className="text-[0.7rem] text-[#D2C3BD] leading-relaxed italic">
-                        {data.deskripsi_bentuk_wajah || `Your ${data.bentuk_wajah || "-"} face shape provides a strong foundation for the selected styles.`}
-                      </p>
-                    </div>
-                  </div>
 
-                  <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm p-6 flex flex-col justify-center space-y-4 hover:border-[#C59B8F]/40 transition-colors">
-                    <div className="flex flex-col justify-between items-start gap-4">
-                      <div className="w-full">
-                        <p className="text-[0.6rem] text-[#A68A82] mb-2 uppercase tracking-widest font-bold">Symmetry</p>
-                          <>
-                            <h3 className="text-3xl text-[#F3E8DE] font-light">{clamp(data.skor_simetri)}%</h3>
-                            <p className="text-[0.6rem] text-[#8A9A5B] font-bold mt-1 uppercase tracking-tighter">{data.level_simetri || "-"}</p>
+                      <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm p-6 flex flex-col justify-center space-y-4 hover:border-[#C59B8F]/40 transition-colors">
+                        <div className="flex flex-col justify-between items-start gap-4">
+                          <div className="w-full">
+                            <p className="text-[0.6rem] text-[#A68A82] mb-2 uppercase tracking-widest font-bold">Symmetry</p>
+                            <>
+                              <h3 className="text-3xl text-[#F3E8DE] font-light">{clamp(data.skor_simetri)}%</h3>
+                              <p className="text-[0.6rem] text-[#8A9A5B] font-bold mt-1 uppercase tracking-tighter">{data.level_simetri || "-"}</p>
+                              <div className="h-1 w-full bg-[#3A1E1E] rounded-full overflow-hidden mt-3">
+                                <div className="h-full bg-[#8A9A5B] transition-all duration-[2s] ease-out delay-500" style={{ width: mounted ? `${clamp(data.skor_simetri)}%` : '0%' }}></div>
+                              </div>
+                            </>
+
+                          </div>
+                          <div className="w-full">
+                            <p className="text-[0.6rem] text-[#A68A82] mb-2 uppercase tracking-widest font-bold">AI Conf.</p>
+                            <h3 className="text-3xl text-[#F3E8DE] font-light">{clamp(data.ai_confidence)}%</h3>
+                            <p className="text-[0.6rem] text-[#C59B8F] font-bold mt-1 uppercase tracking-tighter">Verified</p>
                             <div className="h-1 w-full bg-[#3A1E1E] rounded-full overflow-hidden mt-3">
-                              <div className="h-full bg-[#8A9A5B] transition-all duration-[2s] ease-out delay-500" style={{ width: mounted ? `${clamp(data.skor_simetri)}%` : '0%' }}></div>
+                              <div className="h-full bg-[#C59B8F] transition-all duration-[2s] ease-out delay-700" style={{ width: mounted ? `${clamp(data.ai_confidence)}%` : '0%' }}></div>
                             </div>
-                          </>
-
-                      </div>
-                      <div className="w-full">
-                        <p className="text-[0.6rem] text-[#A68A82] mb-2 uppercase tracking-widest font-bold">AI Conf.</p>
-                        <h3 className="text-3xl text-[#F3E8DE] font-light">{clamp(data.ai_confidence)}%</h3>
-                        <p className="text-[0.6rem] text-[#C59B8F] font-bold mt-1 uppercase tracking-tighter">Verified</p>
-                        <div className="h-1 w-full bg-[#3A1E1E] rounded-full overflow-hidden mt-3">
-                          <div className="h-full bg-[#C59B8F] transition-all duration-[2s] ease-out delay-700" style={{ width: mounted ? `${clamp(data.ai_confidence)}%` : '0%' }}></div>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                </div>
 
-                  <div className="w-full bg-[#2A1616] border border-[#3A1E1E] rounded-sm overflow-hidden hover:border-[#C59B8F]/40 transition-colors flex flex-col h-full">
-                    <div className="w-full flex flex-col h-full">
+                    <div className="w-full bg-[#2A1616] border border-[#3A1E1E] rounded-sm overflow-hidden hover:border-[#C59B8F]/40 transition-colors flex flex-col h-full">
+                      <div className="w-full flex flex-col h-full">
 
-                      <style>
-                        {`
+                        <style>
+                          {`
             @keyframes pulse-soft {
               0%, 100% { transform: scale(1); opacity: 0.8; }
               50% { transform: scale(1.05); opacity: 1; }
@@ -599,145 +610,145 @@ export default function AiResultPage() {
               cursor: pointer;
             }
           `}
-                      </style>
+                        </style>
 
-                      <div className="px-4 pt-4 pb-2 flex items-center justify-between">
-                        <p className="text-[0.6rem] text-[#A68A82] font-bold uppercase tracking-widest">
-                          Face Heatmap
-                        </p>
-                      </div>
-
-                      <div className="relative mx-auto mb-0 overflow-hidden rounded-sm animate-float w-full max-w-[200px] aspect-[3/4] bg-transparent">
-                        <div className="absolute inset-5">
-                          <img
-                            src="/images/face.png"
-                            className="w-full h-full object-contain opacity-50 drop-shadow-lg pointer-events-none"
-                            alt="Face Reference"
-                          />
-                          <div className="absolute inset-0 bg-[#1C0D0D]/20 pointer-events-none" />
-
-                          <svg
-                            className="absolute inset-0 w-full h-full"
-                            viewBox="0 0 100 133"
-                            preserveAspectRatio="xMidYMid meet"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <defs>
-                              <filter id="heatBlur" x="-50%" y="-50%" width="200%" height="200%">
-                                <feGaussianBlur in="SourceGraphic" stdDeviation="3.2" />
-                              </filter>
-                              <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-                                <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-                                <feMerge>
-                                  <feMergeNode in="coloredBlur" />
-                                  <feMergeNode in="SourceGraphic" />
-                                </feMerge>
-                              </filter>
-                            </defs>
-
-                            {heatZones.map((zone) => {
-                              const { color, opacity } = getHeatColor(zone.val);
-                              const isHovered = hoveredZone === zone.id;
-
-                              return zone.ellipses.map((el, ei) => (
-                                <g
-                                  key={`${zone.id}-${ei}`}
-                                  className="zone-hover"
-                                  onMouseEnter={() => setHoveredZone(zone.id)}
-                                  onMouseLeave={() => setHoveredZone(null)}
-                                  style={{ transformOrigin: `${el.cx}px ${el.cy}px` }}
-                                >
-                                  <ellipse
-                                    className="animate-pulse-soft"
-                                    cx={el.cx}
-                                    cy={el.cy}
-                                    rx={isHovered ? el.rx * 1.2 : el.rx}
-                                    ry={isHovered ? el.ry * 1.2 : el.ry}
-                                    fill={color}
-                                    fillOpacity={isHovered ? opacity * 1.2 : opacity}
-                                    filter="url(#heatBlur)"
-                                  />
-                                </g>
-                              ));
-                            })}
-
-                            {heatZones.map((zone) => {
-                              const { color } = getHeatColor(zone.val);
-                              const el = zone.ellipses[0];
-                              const isHovered = hoveredZone === zone.id;
-
-                              return (
-                                <g key={`dot-${zone.id}`} filter="url(#glow)" className="pointer-events-none">
-                                  <circle
-                                    cx={el.cx}
-                                    cy={el.cy}
-                                    r={isHovered ? "3.5" : "2.5"}
-                                    fill={color}
-                                    fillOpacity="0.95"
-                                    style={{ transition: "all 0.3s ease" }}
-                                  />
-                                  <circle
-                                    className="animate-pulse-soft"
-                                    cx={el.cx}
-                                    cy={el.cy}
-                                    r={isHovered ? "6.5" : "4.8"}
-                                    fill="none"
-                                    stroke={color}
-                                    strokeWidth="0.8"
-                                    strokeOpacity="0.7"
-                                  />
-                                </g>
-                              );
-                            })}
-                          </svg>
+                        <div className="px-4 pt-4 pb-2 flex items-center justify-between">
+                          <p className="text-[0.6rem] text-[#A68A82] font-bold uppercase tracking-widest">
+                            Face Heatmap
+                          </p>
                         </div>
-                      </div>
 
-                      <div className="px-4 pt-3 pb-2 flex flex-wrap gap-1.5">
-                        {heatZones.map((zone) => {
-                          const { color, label: lvl } = getHeatColor(zone.val);
-                          const isHovered = hoveredZone === zone.id;
+                        <div className="relative mx-auto mb-0 overflow-hidden rounded-sm animate-float w-full max-w-[200px] aspect-[3/4] bg-transparent">
+                          <div className="absolute inset-5">
+                            <img
+                              src="/images/face.png"
+                              className="w-full h-full object-contain opacity-50 drop-shadow-lg pointer-events-none"
+                              alt="Face Reference"
+                            />
+                            <div className="absolute inset-0 bg-[#1C0D0D]/20 pointer-events-none" />
 
-                          return (
-                            <div
-                              key={zone.id}
-                              onMouseEnter={() => setHoveredZone(zone.id)}
-                              onMouseLeave={() => setHoveredZone(null)}
-                              className={`flex items-center gap-1 px-2 py-[3px] rounded-sm border cursor-pointer transition-all duration-300 ${isHovered
-                                ? "bg-black/40 border-[#A68A82] scale-105"
-                                : "bg-black/20 border-[#3A1E1E]"
-                                }`}
+                            <svg
+                              className="absolute inset-0 w-full h-full"
+                              viewBox="0 0 100 133"
+                              preserveAspectRatio="xMidYMid meet"
+                              xmlns="http://www.w3.org/2000/svg"
                             >
-                              <div
-                                className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                                style={{ background: color, boxShadow: `0 0 4px ${color}` }}
-                              />
-                              <span className="text-[0.48rem] text-[#A68A82] uppercase tracking-wide">{zone.label}</span>
-                              <span className="text-[0.48rem] font-bold uppercase" style={{ color }}>{lvl}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
+                              <defs>
+                                <filter id="heatBlur" x="-50%" y="-50%" width="200%" height="200%">
+                                  <feGaussianBlur in="SourceGraphic" stdDeviation="3.2" />
+                                </filter>
+                                <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                                  <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                                  <feMerge>
+                                    <feMergeNode in="coloredBlur" />
+                                    <feMergeNode in="SourceGraphic" />
+                                  </feMerge>
+                                </filter>
+                              </defs>
 
-                      {data.heatmap_wajah?.zona_terbaik && (
-                        <div className="px-4 pb-4 pt-1 flex items-center justify-between gap-3 border-t border-[#3A1E1E]/50 mt-1">
-                          <div className="shrink-0">
-                            <span className="text-[0.5rem] text-[#A68A82]">Best Zone: </span>
-                            <span className="text-[0.55rem] text-[#C59B8F] font-bold">{data.heatmap_wajah.zona_terbaik}</span>
-                          </div>
-                          <div className="flex-1 flex flex-col gap-[2px] max-w-[90px]">
-                            <div className="h-[3px] w-full rounded-full bg-gradient-to-r from-[#1C6B8A] via-[#FFD700] to-[#FF4500]" />
-                            <div className="flex justify-between text-[0.42rem] text-[#A68A82]/50">
-                              <span>LOW</span>
-                              <span>HIGH</span>
-                            </div>
+                              {heatZones.map((zone) => {
+                                const { color, opacity } = getHeatColor(zone.val);
+                                const isHovered = hoveredZone === zone.id;
+
+                                return zone.ellipses.map((el, ei) => (
+                                  <g
+                                    key={`${zone.id}-${ei}`}
+                                    className="zone-hover"
+                                    onMouseEnter={() => setHoveredZone(zone.id)}
+                                    onMouseLeave={() => setHoveredZone(null)}
+                                    style={{ transformOrigin: `${el.cx}px ${el.cy}px` }}
+                                  >
+                                    <ellipse
+                                      className="animate-pulse-soft"
+                                      cx={el.cx}
+                                      cy={el.cy}
+                                      rx={isHovered ? el.rx * 1.2 : el.rx}
+                                      ry={isHovered ? el.ry * 1.2 : el.ry}
+                                      fill={color}
+                                      fillOpacity={isHovered ? opacity * 1.2 : opacity}
+                                      filter="url(#heatBlur)"
+                                    />
+                                  </g>
+                                ));
+                              })}
+
+                              {heatZones.map((zone) => {
+                                const { color } = getHeatColor(zone.val);
+                                const el = zone.ellipses[0];
+                                const isHovered = hoveredZone === zone.id;
+
+                                return (
+                                  <g key={`dot-${zone.id}`} filter="url(#glow)" className="pointer-events-none">
+                                    <circle
+                                      cx={el.cx}
+                                      cy={el.cy}
+                                      r={isHovered ? "3.5" : "2.5"}
+                                      fill={color}
+                                      fillOpacity="0.95"
+                                      style={{ transition: "all 0.3s ease" }}
+                                    />
+                                    <circle
+                                      className="animate-pulse-soft"
+                                      cx={el.cx}
+                                      cy={el.cy}
+                                      r={isHovered ? "6.5" : "4.8"}
+                                      fill="none"
+                                      stroke={color}
+                                      strokeWidth="0.8"
+                                      strokeOpacity="0.7"
+                                    />
+                                  </g>
+                                );
+                              })}
+                            </svg>
                           </div>
                         </div>
-                      )}
+
+                        <div className="px-4 pt-3 pb-2 flex flex-wrap gap-1.5">
+                          {heatZones.map((zone) => {
+                            const { color, label: lvl } = getHeatColor(zone.val);
+                            const isHovered = hoveredZone === zone.id;
+
+                            return (
+                              <div
+                                key={zone.id}
+                                onMouseEnter={() => setHoveredZone(zone.id)}
+                                onMouseLeave={() => setHoveredZone(null)}
+                                className={`flex items-center gap-1 px-2 py-[3px] rounded-sm border cursor-pointer transition-all duration-300 ${isHovered
+                                  ? "bg-black/40 border-[#A68A82] scale-105"
+                                  : "bg-black/20 border-[#3A1E1E]"
+                                  }`}
+                              >
+                                <div
+                                  className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                                  style={{ background: color, boxShadow: `0 0 4px ${color}` }}
+                                />
+                                <span className="text-[0.48rem] text-[#A68A82] uppercase tracking-wide">{zone.label}</span>
+                                <span className="text-[0.48rem] font-bold uppercase" style={{ color }}>{lvl}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {data.heatmap_wajah?.zona_terbaik && (
+                          <div className="px-4 pb-4 pt-1 flex items-center justify-between gap-3 border-t border-[#3A1E1E]/50 mt-1">
+                            <div className="shrink-0">
+                              <span className="text-[0.5rem] text-[#A68A82]">Best Zone: </span>
+                              <span className="text-[0.55rem] text-[#C59B8F] font-bold">{data.heatmap_wajah.zona_terbaik}</span>
+                            </div>
+                            <div className="flex-1 flex flex-col gap-[2px] max-w-[90px]">
+                              <div className="h-[3px] w-full rounded-full bg-gradient-to-r from-[#1C6B8A] via-[#FFD700] to-[#FF4500]" />
+                              <div className="flex justify-between text-[0.42rem] text-[#A68A82]/50">
+                                <span>LOW</span>
+                                <span>HIGH</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
+                  </div>
                 </div>
-              </div>
-            </div>
 
 
 
@@ -745,240 +756,240 @@ export default function AiResultPage() {
 
 
 
-            <div className={`transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-              <h2 className="text-[0.75rem] uppercase tracking-[0.3em] text-[#A68A82] mb-8 font-bold flex items-center gap-3">
-                DETAILED FACIAL ANALYSIS
-              </h2>
-              <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#3A1E1E]">
-                <div className="p-6 flex flex-col relative h-[250px] justify-center items-center">
-                  <p className="absolute top-6 left-6 text-xs text-[#A68A82]">Facial Proportion</p>
+                <div className={`transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+                  <h2 className="text-[0.75rem] uppercase tracking-[0.3em] text-[#A68A82] mb-8 font-bold flex items-center gap-3">
+                    DETAILED FACIAL ANALYSIS
+                  </h2>
+                  <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#3A1E1E]">
+                    <div className="p-6 flex flex-col relative h-[250px] justify-center items-center">
+                      <p className="absolute top-6 left-6 text-xs text-[#A68A82]">Facial Proportion</p>
                       <>
 
-                      <svg viewBox="0 0 120 120" className="w-48 h-48 mt-4">
-                        <polygon points="60,10 105,45 85,105 35,105 15,45" fill="none" stroke="#4A2626" strokeWidth="0.5" />
-                        <polygon points="60,30 90,55 75,90 45,90 30,55" fill="none" stroke="#4A2626" strokeWidth="0.5" strokeDasharray="2,2" />
-                        <polygon points="60,18 100,48 80,100 40,95 20,48" fill="rgba(197,155,143,0.1)" stroke="#D15C5C" strokeWidth="1" />
-                        <circle cx="60" cy="18" r="1.5" fill="#D15C5C" />
-                        <circle cx="100" cy="48" r="1.5" fill="#D15C5C" />
-                        <circle cx="80" cy="100" r="1.5" fill="#D15C5C" />
-                        <circle cx="40" cy="95" r="1.5" fill="#D15C5C" />
-                        <circle cx="20" cy="48" r="1.5" fill="#D15C5C" />
-                      </svg>
-                      <span className="absolute top-10 text-[0.55rem] text-[#D2C3BD] text-center">Forehead<br />{clamp(data.peta_proporsi?.dahi)}%</span>
-                      <span className="absolute right-12 top-[40%] text-[0.55rem] text-[#D2C3BD] text-center">Cheekbones<br />{clamp(((data.peta_proporsi?.pipi_kiri || 0) + (data.peta_proporsi?.pipi_kanan || 0)) / 2)}%</span>
-                      <span className="absolute right-20 bottom-12 text-[0.55rem] text-[#D2C3BD] text-center">Jawline<br />{clamp(data.peta_proporsi?.rahang)}%</span>
-                      <span className="absolute left-20 bottom-12 text-[0.55rem] text-[#D2C3BD] text-center">Chin<br />{clamp(data.peta_proporsi?.dagu)}%</span>
-                      <span className="absolute left-12 top-[40%] text-[0.55rem] text-[#D2C3BD] text-center">Face Width<br />{clamp(data.pengukuran_fitur?.lebar_wajah)}%</span>
-                      <div className="absolute bottom-4 flex items-center gap-6 text-[0.55rem] text-[#A68A82]">
-                        <div className="flex items-center gap-2"><div className="w-3 h-0.5 bg-[#D15C5C]"></div> You</div>
-                        <div className="flex items-center gap-2"><div className="w-3 h-0.5 border-t border-dashed border-[#A68A82]"></div> Ideal</div>
-                      </div>
+                        <svg viewBox="0 0 120 120" className="w-48 h-48 mt-4">
+                          <polygon points="60,10 105,45 85,105 35,105 15,45" fill="none" stroke="#4A2626" strokeWidth="0.5" />
+                          <polygon points="60,30 90,55 75,90 45,90 30,55" fill="none" stroke="#4A2626" strokeWidth="0.5" strokeDasharray="2,2" />
+                          <polygon points="60,18 100,48 80,100 40,95 20,48" fill="rgba(197,155,143,0.1)" stroke="#D15C5C" strokeWidth="1" />
+                          <circle cx="60" cy="18" r="1.5" fill="#D15C5C" />
+                          <circle cx="100" cy="48" r="1.5" fill="#D15C5C" />
+                          <circle cx="80" cy="100" r="1.5" fill="#D15C5C" />
+                          <circle cx="40" cy="95" r="1.5" fill="#D15C5C" />
+                          <circle cx="20" cy="48" r="1.5" fill="#D15C5C" />
+                        </svg>
+                        <span className="absolute top-10 text-[0.55rem] text-[#D2C3BD] text-center">Forehead<br />{clamp(data.peta_proporsi?.dahi)}%</span>
+                        <span className="absolute right-12 top-[40%] text-[0.55rem] text-[#D2C3BD] text-center">Cheekbones<br />{clamp(((data.peta_proporsi?.pipi_kiri || 0) + (data.peta_proporsi?.pipi_kanan || 0)) / 2)}%</span>
+                        <span className="absolute right-20 bottom-12 text-[0.55rem] text-[#D2C3BD] text-center">Jawline<br />{clamp(data.peta_proporsi?.rahang)}%</span>
+                        <span className="absolute left-20 bottom-12 text-[0.55rem] text-[#D2C3BD] text-center">Chin<br />{clamp(data.peta_proporsi?.dagu)}%</span>
+                        <span className="absolute left-12 top-[40%] text-[0.55rem] text-[#D2C3BD] text-center">Face Width<br />{clamp(data.pengukuran_fitur?.lebar_wajah)}%</span>
+                        <div className="absolute bottom-4 flex items-center gap-6 text-[0.55rem] text-[#A68A82]">
+                          <div className="flex items-center gap-2"><div className="w-3 h-0.5 bg-[#D15C5C]"></div> You</div>
+                          <div className="flex items-center gap-2"><div className="w-3 h-0.5 border-t border-dashed border-[#A68A82]"></div> Ideal</div>
+                        </div>
                       </>
-                </div>
-
-
-                <div className="p-8 flex flex-col justify-between">
-                  <p className="text-[0.65rem] text-[#A68A82] mb-6 uppercase tracking-widest font-bold">Feature Measurements</p>
-                    <div className="space-y-4 flex-1">
-
-                      {[
-                        { label: "Face Length", val: data.pengukuran_fitur?.panjang_wajah },
-                        { label: "Jawline Strength", val: data.pengukuran_fitur?.kekuatan_rahang },
-                        { label: "Cheekbone Width", val: data.pengukuran_fitur?.lebar_tulang_pipi },
-                        { label: "Forehead Width", val: data.pengukuran_fitur?.lebar_dahi },
-                      ].map((item, i) => (
-                        <div key={i} className="group/item">
-                          <div className="flex justify-between text-[0.65rem] text-[#D2C3BD] mb-1.5 font-medium">
-                            <span className="group-hover/item:text-[#F3E8DE] transition-colors">{item.label}</span>
-                            <span className="text-[#C59B8F]">{clamp(item.val)}%</span>
-                          </div>
-                          <div className="h-[2px] w-full bg-[#3A1E1E]">
-                            <div className="h-full bg-[#D15C5C] transition-all duration-[2s] ease-out" style={{ width: mounted ? `${clamp(item.val)}%` : '0%', transitionDelay: `${i * 150}ms` }}></div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                </div>
-
-
-
-                <div className="p-8 flex flex-col justify-between">
-                  <p className="text-[0.65rem] text-[#A68A82] mb-6 uppercase tracking-widest font-bold">Facial Balance</p>
-                    <div className="space-y-4 flex-1">
-
-                      {[
-                        { label: "Eye Symmetry", val: data.keseimbangan_wajah?.mata_kiri_kanan || "-" },
-                        { label: "Brow Balance", val: data.keseimbangan_wajah?.alis_kiri_kanan || "-" },
-                        { label: "Nose Centering", val: data.keseimbangan_wajah?.pemusatan_hidung || "-" },
-                        { label: "Mouth Alignment", val: data.keseimbangan_wajah?.kelurusan_mulut || "-" },
-                      ].map((item, i) => (
-                        <div key={i} className="flex justify-between items-center text-[0.7rem] border-b border-[#3A1E1E]/30 pb-2 hover:border-[#C59B8F]/30 transition-colors">
-                          <span className="text-[#A68A82]">{item.label}</span>
-                          <span className="text-[#F3E8DE] font-semibold flex items-center gap-2">
-                            <Check className="w-3 h-3 text-[#8A9A5B]" /> {item.val}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                </div>
-              </div>
-            </div>
-
-            <div className={`transition-all duration-1000 delay-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-              <h2 className="text-[0.75rem] uppercase tracking-[0.3em] text-[#A68A82] mb-8 font-bold flex items-center gap-3">
-                HAIR ANALYSIS & SCALP HEALTH
-              </h2>
-              {!activeFeatures.includes("HAIR_ANALYSIS") ? (
-                <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm p-12 flex flex-col items-center justify-center text-center opacity-50">
-                  <Scissors className="w-10 h-10 text-[#C59B8F]/30 mb-4" />
-                  <p className="text-xs text-[#D2C3BD] uppercase tracking-widest font-bold mb-1">Premium Feature Locked</p>
-                </div>
-              ) : (
-                <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm overflow-hidden">
-                  <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#3A1E1E] p-8">
-                    <div className="flex flex-col gap-3 justify-center pb-6 md:pb-0">
-                      <p className="text-[0.65rem] text-[#A68A82] font-bold uppercase tracking-widest">Hair Thickness</p>
-                      <div className="flex items-center gap-6 mt-3 group/hair">
-                        <div className="relative w-14 h-14 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
-                          <svg viewBox="0 0 40 40" className="w-full h-full opacity-60">
-                            <path d="M20,35 C15,35 15,10 30,5" fill="none" stroke="#F3E8DE" strokeWidth="2.5" className="animate-pulse" />
-                          </svg>
-                        </div>
-                        <div>
-                          <p className="text-xl text-[#F3E8DE] font-semibold">{data.ketebalan_rambut || "-"}</p>
-                          <p className="text-[0.7rem] text-[#C59B8F] font-bold">{data.ketebalan_rambut_mm ? `${data.ketebalan_rambut_mm} mm` : "Normal"}</p>
-                        </div>
-                      </div>
                     </div>
 
-                    <div className="flex flex-col pl-0 md:pl-8 py-6 md:py-0">
-                      <p className="text-[0.65rem] text-[#A68A82] font-bold uppercase tracking-widest mb-4">Hair Density</p>
-                      <CircularProgress percentage={data.kepadatan_rambut || 0} color="#8A9A5B" label={data.kepadatan_rambut > 80 ? "Optimal" : "Healthy"} subLabel="Density Score" />
-                    </div>
 
-                    <div className="flex flex-col pl-0 md:pl-8 pt-6 md:pt-0">
-                      <p className="text-[0.65rem] text-[#A68A82] font-bold uppercase tracking-widest mb-4">Scalp Health</p>
-                      <CircularProgress percentage={clamp(data.kesehatan_kulit_kepala)} color="#3CB371" label="Excellent" subLabel="Condition Score" />
-                    </div>
-                  </div>
-                  <div className="bg-[#251313] border-t border-[#3A1E1E] p-5 px-8 flex flex-col md:flex-row md:items-center gap-6">
-                    <div className="flex items-center gap-4 min-w-[200px]">
-                      <div className="w-10 h-10 rounded-full bg-[#8A9A5B]/10 border border-[#8A9A5B]/30 flex items-center justify-center">
-                        <ArrowUp className="w-5 h-5 text-[#8A9A5B]" />
-                      </div>
-                      <div>
-                        <p className="text-[0.6rem] text-[#A68A82] font-bold uppercase">Growth Potential</p>
-                        <p className="text-sm text-[#F3E8DE] font-semibold">{data.potensi_pertumbuhan > 80 ? "High Potential" : "Normal"}</p>
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-center text-[0.65rem] text-[#D2C3BD] mb-2 italic">
-                        <span>Optimal growth detected for thick texture styles.</span>
-                        <span className="font-bold text-[#8A9A5B]">{clamp(data.potensi_pertumbuhan)}%</span>
-                      </div>
-                      <div className="h-1.5 w-full bg-[#1C0D0D] rounded-full overflow-hidden">
-                        <div className="h-full bg-[#8A9A5B] transition-all duration-[2.5s] ease-out" style={{ width: mounted ? `${clamp(data.potensi_pertumbuhan)}%` : '0%' }}></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+                    <div className="p-8 flex flex-col justify-between">
+                      <p className="text-[0.65rem] text-[#A68A82] mb-6 uppercase tracking-widest font-bold">Feature Measurements</p>
+                      <div className="space-y-4 flex-1">
 
-            <div className={`transition-all duration-1000 delay-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-              <h2 className="text-[0.75rem] uppercase tracking-[0.3em] text-[#A68A82] mb-8 font-bold flex items-center gap-3">
-                BARBER INSTRUCTIONS
-              </h2>
-              {!activeFeatures.includes("BARBER_INSTRUCTIONS") ? (
-                <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm p-12 flex flex-col items-center justify-center opacity-50">
-                  <Info className="w-10 h-10 text-[#C59B8F]/30 mb-4" />
-                  <p className="text-xs text-[#D2C3BD] uppercase tracking-widest font-bold">Feature Locked</p>
-                </div>
-              ) : (
-                <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm p-8">
-                  {data.instruksi_barber_detail ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                      {[
-                        { label: "Cutting Technique", val: data.instruksi_barber_detail.teknik_potong, icon: <Scissors className="w-3 h-3" /> },
-                        { label: "Side Length", val: data.instruksi_barber_detail.panjang_sisi, icon: <div className="w-3 h-px bg-current"></div> },
-                        { label: "Top Length", val: data.instruksi_barber_detail.panjang_atas, icon: <ArrowUp className="w-3 h-3" /> },
-                        { label: "Finishing", val: data.instruksi_barber_detail.teknik_finishing, icon: <Sparkles className="w-3 h-3" /> },
-                        { label: "Product Guide", val: data.instruksi_barber_detail.produk_saran, icon: <Check className="w-3 h-3" /> },
-                        { label: "Est. Time", val: data.instruksi_barber_detail.estimasi_waktu, icon: <Clock className="w-3 h-3" /> },
-                      ].map((item, i) => (
-                        <div key={i} className="bg-[#1C0D0D] border border-[#3A1E1E] rounded-sm p-4 hover:border-[#C59B8F]/30 transition-all group/inst">
-                          <div className="flex items-center gap-2 mb-3">
-                            <div className="text-[#C59B8F] group-hover/inst:scale-110 transition-transform">{item.icon}</div>
-                            <p className="text-[0.6rem] text-[#A68A82] uppercase tracking-[0.15em] font-bold">{item.label}</p>
-                          </div>
-                          <p className="text-[0.75rem] text-[#F3E8DE] leading-relaxed font-medium">{item.val || "-"}</p>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-[0.8rem] text-[#D2C3BD] leading-relaxed italic border-l-2 border-[#C59B8F] pl-6 py-2">
-                      {data.instruksi_barber || "Present these results to your barber for the most accurate implementation of your recommended style."}
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {activeFeatures.includes("HISTORY") && historyItems.length > 0 && (
-              <div className="mt-16 pt-16 border-t border-[#3A1E1E]">
-                <h2 className="text-[0.75rem] uppercase tracking-[0.3em] text-[#A68A82] mb-10 font-bold flex items-center gap-3">
-                  SCANNING HISTORY
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {historyItems.slice(0, 4).map((item) => {
-                    const result = item.hasil_analisis || {};
-                    let historyAiUrl = null;
-                    if (item.url_hasil_img) {
-                      try {
-                        const p = typeof item.url_hasil_img === 'string' ? JSON.parse(item.url_hasil_img) : item.url_hasil_img;
-                        if (Array.isArray(p) && p.length > 0) historyAiUrl = p[0];
-                      } catch (e) { }
-                    }
-
-                    return (
-                      <div key={item.id} className="flex gap-5 p-5 border border-[#3A1E1E] bg-[#1C0D0D] rounded-sm group/history hover:border-[#C59B8F]/40 transition-all">
-                        <div className="relative w-24 h-24 shrink-0 overflow-hidden bg-[#2A1616]">
-                          <img
-                            src={item.url_foto_upload?.startsWith("http") ? item.url_foto_upload : `${(process.env.NEXT_PUBLIC_API_URL).replace("/api/v1", "")}${item.url_foto_upload}`}
-                            alt="Scan"
-                            className="object-cover w-full h-full opacity-40 group-hover/history:scale-110 transition-transform duration-700"
-                          />
-                          {historyAiUrl && (
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-2">
-                              <span className="text-[0.45rem] font-bold text-[#C59B8F] uppercase tracking-tighter">AI Result Saved</span>
+                        {[
+                          { label: "Face Length", val: data.pengukuran_fitur?.panjang_wajah },
+                          { label: "Jawline Strength", val: data.pengukuran_fitur?.kekuatan_rahang },
+                          { label: "Cheekbone Width", val: data.pengukuran_fitur?.lebar_tulang_pipi },
+                          { label: "Forehead Width", val: data.pengukuran_fitur?.lebar_dahi },
+                        ].map((item, i) => (
+                          <div key={i} className="group/item">
+                            <div className="flex justify-between text-[0.65rem] text-[#D2C3BD] mb-1.5 font-medium">
+                              <span className="group-hover/item:text-[#F3E8DE] transition-colors">{item.label}</span>
+                              <span className="text-[#C59B8F]">{clamp(item.val)}%</span>
                             </div>
-                          )}
-                        </div>
-                        <div className="flex flex-col justify-center">
-                          <div className="flex items-center gap-2 mb-1.5">
-                            <Clock className="w-3 h-3 text-[#A68A82]" />
-                            <span className="text-[0.6rem] text-[#A68A82] font-bold uppercase tracking-widest">
-                              {new Date(item.tgl_generate).toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' })}
+                            <div className="h-[2px] w-full bg-[#3A1E1E]">
+                              <div className="h-full bg-[#D15C5C] transition-all duration-[2s] ease-out" style={{ width: mounted ? `${clamp(item.val)}%` : '0%', transitionDelay: `${i * 150}ms` }}></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+
+
+                    <div className="p-8 flex flex-col justify-between">
+                      <p className="text-[0.65rem] text-[#A68A82] mb-6 uppercase tracking-widest font-bold">Facial Balance</p>
+                      <div className="space-y-4 flex-1">
+
+                        {[
+                          { label: "Eye Symmetry", val: data.keseimbangan_wajah?.mata_kiri_kanan || "-" },
+                          { label: "Brow Balance", val: data.keseimbangan_wajah?.alis_kiri_kanan || "-" },
+                          { label: "Nose Centering", val: data.keseimbangan_wajah?.pemusatan_hidung || "-" },
+                          { label: "Mouth Alignment", val: data.keseimbangan_wajah?.kelurusan_mulut || "-" },
+                        ].map((item, i) => (
+                          <div key={i} className="flex justify-between items-center text-[0.7rem] border-b border-[#3A1E1E]/30 pb-2 hover:border-[#C59B8F]/30 transition-colors">
+                            <span className="text-[#A68A82]">{item.label}</span>
+                            <span className="text-[#F3E8DE] font-semibold flex items-center gap-2">
+                              <Check className="w-3 h-3 text-[#8A9A5B]" /> {item.val}
                             </span>
                           </div>
-                          <h4 className="text-sm text-[#F3E8DE] font-serif font-medium mb-2 group-hover/history:text-[#C59B8F] transition-colors">{result.rekomendasi_gaya?.[0]?.nama_gaya || "Analysis"}</h4>
-                          <div className="flex gap-4">
-                            <div className="flex flex-col">
-                              <span className="text-[0.5rem] uppercase text-[#A68A82]">Match</span>
-                              <span className="text-[0.65rem] text-[#F3E8DE] font-bold">{result.rekomendasi_gaya?.[0]?.match_score || 0}%</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={`transition-all duration-1000 delay-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+                  <h2 className="text-[0.75rem] uppercase tracking-[0.3em] text-[#A68A82] mb-8 font-bold flex items-center gap-3">
+                    HAIR ANALYSIS & SCALP HEALTH
+                  </h2>
+                  {!activeFeatures.includes("HAIR_ANALYSIS") ? (
+                    <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm p-12 flex flex-col items-center justify-center text-center opacity-50">
+                      <Scissors className="w-10 h-10 text-[#C59B8F]/30 mb-4" />
+                      <p className="text-xs text-[#D2C3BD] uppercase tracking-widest font-bold mb-1">Premium Feature Locked</p>
+                    </div>
+                  ) : (
+                    <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm overflow-hidden">
+                      <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#3A1E1E] p-8">
+                        <div className="flex flex-col gap-3 justify-center pb-6 md:pb-0">
+                          <p className="text-[0.65rem] text-[#A68A82] font-bold uppercase tracking-widest">Hair Thickness</p>
+                          <div className="flex items-center gap-6 mt-3 group/hair">
+                            <div className="relative w-14 h-14 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+                              <svg viewBox="0 0 40 40" className="w-full h-full opacity-60">
+                                <path d="M20,35 C15,35 15,10 30,5" fill="none" stroke="#F3E8DE" strokeWidth="2.5" className="animate-pulse" />
+                              </svg>
                             </div>
-                            <div className="flex flex-col">
-                              <span className="text-[0.5rem] uppercase text-[#A68A82]">Face</span>
-                              <span className="text-[0.65rem] text-[#F3E8DE] font-bold">{result.bentuk_wajah || "-"}</span>
+                            <div>
+                              <p className="text-xl text-[#F3E8DE] font-semibold">{data.ketebalan_rambut || "-"}</p>
+                              <p className="text-[0.7rem] text-[#C59B8F] font-bold">{data.ketebalan_rambut_mm ? `${data.ketebalan_rambut_mm} mm` : "Normal"}</p>
                             </div>
                           </div>
                         </div>
+
+                        <div className="flex flex-col pl-0 md:pl-8 py-6 md:py-0">
+                          <p className="text-[0.65rem] text-[#A68A82] font-bold uppercase tracking-widest mb-4">Hair Density</p>
+                          <CircularProgress percentage={data.kepadatan_rambut || 0} color="#8A9A5B" label={data.kepadatan_rambut > 80 ? "Optimal" : "Healthy"} subLabel="Density Score" />
+                        </div>
+
+                        <div className="flex flex-col pl-0 md:pl-8 pt-6 md:pt-0">
+                          <p className="text-[0.65rem] text-[#A68A82] font-bold uppercase tracking-widest mb-4">Scalp Health</p>
+                          <CircularProgress percentage={clamp(data.kesehatan_kulit_kepala)} color="#3CB371" label="Excellent" subLabel="Condition Score" />
+                        </div>
                       </div>
-                    );
-                  })}
+                      <div className="bg-[#251313] border-t border-[#3A1E1E] p-5 px-8 flex flex-col md:flex-row md:items-center gap-6">
+                        <div className="flex items-center gap-4 min-w-[200px]">
+                          <div className="w-10 h-10 rounded-full bg-[#8A9A5B]/10 border border-[#8A9A5B]/30 flex items-center justify-center">
+                            <ArrowUp className="w-5 h-5 text-[#8A9A5B]" />
+                          </div>
+                          <div>
+                            <p className="text-[0.6rem] text-[#A68A82] font-bold uppercase">Growth Potential</p>
+                            <p className="text-sm text-[#F3E8DE] font-semibold">{data.potensi_pertumbuhan > 80 ? "High Potential" : "Normal"}</p>
+                          </div>
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex justify-between items-center text-[0.65rem] text-[#D2C3BD] mb-2 italic">
+                            <span>Optimal growth detected for thick texture styles.</span>
+                            <span className="font-bold text-[#8A9A5B]">{clamp(data.potensi_pertumbuhan)}%</span>
+                          </div>
+                          <div className="h-1.5 w-full bg-[#1C0D0D] rounded-full overflow-hidden">
+                            <div className="h-full bg-[#8A9A5B] transition-all duration-[2.5s] ease-out" style={{ width: mounted ? `${clamp(data.potensi_pertumbuhan)}%` : '0%' }}></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
+
+                <div className={`transition-all duration-1000 delay-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+                  <h2 className="text-[0.75rem] uppercase tracking-[0.3em] text-[#A68A82] mb-8 font-bold flex items-center gap-3">
+                    BARBER INSTRUCTIONS
+                  </h2>
+                  {!activeFeatures.includes("BARBER_INSTRUCTIONS") ? (
+                    <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm p-12 flex flex-col items-center justify-center opacity-50">
+                      <Info className="w-10 h-10 text-[#C59B8F]/30 mb-4" />
+                      <p className="text-xs text-[#D2C3BD] uppercase tracking-widest font-bold">Feature Locked</p>
+                    </div>
+                  ) : (
+                    <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm p-8">
+                      {data.instruksi_barber_detail ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                          {[
+                            { label: "Cutting Technique", val: data.instruksi_barber_detail.teknik_potong, icon: <Scissors className="w-3 h-3" /> },
+                            { label: "Side Length", val: data.instruksi_barber_detail.panjang_sisi, icon: <div className="w-3 h-px bg-current"></div> },
+                            { label: "Top Length", val: data.instruksi_barber_detail.panjang_atas, icon: <ArrowUp className="w-3 h-3" /> },
+                            { label: "Finishing", val: data.instruksi_barber_detail.teknik_finishing, icon: <Sparkles className="w-3 h-3" /> },
+                            { label: "Product Guide", val: data.instruksi_barber_detail.produk_saran, icon: <Check className="w-3 h-3" /> },
+                            { label: "Est. Time", val: data.instruksi_barber_detail.estimasi_waktu, icon: <Clock className="w-3 h-3" /> },
+                          ].map((item, i) => (
+                            <div key={i} className="bg-[#1C0D0D] border border-[#3A1E1E] rounded-sm p-4 hover:border-[#C59B8F]/30 transition-all group/inst">
+                              <div className="flex items-center gap-2 mb-3">
+                                <div className="text-[#C59B8F] group-hover/inst:scale-110 transition-transform">{item.icon}</div>
+                                <p className="text-[0.6rem] text-[#A68A82] uppercase tracking-[0.15em] font-bold">{item.label}</p>
+                              </div>
+                              <p className="text-[0.75rem] text-[#F3E8DE] leading-relaxed font-medium">{item.val || "-"}</p>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-[0.8rem] text-[#D2C3BD] leading-relaxed italic border-l-2 border-[#C59B8F] pl-6 py-2">
+                          {data.instruksi_barber || "Present these results to your barber for the most accurate implementation of your recommended style."}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {activeFeatures.includes("HISTORY") && historyItems.length > 0 && (
+                  <div className="mt-16 pt-16 border-t border-[#3A1E1E]">
+                    <h2 className="text-[0.75rem] uppercase tracking-[0.3em] text-[#A68A82] mb-10 font-bold flex items-center gap-3">
+                      SCANNING HISTORY
+                    </h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      {historyItems.slice(0, 4).map((item) => {
+                        const result = item.hasil_analisis || {};
+                        let historyAiUrl = null;
+                        if (item.url_hasil_img) {
+                          try {
+                            const p = typeof item.url_hasil_img === 'string' ? JSON.parse(item.url_hasil_img) : item.url_hasil_img;
+                            if (Array.isArray(p) && p.length > 0) historyAiUrl = p[0];
+                          } catch (e) { }
+                        }
+
+                        return (
+                          <div key={item.id} className="flex gap-5 p-5 border border-[#3A1E1E] bg-[#1C0D0D] rounded-sm group/history hover:border-[#C59B8F]/40 transition-all">
+                            <div className="relative w-24 h-24 shrink-0 overflow-hidden bg-[#2A1616]">
+                              <img
+                                src={item.url_foto_upload?.startsWith("http") ? item.url_foto_upload : `${(process.env.NEXT_PUBLIC_API_URL).replace("/api/v1", "")}${item.url_foto_upload}`}
+                                alt="Scan"
+                                className="object-cover w-full h-full opacity-40 group-hover/history:scale-110 transition-transform duration-700"
+                              />
+                              {historyAiUrl && (
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-2">
+                                  <span className="text-[0.45rem] font-bold text-[#C59B8F] uppercase tracking-tighter">AI Result Saved</span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex flex-col justify-center">
+                              <div className="flex items-center gap-2 mb-1.5">
+                                <Clock className="w-3 h-3 text-[#A68A82]" />
+                                <span className="text-[0.6rem] text-[#A68A82] font-bold uppercase tracking-widest">
+                                  {new Date(item.tgl_generate).toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' })}
+                                </span>
+                              </div>
+                              <h4 className="text-sm text-[#F3E8DE] font-serif font-medium mb-2 group-hover/history:text-[#C59B8F] transition-colors">{result.rekomendasi_gaya?.[0]?.nama_gaya || "Analysis"}</h4>
+                              <div className="flex gap-4">
+                                <div className="flex flex-col">
+                                  <span className="text-[0.5rem] uppercase text-[#A68A82]">Match</span>
+                                  <span className="text-[0.65rem] text-[#F3E8DE] font-bold">{result.rekomendasi_gaya?.[0]?.match_score || 0}%</span>
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="text-[0.5rem] uppercase text-[#A68A82]">Face</span>
+                                  <span className="text-[0.65rem] text-[#F3E8DE] font-bold">{result.bentuk_wajah || "-"}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
               </div>
             </div>

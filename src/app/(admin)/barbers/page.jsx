@@ -139,7 +139,7 @@ export default function BarbersPage() {
     } catch (err) {
       showToast(
         err?.response?.data?.message ||
-          `Terjadi kesalahan saat ${editingId ? 'memperbarui' : 'menambahkan'} kapster`,
+        `Terjadi kesalahan saat ${editingId ? 'memperbarui' : 'menambahkan'} kapster`,
         "error"
       );
     } finally {
@@ -150,7 +150,7 @@ export default function BarbersPage() {
   const getImageUrl = (url) => {
     if (!url) return null;
     const baseUrl = (
-      process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1"
+      process.env.NEXT_PUBLIC_API_URL
     ).replace(/\/api\/v1\/?$/, "");
     return `${baseUrl}${url}`;
   };

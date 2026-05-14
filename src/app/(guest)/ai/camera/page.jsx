@@ -97,7 +97,8 @@ export default function AiCameraPage() {
       }
 
       const res = await aiScanService.guestLogin({ device_cookie: deviceId });
-      const { data } = res.data;
+      const body = res.data;
+      const { data } = body;
       saveUserAuth(data.token, data.user);
     }
   };
@@ -133,7 +134,11 @@ export default function AiCameraPage() {
 
       // Save base64 image so the result page can display it
       const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
-      sessionStorage.setItem("aiOriginalImage", dataUrl);
+      try {
+        sessionStorage.setItem("aiOriginalImage", dataUrl);
+      } catch (storageErr) {
+        console.warn("Session storage quota exceeded, skipping local image save. The app will fall back to server URL.");
+      }
 
       // Convert canvas to blob for upload
       const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.9));
@@ -156,14 +161,22 @@ export default function AiCameraPage() {
       const analysisRes = await aiScanService.analyzeFace(formData);
 
       // Store result to display on the Result page
-      sessionStorage.setItem("aiAnalysisResult", JSON.stringify(analysisRes.data?.data));
+      try {
+        sessionStorage.setItem("aiAnalysisResult", JSON.stringify(analysisRes.data?.data));
+      } catch (storageErr) {
+        console.error("Session storage quota exceeded for aiAnalysisResult.");
+        showToast("Result is too large to save locally. Please try again with a smaller photo.", "error");
+        setIsProcessing(false);
+        setIsCapturing(false);
+        return;
+      }
 
       showToast("Analysis complete!", "success");
       setIsApiDone(true);
     } catch (err) {
       console.error(err);
       const errCode = err.response?.data?.errorCode;
-      if (errCode === "SERVICE_UNAVAILABLE" || err.response?.status === 503) {
+      if (errCode === "SERVICE_UNAVAILABLE" || err.response?.status === 503 || err.response?.status === 429) {
         router.push("/ai/busy");
         return;
       } else {

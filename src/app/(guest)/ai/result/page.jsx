@@ -206,6 +206,7 @@ export default function AiResultPage() {
     return isNaN(num) ? 0 : Math.min(99, Math.max(0, Math.round(num)));
   };
 
+  if (!mounted) return null;
   if (!analysisData) return null;
 
   let data = analysisData.hasil_analisis || {};

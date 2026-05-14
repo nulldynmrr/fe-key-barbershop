@@ -11,7 +11,7 @@ function SocialVideoCard({ item, index, isActive, onSetActive, onClearActive }) 
   const url = item.link;
   const embedUrl = isActive ? `${getEmbedUrl(url)}${url.includes('?') ? '&' : '?'}autoplay=1&mute=1` : null;
 
-  const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000").replace('/api/v1', '');
+  const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000").replace(/\/api\/v1\/?$/, "");
   const thumbnailUrl = item.thumbnail
     ? `${baseUrl}${item.thumbnail}`
     : getThumbnailUrl(url);
@@ -61,7 +61,7 @@ function SocialVideoCard({ item, index, isActive, onSetActive, onClearActive }) 
               className="object-cover transition-transform duration-700 group-hover:scale-110"
               onLoadingComplete={() => setThumbError(false)}
               onError={() => setThumbError(true)}
-              unoptimized={thumbnailUrl.includes('localhost')}
+              unoptimized={thumbnailUrl.includes('localhost') || thumbnailUrl.includes('127.0.0.1')}
             />
           </div>
         )}
@@ -89,8 +89,9 @@ export default function SocialGallery() {
     const fetchSocials = async () => {
       try {
         const res = await socialMediaService.getSocialMedias();
-        if (res.data.success) {
-          setSocialMedias(res.data.data.slice(0, 3));
+        const body = res.data;
+        if (body.success) {
+          setSocialMedias(body.data?.slice(0, 3) || []);
         }
       } catch (err) {
         console.error("Error fetching social media:", err);

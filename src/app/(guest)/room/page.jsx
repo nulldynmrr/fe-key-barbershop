@@ -27,7 +27,8 @@ export default function MeetOurCapster() {
     api
       .get("/gallery")
       .then((res) => {
-        const data = res.data?.data ?? res.data ?? [];
+        const body = res.data;
+        const data = body?.data ?? body ?? [];
         setGalleries(Array.isArray(data) ? data : []);
       })
       .catch(() => setGalleries([]))
@@ -50,10 +51,7 @@ export default function MeetOurCapster() {
       return url;
     }
 
-    const baseUrl = (
-      process.env.NEXT_PUBLIC_API_URL
-    ).replace(/\/api\/v1\/?$/, "");
-
+    const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000").replace(/\/api\/v1\/?$/, "");
     return `${baseUrl}${url}`;
   };
 
@@ -288,7 +286,7 @@ export default function MeetOurCapster() {
                 <div className="bg-white p-4 shadow-sm w-full aspect-square relative overflow-hidden border border-gray-200">
                   {galleries[0] && (
                     <Image
-                      src={getImageUrl(galleries[0].url_foto_upload)}
+                      src={getImageUrl(galleries[0].url_foto_gallery)}
                       alt={galleries[0].kategori}
                       fill
                       sizes="(max-width: 768px) 100vw, 33vw"
@@ -302,7 +300,7 @@ export default function MeetOurCapster() {
               {galleries[1] && (
                 <div className="bg-white p-4 shadow-sm w-[80%] mx-auto aspect-square relative overflow-hidden border border-gray-200 transform -rotate-3">
                   <Image
-                    src={getImageUrl(galleries[1].url_foto_upload)}
+                    src={getImageUrl(galleries[1].url_foto_gallery)}
                     alt={galleries[1].kategori}
                     fill
                     sizes="(max-width: 768px) 80vw, 26vw"
@@ -317,7 +315,7 @@ export default function MeetOurCapster() {
               {galleries[2] && (
                 <div className="bg-white p-4 shadow-sm w-full h-[400px] relative overflow-hidden border border-gray-200">
                   <Image
-                    src={getImageUrl(galleries[2].url_foto_upload)}
+                    src={getImageUrl(galleries[2].url_foto_gallery)}
                     alt={galleries[2].kategori}
                     fill
                     sizes="(max-width: 768px) 100vw, 33vw"
@@ -330,7 +328,7 @@ export default function MeetOurCapster() {
               {galleries[3] && (
                 <div className="bg-white p-4 shadow-sm w-[80%] mx-auto aspect-square relative overflow-hidden border border-gray-200">
                   <Image
-                    src={getImageUrl(galleries[3].url_foto_upload)}
+                    src={getImageUrl(galleries[3].url_foto_gallery)}
                     alt={galleries[3].kategori}
                     fill
                     sizes="(max-width: 768px) 80vw, 26vw"
@@ -346,7 +344,7 @@ export default function MeetOurCapster() {
                 {galleries[4] && (
                   <div className="bg-white p-4 shadow-sm w-full h-[500px] relative overflow-hidden border border-gray-200">
                     <Image
-                      src={getImageUrl(galleries[4].url_foto_upload)}
+                      src={getImageUrl(galleries[4].url_foto_gallery)}
                       alt={galleries[4].kategori}
                       fill
                       sizes="(max-width: 768px) 100vw, 33vw"

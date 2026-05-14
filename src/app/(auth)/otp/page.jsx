@@ -89,7 +89,8 @@ function OTPForm() {
         router.push("/login?verified=true");
       } else {
         // Save auth and navigate to home on success
-        saveUserAuth(data.token, data.user);
+        const { data: authData } = data;
+        saveUserAuth(authData.token, authData.user);
         router.push("/home");
       }
 

@@ -56,7 +56,8 @@ function LoginForm() {
           return;
         }
 
-        saveUserAuth(data.token, data.user);
+        const { data: authData } = data;
+        saveUserAuth(authData.token, authData.user);
         router.push("/home");
       } catch (err) {
         const msg = err?.response?.data?.message;
@@ -100,7 +101,8 @@ function LoginForm() {
         return;
       }
 
-      saveUserAuth(data.token, data.user);
+      const { data: authData } = data;
+      saveUserAuth(authData.token, authData.user);
       router.push("/home");
     } catch (err) {
       const errData = err?.response?.data;

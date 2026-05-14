@@ -37,8 +37,9 @@ export default function LoginAdminPage() {
         return;
       }
 
-      Cookies.set("admin_token", data.token, { expires: 1 });
-      localStorage.setItem("admin", JSON.stringify(data.user));
+      const { data: authData } = data;
+      Cookies.set("admin_token", authData.token, { expires: 1 });
+      localStorage.setItem("admin", JSON.stringify(authData.user));
 
       router.push("/dashboard");
     } catch (err) {

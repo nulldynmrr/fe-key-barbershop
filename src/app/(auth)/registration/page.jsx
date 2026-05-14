@@ -51,7 +51,8 @@ export default function RegistrationPage() {
           return;
         }
 
-        saveUserAuth(data.token, data.data);
+        const { data: authData } = data;
+        saveUserAuth(authData.token, authData.user || authData);
         router.push("/home");
       } catch (err) {
         setError("Gagal login dengan Google. Coba lagi.");

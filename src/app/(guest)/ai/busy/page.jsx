@@ -28,8 +28,8 @@ export default function AiBusyPage() {
         await ensureAuth();
         const res = await waitlistService.checkStatus();
         if (res.success) {
-          setIsSuccess(res.hasPending);
-          if (!res.hasPending) {
+          setIsSuccess(res.data.hasPending);
+          if (!res.data.hasPending) {
             localStorage.removeItem("has_submitted_waitlist");
           }
         }

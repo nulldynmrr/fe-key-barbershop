@@ -52,8 +52,9 @@ export default function MediaSocialPage() {
     setLoading(true);
     try {
       const res = await socialMediaService.getSocialMedias();
-      if (res.data.success) {
-        setSocialMedias(res.data.data);
+      const body = res.data;
+      if (body.success) {
+        setSocialMedias(body.data || []);
       }
     } catch (err) {
       console.error("Gagal memuat media sosial:", err);
@@ -183,10 +184,11 @@ export default function MediaSocialPage() {
                     {item.thumbnail ? (
                       <div className="w-full h-full relative">
                         <Image 
-                          src={`${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000").replace('/api/v1', '')}${item.thumbnail}`} 
+                          src={`${(process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000").replace(/\/api\/v1\/?$/, "")}${item.thumbnail}`} 
                           alt={item.title} 
                           fill 
                           className="object-cover" 
+                          unoptimized={true}
                         />
 
                         <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">

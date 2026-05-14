@@ -29,9 +29,9 @@ function UserEmailResolver({ userId }) {
       setIsLoading(true);
       try {
         const res = await resolveUserEmail(userId);
-        if (res.success && res.email) {
-          setEmail(res.email);
-          resolvedCache.current[userId] = res.email;
+        if (res.success && res.data?.email) {
+          setEmail(res.data.email);
+          resolvedCache.current[userId] = res.data.email;
         }
       } catch (err) {
         console.error("Failed to resolve email:", err);
@@ -195,11 +195,11 @@ function AdminLayoutContent({ children }) {
 
       if (notifRes.success) {
         setNotifications(notifRes.data);
-        setUnreadCount(notifRes.unreadCount);
+        setUnreadCount(notifRes.meta?.unreadCount || 0);
       }
 
       if (waitlistRes.success) {
-        setUnhandledCount(waitlistRes.count);
+        setUnhandledCount(waitlistRes.data.count);
       }
     } catch (err) {
       console.error("Failed to fetch admin data:", err);

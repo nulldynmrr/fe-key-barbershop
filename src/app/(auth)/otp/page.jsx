@@ -226,13 +226,21 @@ function OTPForm() {
             type="button"
             disabled={timeLeft > 0}
             onClick={handleResendOTP}
-            className={`text-[10px] font-semibold uppercase tracking-[0.1em] transition-colors ${
+            className={`text-[10px] font-semibold uppercase tracking-[0.1em] transition-colors block mx-auto mb-4 ${
               timeLeft > 0 ? "text-[#a89c97] cursor-not-allowed" : "text-[#4C2222] hover:text-[#4a1a1a]"
             }`}
             style={{ fontFamily: "var(--font-be-vietnam)" }}
           >
             RESEND CODE {timeLeft > 0 ? `(${formatTime(timeLeft)})` : ""}
           </button>
+
+          <Link
+            href="/registration"
+            className="text-[10px] font-bold text-[#8b6f66] hover:text-[#4a1a1a] uppercase tracking-widest underline underline-offset-4 transition-colors"
+            style={{ fontFamily: "var(--font-be-vietnam)" }}
+          >
+            Wrong Email? Change Address
+          </Link>
         </div>
       </div>
 

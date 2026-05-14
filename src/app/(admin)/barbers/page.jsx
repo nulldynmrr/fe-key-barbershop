@@ -17,7 +17,7 @@ import Image from "next/image";
 import { useToast } from "@/contexts/ToastContext";
 
 export default function BarbersPage() {
-  const { showToast } = useToast();
+  const { showToast, showConfirm } = useToast();
   const [barbers, setBarbers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -92,18 +92,23 @@ export default function BarbersPage() {
   };
 
   const handleDeleteBarber = async (id) => {
-    if (!window.confirm("Apakah Anda yakin ingin menghapus kapster ini?")) return;
-    try {
-      const res = await barberService.deleteBarber(id);
-      if (res.data.success) {
-        alert("Kapster berhasil dihapus!");
-        fetchBarbers();
-      } else {
-        alert(res.data.message || "Gagal menghapus kapster");
+    showConfirm(
+      "Hapus Kapster",
+      "Apakah Anda yakin ingin menghapus kapster ini? Tindakan ini tidak dapat dibatalkan.",
+      async () => {
+        try {
+          const res = await barberService.deleteBarber(id);
+          if (res.data.success) {
+            showToast("Kapster berhasil dihapus!", "success");
+            fetchBarbers();
+          } else {
+            showToast(res.data.message || "Gagal menghapus kapster", "error");
+          }
+        } catch (err) {
+          showToast(err?.response?.data?.message || "Terjadi kesalahan saat menghapus kapster", "error");
+        }
       }
-    } catch (err) {
-      alert(err?.response?.data?.message || "Terjadi kesalahan saat menghapus kapster");
-    }
+    );
   };
 
   const handleSaveBarber = async () => {
@@ -149,10 +154,14 @@ export default function BarbersPage() {
 
   const getImageUrl = (url) => {
     if (!url) return null;
-    const baseUrl = (
-      process.env.NEXT_PUBLIC_API_URL
-    ).replace(/\/api\/v1\/?$/, "");
-    return `${baseUrl}${url}`;
+    if (url.startsWith("http")) return url;
+    if (url.startsWith("data:")) return url;
+
+    const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1")
+      .replace(/\/api\/v1\/?$/, "");
+    
+    const normalizedUrl = url.startsWith("/") ? url : `/${url}`;
+    return `${baseUrl}${normalizedUrl}`;
   };
 
   return (

@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useGoogleLogin } from "@react-oauth/google";
+import { z } from "zod";
 import api, { saveUserAuth } from "@/utils/request";
 
 import TermsModal from "@/components/TermsModal";
@@ -19,6 +20,7 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState({});
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
   
   const isVerified = searchParams.get("verified") === "true";
@@ -83,6 +85,25 @@ function LoginForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setFieldErrors({});
+    
+    const loginSchema = z.object({
+      email: z.string().min(1, "Email wajib diisi").email("Format email tidak valid"),
+      password: z.string().min(1, "Password wajib diisi")
+    });
+
+    const result = loginSchema.safeParse({ email, password });
+
+    if (!result.success) {
+      const newErrors = {};
+      result.error.issues.forEach((issue) => {
+        newErrors[issue.path[0]] = issue.message;
+      });
+      setFieldErrors(newErrors);
+      setError("Silakan perbaiki kesalahan di bawah ini.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -95,9 +116,7 @@ function LoginForm() {
       const data = res.data;
 
       if (!data.success) {
-        setError(
-          data.message || "Login gagal. Periksa email dan password Anda.",
-        );
+        setError(data.message || "Login gagal.");
         return;
       }
 
@@ -114,11 +133,18 @@ function LoginForm() {
         return;
       }
       
-      const msg = errData?.message;
-      setError(
-        msg ||
-          "Tidak dapat terhubung ke server. Pastikan backend sudah berjalan.",
-      );
+      const msg = errData?.message || "Terjadi kesalahan pada server.";
+      
+      // Map generic error to fields
+      if (msg.toLowerCase().includes("email") || msg.toLowerCase().includes("password") || msg.toLowerCase().includes("salah") || msg.toLowerCase().includes("invalid")) {
+        setFieldErrors({
+          email: msg.includes("Email") ? msg : "Periksa kembali email Anda",
+          password: msg.includes("password") || msg.includes("Password") ? msg : "Periksa kembali password Anda"
+        });
+        setError("Login gagal. Silakan periksa kredensial Anda.");
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -253,9 +279,10 @@ function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full pb-2 border-b border-[#e6d1c7] bg-transparent focus:border-[#4a1a1a] focus:outline-none transition-colors text-sm placeholder:text-[#d8c8bc] text-[#2b1d19]"
+              className={`w-full pb-2 border-b border-[#e6d1c7] bg-transparent focus:border-[#4a1a1a] focus:outline-none transition-colors text-sm placeholder:text-[#d8c8bc] text-[#2b1d19] ${fieldErrors.email ? "border-red-500" : ""}`}
               style={{ fontFamily: "var(--font-plus-jakarta)" }}
             />
+            {fieldErrors.email && <p className="mt-1 text-[10px] text-red-500 italic">{fieldErrors.email}</p>}
           </div>
 
           <div className="mb-8">
@@ -281,7 +308,7 @@ function LoginForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className={`w-full pb-2 pr-8 border-b border-[#e6d1c7] bg-transparent focus:border-[#4a1a1a] focus:outline-none transition-colors text-sm placeholder:text-[#d8c8bc] placeholder:text-sm placeholder:tracking-normal text-[#2b1d19] ${showPassword ? "tracking-normal" : "tracking-widest"}`}
+                className={`w-full pb-2 pr-8 border-b border-[#e6d1c7] bg-transparent focus:border-[#4a1a1a] focus:outline-none transition-colors text-sm placeholder:text-[#d8c8bc] placeholder:text-sm placeholder:tracking-normal text-[#2b1d19] ${showPassword ? "tracking-normal" : "tracking-widest"} ${fieldErrors.password ? "border-red-500" : ""}`}
                 style={{ fontFamily: "var(--font-plus-jakarta)" }}
               />
               <button
@@ -292,6 +319,7 @@ function LoginForm() {
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
+            {fieldErrors.password && <p className="mt-1 text-[10px] text-red-500 italic">{fieldErrors.password}</p>}
           </div>
 
           <button

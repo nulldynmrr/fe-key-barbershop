@@ -27,7 +27,7 @@ const getSocialIcon = (url) => {
 };
 
 export default function MediaSocialPage() {
-  const { showToast } = useToast();
+  const { showToast, showConfirm } = useToast();
   const [socialMedias, setSocialMedias] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -90,16 +90,21 @@ export default function MediaSocialPage() {
 
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Apakah Anda yakin ingin menghapus media sosial ini?")) return;
-    try {
-      const res = await socialMediaService.deleteSocialMedia(id);
-      if (res.data.success) {
-        showToast("Media sosial berhasil dihapus!", "success");
-        fetchSocialMedias();
+    showConfirm(
+      "Hapus Konten",
+      "Apakah Anda yakin ingin menghapus media sosial ini?",
+      async () => {
+        try {
+          const res = await socialMediaService.deleteSocialMedia(id);
+          if (res.data.success) {
+            showToast("Media sosial berhasil dihapus!", "success");
+            fetchSocialMedias();
+          }
+        } catch (err) {
+          showToast(err?.response?.data?.message || "Gagal menghapus media sosial", "error");
+        }
       }
-    } catch (err) {
-      showToast(err?.response?.data?.message || "Gagal menghapus media sosial", "error");
-    }
+    );
   };
 
   const handleSave = async () => {
@@ -135,6 +140,18 @@ export default function MediaSocialPage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const getImageUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith("http")) return url;
+    if (url.startsWith("data:")) return url;
+
+    const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1")
+      .replace(/\/api\/v1\/?$/, "");
+    
+    const normalizedUrl = url.startsWith("/") ? url : `/${url}`;
+    return `${baseUrl}${normalizedUrl}`;
   };
 
   return (
@@ -184,7 +201,7 @@ export default function MediaSocialPage() {
                     {item.thumbnail ? (
                       <div className="w-full h-full relative">
                         <Image
-                          src={`${(process.env.NEXT_PUBLIC_API_URL).replace(/\/api\/v1\/?$/, "")}${item.thumbnail}`}
+                          src={getImageUrl(item.thumbnail)}
                           alt={item.title}
                           fill
                           className="object-cover"

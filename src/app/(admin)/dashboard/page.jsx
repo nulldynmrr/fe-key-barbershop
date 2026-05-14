@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { AlertTriangle, InboxIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { AlertTriangle, InboxIcon, ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -214,6 +214,8 @@ export default function DashboardPage() {
     count: d.count.toLocaleString("id-ID"),
     color: userColors[d.label] || d.color || aiColors[i % aiColors.length],
   }));
+  const hasLeftData = barChartData.length > 0 || tableData.length > 0;
+  const hasRightData = modelAiData.length > 0 || userStatData.length > 0;
 
   return (
     <div className="space-y-6 pb-12">
@@ -222,7 +224,7 @@ export default function DashboardPage() {
           <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
             <h4 className="text-red-800 font-bold text-sm" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
-              ⚠️ DANGER: Budget API AI Hampir / Sudah Habis!
+              <Sparkles size={20} strokeWidth={1.5} />DANGER: Budget API AI Hampir / Sudah Habis!
             </h4>
             <p className="text-red-600 text-[11px] mt-1 leading-relaxed" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
               Satu atau lebih model AI memiliki sisa budget kurang dari 20%. Fitur Virtual Try-On dan analisis AI akan GAGAL jika budget habis. Segera top-up saldo provider atau ganti API Key.
@@ -298,338 +300,336 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white p-6 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-            <h3
-              className="text-lg font-bold text-[#2b1d19] mb-6"
-              style={{ fontFamily: "var(--font-plus-jakarta)" }}
-            >
-              Rangkuman Pendapatan
-            </h3>
-            {barChartData.length === 0 ? (
-              <EmptyState label="Belum ada data pendapatan" />
-            ) : (
-              <div className="h-[280px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={barChartData}
-                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+      {(hasLeftData || hasRightData) && (
+        <div className={`grid grid-cols-1 ${hasLeftData && hasRightData ? "lg:grid-cols-3" : ""} gap-6`}>
+          {hasLeftData && (
+            <div className={`${hasRightData ? "lg:col-span-2" : ""} space-y-6`}>
+              {barChartData.length > 0 && (
+                <div className="bg-white p-6 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+                  <h3
+                    className="text-lg font-bold text-[#2b1d19] mb-6"
+                    style={{ fontFamily: "var(--font-plus-jakarta)" }}
                   >
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      vertical={false}
-                      stroke="#f0e2d9"
-                    />
-                    <XAxis
-                      dataKey="name"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{
-                        fontSize: 10,
-                        fill: "#8b6f66",
-                        fontFamily: "var(--font-plus-jakarta)",
-                      }}
-                      dy={10}
-                    />
-                    <YAxis
-                      width={65}
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{
-                        fontSize: 10,
-                        fill: "#8b6f66",
-                        fontFamily: "var(--font-plus-jakarta)",
-                      }}
-                      tickFormatter={(value) => {
-                        if (value === 0) return "0";
-                        if (value >= 1000000) return `Rp${value / 1000000}jt`;
-                        if (value >= 1000) return `Rp${value / 1000}rb`;
-                        return `Rp${value}`;
-                      }}
-                    />
-                    <Tooltip cursor={{ fill: "transparent" }} />
-                    <Bar
-                      dataKey="value"
-                      shape={
-                        <CustomBar
-                          max={computedMax}
+                    Rangkuman Pendapatan
+                  </h3>
+                  <div className="h-[280px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={barChartData}
+                        margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                      >
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          vertical={false}
+                          stroke="#f0e2d9"
                         />
-                      }
-                      barSize={40}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-          </div>
+                        <XAxis
+                          dataKey="name"
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{
+                            fontSize: 10,
+                            fill: "#8b6f66",
+                            fontFamily: "var(--font-plus-jakarta)",
+                          }}
+                          dy={10}
+                        />
+                        <YAxis
+                          width={65}
+                          axisLine={false}
+                          tickLine={false}
+                          tick={{
+                            fontSize: 10,
+                            fill: "#8b6f66",
+                            fontFamily: "var(--font-plus-jakarta)",
+                          }}
+                          tickFormatter={(value) => {
+                            if (value === 0) return "0";
+                            if (value >= 1000000) return `Rp${value / 1000000}jt`;
+                            if (value >= 1000) return `Rp${value / 1000}rb`;
+                            return `Rp${value}`;
+                          }}
+                        />
+                        <Tooltip cursor={{ fill: "transparent" }} />
+                        <Bar
+                          dataKey="value"
+                          shape={
+                            <CustomBar
+                              max={computedMax}
+                            />
+                          }
+                          barSize={40}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              )}
 
-          <div className="bg-white p-6 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
-            <h3
-              className="text-lg font-bold text-[#2b1d19] mb-4"
-              style={{ fontFamily: "var(--font-plus-jakarta)" }}
-            >
-              Analisis AI Terbaru
-            </h3>
-            {tableData.length === 0 ? (
-              <EmptyState label="Belum ada data analisis" />
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-[#e6d1c7]">
-                      <th className="pb-3 pt-2 pl-4 w-12">
-                        <input
-                          type="checkbox"
-                          className="rounded border-gray-300 text-[#4a1a1a] focus:ring-[#4a1a1a]"
-                        />
-                      </th>
-                      <th
-                        className="pb-3 pt-2 text-[11px] font-bold text-[#2b1d19] uppercase tracking-wider"
-                        style={{ fontFamily: "var(--font-plus-jakarta)" }}
-                      >
-                        Email
-                      </th>
-                      <th
-                        className="pb-3 pt-2 text-[11px] font-bold text-[#2b1d19] uppercase tracking-wider"
-                        style={{ fontFamily: "var(--font-plus-jakarta)" }}
-                      >
-                        Total Credit
-                      </th>
-                      <th
-                        className="pb-3 pt-2 text-[11px] font-bold text-[#2b1d19] uppercase tracking-wider"
-                        style={{ fontFamily: "var(--font-plus-jakarta)" }}
-                      >
-                        Total Generate
-                      </th>
-                      <th
-                        className="pb-3 pt-2 text-[11px] font-bold text-[#2b1d19] uppercase tracking-wider"
-                        style={{ fontFamily: "var(--font-plus-jakarta)" }}
-                      >
-                        Status
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {tableData.map((row, idx) => (
-                      <tr
-                        key={idx}
-                        className="border-b border-[#f5ebe6] last:border-none hover:bg-[#fafafa] transition-colors"
-                      >
-                        <td className="py-4 pl-4">
-                          <input
-                            type="checkbox"
-                            className="rounded border-gray-300 text-[#4a1a1a] focus:ring-[#4a1a1a]"
-                          />
-                        </td>
-                        <td
-                          className="py-4 text-xs font-medium text-[#2b1d19]"
-                          style={{ fontFamily: "var(--font-plus-jakarta)" }}
-                        >
-                          {row.email}
-                        </td>
-                        <td
-                          className="py-4 text-xs text-[#524342]"
-                          style={{ fontFamily: "var(--font-plus-jakarta)" }}
-                        >
-                          {row.credit}
-                        </td>
-                        <td
-                          className="py-4 text-xs text-[#524342]"
-                          style={{ fontFamily: "var(--font-plus-jakarta)" }}
-                        >
-                          {row.generate}
-                        </td>
-                        <td className="py-4">
-                          <span
-                            className={`px-4 py-1 text-[10px] font-bold rounded-md border ${row.status !== "FREE"
-                              ? "bg-[#fdf2f0] border-[#e6d1c7] text-[#4a1a1a]"
-                              : "bg-white border-gray-100 text-[#8b6f66]"
-                              }`}
-                            style={{ fontFamily: "var(--font-be-vietnam)" }}
+              {tableData.length > 0 && (
+                <div className="bg-white p-6 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
+                  <h3
+                    className="text-lg font-bold text-[#2b1d19] mb-4"
+                    style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                  >
+                    Analisis AI Terbaru
+                  </h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-[#e6d1c7]">
+                          <th className="pb-3 pt-2 pl-4 w-12">
+                            <input
+                              type="checkbox"
+                              className="rounded border-gray-300 text-[#4a1a1a] focus:ring-[#4a1a1a]"
+                            />
+                          </th>
+                          <th
+                            className="pb-3 pt-2 text-[11px] font-bold text-[#2b1d19] uppercase tracking-wider"
+                            style={{ fontFamily: "var(--font-plus-jakarta)" }}
                           >
-                            {row.status}
+                            Email
+                          </th>
+                          <th
+                            className="pb-3 pt-2 text-[11px] font-bold text-[#2b1d19] uppercase tracking-wider"
+                            style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                          >
+                            Total Credit
+                          </th>
+                          <th
+                            className="pb-3 pt-2 text-[11px] font-bold text-[#2b1d19] uppercase tracking-wider"
+                            style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                          >
+                            Total Generate
+                          </th>
+                          <th
+                            className="pb-3 pt-2 text-[11px] font-bold text-[#2b1d19] uppercase tracking-wider"
+                            style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                          >
+                            Status
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {tableData.map((row, idx) => (
+                          <tr
+                            key={idx}
+                            className="border-b border-[#f5ebe6] last:border-none hover:bg-[#fafafa] transition-colors"
+                          >
+                            <td className="py-4 pl-4">
+                              <input
+                                type="checkbox"
+                                className="rounded border-gray-300 text-[#4a1a1a] focus:ring-[#4a1a1a]"
+                              />
+                            </td>
+                            <td
+                              className="py-4 text-xs font-medium text-[#2b1d19]"
+                              style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                            >
+                              {row.email}
+                            </td>
+                            <td
+                              className="py-4 text-xs text-[#524342]"
+                              style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                            >
+                              {row.credit}
+                            </td>
+                            <td
+                              className="py-4 text-xs text-[#524342]"
+                              style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                            >
+                              {row.generate}
+                            </td>
+                            <td className="py-4">
+                              <span
+                                className={`px-4 py-1 text-[10px] font-bold rounded-md border ${row.status !== "FREE"
+                                  ? "bg-[#fdf2f0] border-[#e6d1c7] text-[#4a1a1a]"
+                                  : "bg-white border-gray-100 text-[#8b6f66]"
+                                  }`}
+                                style={{ fontFamily: "var(--font-be-vietnam)" }}
+                              >
+                                {row.status}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {dashboardData?.recentAnalysisMeta && dashboardData.recentAnalysisMeta.totalPages > 1 && (
+                    <div className="mt-6 flex items-center justify-between border-t border-[#fcf7f4] pt-4">
+                      <p className="text-[10px] text-[#8b6f66]">
+                        Menampilkan {dashboardData.recentAnalysis.length} dari {dashboardData.recentAnalysisMeta.total} data
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setRecentAnalysisPage(prev => Math.max(1, prev - 1))}
+                          disabled={recentAnalysisPage === 1 || isRecentAnalysisLoading}
+                          className="p-1.5 rounded-lg bg-[#fafafa] text-[#8b6f66] disabled:opacity-30 hover:bg-[#f5ece8] transition-all"
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                        </button>
+                        <div className="flex items-center px-3 text-[11px] font-bold text-[#2b1d19]">
+                          {recentAnalysisPage} / {dashboardData.recentAnalysisMeta.totalPages}
+                        </div>
+                        <button
+                          onClick={() => setRecentAnalysisPage(prev => Math.min(dashboardData.recentAnalysisMeta.totalPages, prev + 1))}
+                          disabled={recentAnalysisPage === dashboardData.recentAnalysisMeta.totalPages || isRecentAnalysisLoading}
+                          className="p-1.5 rounded-lg bg-[#fafafa] text-[#8b6f66] disabled:opacity-30 hover:bg-[#f5ece8] transition-all"
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {hasRightData && (
+            <div className="space-y-6">
+              {modelAiData.length > 0 && (
+                <div className="bg-white p-6 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+                  <h3
+                    className="text-lg font-bold text-[#2b1d19] mb-2"
+                    style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                  >
+                    Model AI
+                  </h3>
+                  <div className="flex justify-center items-center h-[200px] relative">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={modelAiData}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={55}
+                          outerRadius={85}
+                          paddingAngle={2}
+                          dataKey="value"
+                          stroke="none"
+                        >
+                          {modelAiData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <Image
+                        src="/images/figma/admin-dashboard/pengeluaran-ai.png"
+                        alt="Model AI"
+                        width={28}
+                        height={28}
+                        className="object-contain"
+                        unoptimized
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-4 space-y-4">
+                    {modelAiData.map((item, idx) => (
+                      <div key={idx} className="flex flex-col">
+                        <div className="flex items-center gap-2 mb-1">
+                          <div
+                            className="w-2.5 h-2.5 rounded-sm"
+                            style={{ backgroundColor: item.color }}
+                          ></div>
+                          <span
+                            className="text-[11px] font-semibold text-[#524342]"
+                            style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                          >
+                            {item.name}
                           </span>
-                        </td>
-                      </tr>
+                        </div>
+                        <span
+                          className="text-sm font-medium pl-4.5 text-[#2b1d19]"
+                          style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                        >
+                          Sisa {item.value}%
+                        </span>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            {dashboardData?.recentAnalysisMeta && dashboardData.recentAnalysisMeta.totalPages > 1 && (
-              <div className="mt-6 flex items-center justify-between border-t border-[#fcf7f4] pt-4">
-                <p className="text-[10px] text-[#8b6f66]">
-                  Menampilkan {dashboardData.recentAnalysis.length} dari {dashboardData.recentAnalysisMeta.total} data
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setRecentAnalysisPage(prev => Math.max(1, prev - 1))}
-                    disabled={recentAnalysisPage === 1 || isRecentAnalysisLoading}
-                    className="p-1.5 rounded-lg bg-[#fafafa] text-[#8b6f66] disabled:opacity-30 hover:bg-[#f5ece8] transition-all"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <div className="flex items-center px-3 text-[11px] font-bold text-[#2b1d19]">
-                    {recentAnalysisPage} / {dashboardData.recentAnalysisMeta.totalPages}
-                  </div>
-                  <button
-                    onClick={() => setRecentAnalysisPage(prev => Math.min(dashboardData.recentAnalysisMeta.totalPages, prev + 1))}
-                    disabled={recentAnalysisPage === dashboardData.recentAnalysisMeta.totalPages || isRecentAnalysisLoading}
-                    className="p-1.5 rounded-lg bg-[#fafafa] text-[#8b6f66] disabled:opacity-30 hover:bg-[#f5ece8] transition-all"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="space-y-6">
-          <div className="bg-white p-6 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-            <h3
-              className="text-lg font-bold text-[#2b1d19] mb-2"
-              style={{ fontFamily: "var(--font-plus-jakarta)" }}
-            >
-              Model AI
-            </h3>
-            {modelAiData.length === 0 ? (
-              <EmptyState label="Belum ada data model AI" />
-            ) : (
-              <>
-                <div className="flex justify-center items-center h-[200px] relative">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={modelAiData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={55}
-                        outerRadius={85}
-                        paddingAngle={2}
-                        dataKey="value"
-                        stroke="none"
-                      >
-                        {modelAiData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <Image
-                      src="/images/figma/admin-dashboard/pengeluaran-ai.png"
-                      alt="Model AI"
-                      width={28}
-                      height={28}
-                      className="object-contain"
-                      unoptimized
-                    />
                   </div>
                 </div>
-                <div className="mt-4 space-y-4">
-                  {modelAiData.map((item, idx) => (
-                    <div key={idx} className="flex flex-col">
-                      <div className="flex items-center gap-2 mb-1">
-                        <div
-                          className="w-2.5 h-2.5 rounded-sm"
-                          style={{ backgroundColor: item.color }}
-                        ></div>
-                        <span
-                          className="text-[11px] font-semibold text-[#524342]"
-                          style={{ fontFamily: "var(--font-plus-jakarta)" }}
-                        >
-                          {item.name}
-                        </span>
+              )}
+
+              <div className="bg-white p-6 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+                <h3
+                  className="text-lg font-bold text-[#2b1d19] mb-2"
+                  style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                >
+                  Statistik User
+                </h3>
+                {userStatData.length === 0 ? (
+                  <EmptyState label="Belum ada data statistik user" />
+                ) : (
+                  <>
+                    <div className="flex justify-center items-center h-[200px] relative">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={userStatData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={55}
+                            outerRadius={85}
+                            paddingAngle={2}
+                            dataKey="value"
+                            stroke="none"
+                          >
+                            {userStatData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                          </Pie>
+                        </PieChart>
+                      </ResponsiveContainer>
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <Image
+                          src="/images/figma/admin-dashboard/statistik-user.png"
+                          alt="Statistik User"
+                          width={28}
+                          height={28}
+                          className="object-contain"
+                          unoptimized
+                        />
                       </div>
-                      <span
-                        className="text-sm font-medium pl-4.5 text-[#2b1d19]"
-                        style={{ fontFamily: "var(--font-plus-jakarta)" }}
-                      >
-                        Sisa {item.value}%
-                      </span>
                     </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-
-          <div className="bg-white p-6 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-            <h3
-              className="text-lg font-bold text-[#2b1d19] mb-2"
-              style={{ fontFamily: "var(--font-plus-jakarta)" }}
-            >
-              Statistik User
-            </h3>
-            {userStatData.length === 0 ? (
-              <EmptyState label="Belum ada data statistik user" />
-            ) : (
-              <>
-                <div className="flex justify-center items-center h-[200px] relative">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={userStatData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={55}
-                        outerRadius={85}
-                        paddingAngle={2}
-                        dataKey="value"
-                        stroke="none"
-                      >
-                        {userStatData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <Image
-                      src="/images/figma/admin-dashboard/statistik-user.png"
-                      alt="Statistik User"
-                      width={28}
-                      height={28}
-                      className="object-contain"
-                      unoptimized
-                    />
-                  </div>
-                </div>
-                <div className="mt-6 grid grid-cols-2 gap-y-4 gap-x-2">
-                  {userStatData.map((item, idx) => (
-                    <div key={idx} className="flex flex-col">
-                      <div className="flex items-center gap-2 mb-1">
-                        <div
-                          className="w-2 h-2 rounded-full"
-                          style={{ backgroundColor: item.color }}
-                        ></div>
-                        <span
-                          className="text-[10px] font-semibold text-[#8b6f66]"
-                          style={{ fontFamily: "var(--font-plus-jakarta)" }}
-                        >
-                          {item.name}
-                        </span>
-                      </div>
-                      <span
-                        className="text-xs font-bold pl-4 text-[#2b1d19]"
-                        style={{ fontFamily: "var(--font-plus-jakarta)" }}
-                      >
-                        {item.value}%{" "}
-                        <span className="text-[#8b6f66] font-medium">
-                          ({item.count})
-                        </span>
-                      </span>
+                    <div className="mt-6 grid grid-cols-2 gap-y-4 gap-x-2">
+                      {userStatData.map((item, idx) => (
+                        <div key={idx} className="flex flex-col">
+                          <div className="flex items-center gap-2 mb-1">
+                            <div
+                              className="w-2 h-2 rounded-full"
+                              style={{ backgroundColor: item.color }}
+                            ></div>
+                            <span
+                              className="text-[10px] font-semibold text-[#8b6f66]"
+                              style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                            >
+                              {item.name}
+                            </span>
+                          </div>
+                          <span
+                            className="text-xs font-bold pl-4 text-[#2b1d19]"
+                            style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                          >
+                            {item.value}%{" "}
+                            <span className="text-[#8b6f66] font-medium">
+                              ({item.count})
+                            </span>
+                          </span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
         </div>
-      </div>
+      )}
     </div>
   );
 }

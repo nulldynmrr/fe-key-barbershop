@@ -14,6 +14,8 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
+  RefreshCw,
+  AlertTriangle,
 } from "lucide-react";
 import { aiConfigService } from "@/services/aiConfigService";
 import { useToast } from "@/contexts/ToastContext";
@@ -58,6 +60,7 @@ export default function AiConfigPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [togglingId, setTogglingId] = useState(null);
+  const [syncingId, setSyncingId] = useState(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditingAPI, setIsEditingAPI] = useState(false);
@@ -177,6 +180,22 @@ export default function AiConfigPage() {
       showToast("Gagal mengubah status router", "error");
     } finally {
       setTogglingId(null);
+    }
+  };
+
+  const handleSyncBalance = async (id) => {
+    setSyncingId(id);
+    try {
+      const res = await aiConfigService.syncModelBalance(id);
+      if (res.data.success) {
+        showToast(res.data.message, "success");
+        fetchData();
+      }
+    } catch (err) {
+      console.error("Failed to sync balance:", err);
+      showToast(err?.response?.data?.message || "Gagal sinkronisasi saldo", "error");
+    } finally {
+      setSyncingId(null);
     }
   };
 
@@ -477,6 +496,48 @@ export default function AiConfigPage() {
                       className="w-full text-sm text-[#524342] px-3 py-2 rounded border border-[#e6d1c7] bg-white focus:outline-none"
                       style={{ fontFamily: "var(--font-plus-jakarta)" }}
                     />
+                  </div>
+
+                  <div className="pt-2 border-t border-[#fdf2f0] mt-2">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-[10px] font-bold text-[#8b6f66] uppercase">Saldo & Penggunaan</span>
+                      {router.namaRouter.toLowerCase().includes("maia") && (
+                        <button
+                          onClick={() => handleSyncBalance(router._id || router.id)}
+                          disabled={syncingId === (router._id || router.id)}
+                          className={`text-[#4a1a1a] hover:text-[#2b1d19] transition-all ${syncingId === (router._id || router.id) ? "animate-spin" : ""}`}
+                          title="Sinkronkan Saldo MAIA"
+                        >
+                          <RefreshCw className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-[#fdf2f0] p-2 rounded-lg">
+                        <p className="text-[9px] text-[#8b6f66] mb-0.5">Used (DB)</p>
+                        <p className="text-xs font-bold text-[#4a1a1a]">${Number(router.usedBudget || 0).toFixed(4)}</p>
+                      </div>
+                      <div className="bg-emerald-50 p-2 rounded-lg border border-emerald-100">
+                        <p className="text-[9px] text-emerald-600 mb-0.5">Real-time (MAIA)</p>
+                        <p className="text-xs font-bold text-emerald-700">
+                          {router.realtimeBalance !== undefined && router.realtimeBalance !== null 
+                            ? `$${Number(router.realtimeBalance).toFixed(4)}` 
+                            : "—"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 flex justify-between items-center">
+                      <p className="text-[9px] text-[#8b6f66]">Max Budget (Limit)</p>
+                      <p className="text-[10px] font-bold text-[#2b1d19]">${Number(router.maxBudget || 0).toFixed(2)}</p>
+                    </div>
+                    <div className="w-full bg-gray-100 h-1.5 rounded-full mt-1 overflow-hidden">
+                      <div 
+                        className={`h-full transition-all duration-500 ${router.isWarning ? "bg-red-500" : "bg-[#4a1a1a]"}`}
+                        style={{ width: `${Math.min(100, (router.usedBudget / (router.maxBudget || 1)) * 100)}%` }}
+                      ></div>
+                    </div>
                   </div>
                 </div>
               </div>

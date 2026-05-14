@@ -13,6 +13,9 @@ export const aiConfigService = {
 
   getLogs: (page = 1, limit = 10) => api.get("/ai-config/logs", { page, limit }),
 
+  getModelBalance: (id) => api.get(`/ai-config/models/${id}/balance`),
+  syncModelBalance: (id) => api.post(`/ai-config/models/${id}/sync-balance`),
+
   getFeaturePricing: () => api.get("/ai-config/feature-pricing"),
   updateFeaturePricing: (id, data) => api.put(`/ai-config/feature-pricing/${id}`, data),
 };

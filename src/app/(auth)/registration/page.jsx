@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { useGoogleLogin } from "@react-oauth/google";
+import { z } from "zod";
 
 import Image from "next/image";
 import TermsModal from "@/components/TermsModal";
@@ -26,6 +27,7 @@ export default function RegistrationPage() {
   const [agreed, setAgreed] = useState(false);
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
 
   const googleLogin = useGoogleLogin({
     flow: "implicit",
@@ -83,7 +85,16 @@ export default function RegistrationPage() {
 
       if (!res.ok || !data.success) {
         if (data.errors && Array.isArray(data.errors)) {
-          setError(data.errors.join(", "));
+          const errorsObj = {};
+          data.errors.forEach(err => {
+            const lowerErr = err.toLowerCase();
+            if (lowerErr.includes("nama")) errorsObj.nama = err;
+            else if (lowerErr.includes("email")) errorsObj.email = err;
+            else if (lowerErr.includes("password")) errorsObj.password = err;
+            else if (lowerErr.includes("syarat") || lowerErr.includes("persetujuan") || lowerErr.includes("agreed")) errorsObj.agreed = err;
+          });
+          setFieldErrors(errorsObj);
+          setError("Silakan periksa kembali data yang Anda masukkan.");
         } else {
           setError(data.message || "Registrasi gagal. Silakan coba lagi.");
         }
@@ -113,19 +124,28 @@ export default function RegistrationPage() {
     e.preventDefault();
     setError("");
     setSuccess("");
+    setFieldErrors({});
 
-    if (!agreed) {
-      setError("You must agree to the Terms of Service and Privacy Policy.");
-      return;
-    }
+    const registerSchema = z.object({
+      nama: z.string().trim().min(1, "Nama wajib diisi").min(3, "Nama minimal 3 karakter"),
+      email: z.string().min(1, "Email wajib diisi").email("Format email tidak valid"),
+      password: z.string().min(1, "Password wajib diisi").min(6, "Password minimal 6 karakter"),
+      confirmPassword: z.string().min(1, "Konfirmasi password wajib diisi"),
+      agreed: z.boolean().refine(val => val === true, "Anda harus menyetujui Syarat & Ketentuan")
+    }).refine((data) => data.password === data.confirmPassword, {
+      message: "Konfirmasi password tidak cocok",
+      path: ["confirmPassword"],
+    });
 
-    if (password !== confirmPassword) {
-      setError("Password dan Confirm Password tidak sama.");
-      return;
-    }
+    const result = registerSchema.safeParse({ nama, email, password, confirmPassword, agreed });
 
-    if (password.length < 6) {
-      setError("Password minimal 6 karakter.");
+    if (!result.success) {
+      const newErrors = {};
+      result.error.issues.forEach((issue) => {
+        newErrors[issue.path[0]] = issue.message;
+      });
+      setFieldErrors(newErrors);
+      setError("Silakan perbaiki kesalahan di bawah ini.");
       return;
     }
 
@@ -214,10 +234,10 @@ export default function RegistrationPage() {
               placeholder="Enter your full name"
               value={nama}
               onChange={(e) => setNama(e.target.value)}
-              required
-              className="w-full pb-2 border-b border-[#e6d1c7] bg-transparent focus:border-[#4a1a1a] focus:outline-none transition-colors text-sm placeholder:text-[#d8c8bc] text-[#2b1d19]"
+              className={`w-full pb-2 border-b border-[#e6d1c7] bg-transparent focus:border-[#4a1a1a] focus:outline-none transition-colors text-sm placeholder:text-[#d8c8bc] text-[#2b1d19] ${fieldErrors.nama ? "border-red-500" : ""}`}
               style={{ fontFamily: "var(--font-plus-jakarta)" }}
             />
+            {fieldErrors.nama && <p className="mt-1 text-[10px] text-red-500 italic">{fieldErrors.nama}</p>}
           </div>
 
           <div className="mb-6">
@@ -227,10 +247,10 @@ export default function RegistrationPage() {
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full pb-2 border-b border-[#e6d1c7] bg-transparent focus:border-[#4a1a1a] focus:outline-none transition-colors text-sm placeholder:text-[#d8c8bc] text-[#2b1d19]"
+              className={`w-full pb-2 border-b border-[#e6d1c7] bg-transparent focus:border-[#4a1a1a] focus:outline-none transition-colors text-sm placeholder:text-[#d8c8bc] text-[#2b1d19] ${fieldErrors.email ? "border-red-500" : ""}`}
               style={{ fontFamily: "var(--font-plus-jakarta)" }}
             />
+            {fieldErrors.email && <p className="mt-1 text-[10px] text-red-500 italic">{fieldErrors.email}</p>}
           </div>
 
           <div className="mb-8">
@@ -243,8 +263,7 @@ export default function RegistrationPage() {
                 placeholder="Enter Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required
-                className={`w-full pb-2 pr-8 border-b border-[#e6d1c7] bg-transparent focus:border-[#4a1a1a] focus:outline-none transition-colors text-sm placeholder:text-[#d8c8bc] placeholder:text-sm placeholder:tracking-normal text-[#2b1d19] ${showPassword ? "tracking-normal" : "tracking-widest"}`}
+                className={`w-full pb-2 pr-8 border-b border-[#e6d1c7] bg-transparent focus:border-[#4a1a1a] focus:outline-none transition-colors text-sm placeholder:text-[#d8c8bc] placeholder:text-sm placeholder:tracking-normal text-[#2b1d19] ${showPassword ? "tracking-normal" : "tracking-widest"} ${fieldErrors.password ? "border-red-500" : ""}`}
                 style={{ fontFamily: "var(--font-plus-jakarta)" }}
               />
               <button
@@ -255,6 +274,7 @@ export default function RegistrationPage() {
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
+            {fieldErrors.password && <p className="mt-1 text-[10px] text-red-500 italic">{fieldErrors.password}</p>}
           </div>
 
           <div className="mb-8">
@@ -267,8 +287,7 @@ export default function RegistrationPage() {
                 placeholder="Enter Confirm Password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                className={`w-full pb-2 pr-8 border-b border-[#e6d1c7] bg-transparent focus:border-[#4a1a1a] focus:outline-none transition-colors text-sm placeholder:text-[#d8c8bc] placeholder:text-sm placeholder:tracking-normal text-[#2b1d19] ${showConfirmPassword ? "tracking-normal" : "tracking-widest"}`}
+                className={`w-full pb-2 pr-8 border-b border-[#e6d1c7] bg-transparent focus:border-[#4a1a1a] focus:outline-none transition-colors text-sm placeholder:text-[#d8c8bc] placeholder:text-sm placeholder:tracking-normal text-[#2b1d19] ${showConfirmPassword ? "tracking-normal" : "tracking-widest"} ${fieldErrors.confirmPassword ? "border-red-500" : ""}`}
                 style={{ fontFamily: "var(--font-plus-jakarta)" }}
               />
               <button
@@ -279,18 +298,20 @@ export default function RegistrationPage() {
                 {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
+            {fieldErrors.confirmPassword && <p className="mt-1 text-[10px] text-red-500 italic">{fieldErrors.confirmPassword}</p>}
           </div>
 
           {/* Terms Agreement Toggle */}
           <div className="mb-8 flex flex-col gap-3">
             <div className="flex items-center gap-3 group cursor-pointer" onClick={() => setAgreed(!agreed)}>
-              <div className={`w-10 h-5 rounded-full relative transition-all duration-300 ${agreed ? "bg-[#4a1a1a]" : "bg-[#e6d1c7]"}`}>
+              <div className={`w-10 h-5 rounded-full relative transition-all duration-300 ${agreed ? "bg-[#4a1a1a]" : "bg-[#e6d1c7]"} ${fieldErrors.agreed ? "ring-1 ring-red-500" : ""}`}>
                 <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all duration-300 ${agreed ? "left-6" : "left-1"}`}></div>
               </div>
               <span className="text-[11px] font-bold text-[#4a1a1a] tracking-wide" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
                 I agree to the <Link href="/terms" target="_blank" className="underline hover:text-[#2b1d19]" onClick={(e) => e.stopPropagation()}>terms and conditions</Link>
               </span>
             </div>
+            {fieldErrors.agreed && <p className="text-[10px] text-red-500 italic ml-13">{fieldErrors.agreed}</p>}
             <p className="text-[9px] text-[#8b6f66] leading-relaxed italic ml-13">
               By agreeing, you consent to having your photo processed by our AI systems for hairstyle analysis and simulation.
             </p>

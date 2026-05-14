@@ -11,13 +11,13 @@ export const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
   const [confirmModal, setConfirmModal] = useState(null);
 
-  const showToast = useCallback((message, type = "success") => {
+  const showToast = useCallback((message, type = "success", duration = 3000) => {
     const id = Math.random().toString(36).substring(2, 9);
     setToasts((prev) => [...prev, { id, message, type }]);
 
     setTimeout(() => {
       setToasts((prev) => prev.filter((toast) => toast.id !== id));
-    }, 3000);
+    }, duration);
   }, []);
 
   const removeToast = useCallback((id) => {

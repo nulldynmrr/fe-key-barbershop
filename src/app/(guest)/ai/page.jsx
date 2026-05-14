@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
-import { Sparkles, Upload, Camera, Loader2, Search } from "lucide-react";
+import { Sparkles, Upload, Camera, Loader2, Search, History } from "lucide-react";
 
 
 import SeparatorKey from "../../../components/SeparatorKey";
@@ -72,6 +72,7 @@ export default function AiPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [isExhaustedModalOpen, setIsExhaustedModalOpen] = useState(false);
   const [ripples, setRipples] = useState([]);
+  const [hasHistoryAccess, setHasHistoryAccess] = useState(false);
 
   const addRipple = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -105,6 +106,23 @@ export default function AiPage() {
       cancelled = true;
     };
   }, [router]);
+
+  useEffect(() => {
+    const checkHistoryAccess = async () => {
+      const token = Cookies.get("user_token");
+      if (!token) return;
+      try {
+        const res = await aiScanService.getFeatures();
+        const features = res.data?.data || {};
+        if (features.HISTORY?.available) {
+          setHasHistoryAccess(true);
+        }
+      } catch (err) {
+        console.error("Failed to check history access:", err);
+      }
+    };
+    checkHistoryAccess();
+  }, []);
 
   const handleCameraClick = () => {
     router.push("/ai/camera");
@@ -198,6 +216,54 @@ export default function AiPage() {
 
     setIsAnalyzing(true);
 
+    // [PRE-VALIDATION] Check for basic image quality to save tokens/credits
+    try {
+      const bitmap = await createImageBitmap(file);
+      const canvas = document.createElement("canvas");
+      canvas.width = bitmap.width;
+      canvas.height = bitmap.height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(bitmap, 0, 0);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      
+      let brightness = 0;
+      for (let i = 0; i < data.length; i += 4) {
+        brightness += (0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
+      }
+      brightness /= (data.length / 4);
+
+      if (brightness < 30) {
+        showToast("Foto terlalu gelap. Silakan gunakan pencahayaan yang lebih baik.", "error");
+        setIsAnalyzing(false);
+        return;
+      }
+      if (brightness > 235) {
+        showToast("Foto terlalu terang (overexposed). Silakan coba lagi.", "error");
+        setIsAnalyzing(false);
+        return;
+      }
+
+      // Experimental Native Face Detection (Chrome/Edge only)
+      if (window.FaceDetector) {
+        try {
+          const detector = new window.FaceDetector();
+          const faces = await detector.detect(bitmap);
+          if (faces.length === 0) {
+            const confirmAnyway = window.confirm("Wajah tidak terdeteksi dengan jelas. Tetap lanjutkan analisis? (Dapat menghabiskan koin/credit)");
+            if (!confirmAnyway) {
+              setIsAnalyzing(false);
+              return;
+            }
+          }
+        } catch (faceErr) {
+          console.warn("Native face detection failed:", faceErr);
+        }
+      }
+    } catch (qualityErr) {
+      console.warn("Image pre-validation failed:", qualityErr);
+    }
+
     try {
       await ensureAuth();
 
@@ -221,6 +287,7 @@ export default function AiPage() {
 
           const formData = new FormData();
           formData.append("foto", file);
+          formData.append("source", "file");
 
           if (activeFeatures.length === 0) {
             // Default to ALL globally active features for guests instead of just STANDARD_SCAN
@@ -233,8 +300,26 @@ export default function AiPage() {
           }
 
           const analysisRes = await aiScanService.analyzeFace(formData);
+          const resultData = analysisRes.data?.data;
+          const isBadQuality = resultData?.hasil_analisis?.kualitas_foto_ok === false;
+          const hasImages = resultData?.url_hasil_img && resultData.url_hasil_img.length > 0;
+
+          // Only block and show toast if it's bad quality AND no images were produced.
+          // If images exist, we must show them even if quality was flagged.
+          if (isBadQuality && !hasImages) {
+            const reason = resultData?.hasil_analisis?.alasan_kualitas || "Kualitas foto kurang baik untuk analisis.";
+            showToast(
+              `Analisis Terhenti: ${reason}. Biaya evaluasi AI tetap terpotong, namun proses pembuatan gambar dibatalkan otomatis untuk menghemat koin Anda.`,
+              "error",
+              10000
+            );
+            setIsAnalyzing(false);
+            if (fileInputRef.current) fileInputRef.current.value = "";
+            return;
+          }
+
           try {
-            sessionStorage.setItem("aiAnalysisResult", JSON.stringify(analysisRes.data?.data));
+            sessionStorage.setItem("aiAnalysisResult", JSON.stringify(resultData));
           } catch (storageErr) {
             // If saving result fails, try clearing the preview image to make room
             sessionStorage.removeItem("aiOriginalImage");
@@ -569,6 +654,18 @@ export default function AiPage() {
       </section>
 
       <SiteFooter />
+
+      {/* Floating History Button */}
+      {hasHistoryAccess && (
+        <button
+          onClick={() => router.push("/ai/history")}
+          className="fixed bottom-6 right-6 z-[90] flex items-center gap-2 bg-[#2b1d19] text-white px-4 py-3 rounded-2xl shadow-2xl hover:bg-[#45312b] transition-all hover:scale-105 active:scale-95 border border-[#f0e2d9]/20"
+          style={{ fontFamily: "var(--font-be-vietnam)" }}
+        >
+          <History className="w-5 h-5" />
+          <span className="text-[0.7rem] uppercase tracking-[0.2em] font-bold">History</span>
+        </button>
+      )}
     </main>
   );
 }

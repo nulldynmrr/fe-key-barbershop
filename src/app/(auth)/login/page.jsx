@@ -88,7 +88,7 @@ function LoginForm() {
     setFieldErrors({});
     
     const loginSchema = z.object({
-      email: z.string().min(1, "Email wajib diisi").email("Format email tidak valid"),
+      email: z.string().email("Format email tidak valid").min(1, "Email wajib diisi"),
       password: z.string().min(1, "Password wajib diisi")
     });
 
@@ -278,7 +278,6 @@ function LoginForm() {
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
               className={`w-full pb-2 border-b border-[#e6d1c7] bg-transparent focus:border-[#4a1a1a] focus:outline-none transition-colors text-sm placeholder:text-[#d8c8bc] text-[#2b1d19] ${fieldErrors.email ? "border-red-500" : ""}`}
               style={{ fontFamily: "var(--font-plus-jakarta)" }}
             />
@@ -307,7 +306,6 @@ function LoginForm() {
                 placeholder="Enter Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required
                 className={`w-full pb-2 pr-8 border-b border-[#e6d1c7] bg-transparent focus:border-[#4a1a1a] focus:outline-none transition-colors text-sm placeholder:text-[#d8c8bc] placeholder:text-sm placeholder:tracking-normal text-[#2b1d19] ${showPassword ? "tracking-normal" : "tracking-widest"} ${fieldErrors.password ? "border-red-500" : ""}`}
                 style={{ fontFamily: "var(--font-plus-jakarta)" }}
               />

@@ -13,8 +13,9 @@ function OTPForm() {
   
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
   const [error, setError] = useState("");
-  const [timeLeft, setTimeLeft] = useState(59);
+  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes count down
   const inputRefs = useRef([]);
 
   useEffect(() => {
@@ -103,22 +104,29 @@ function OTPForm() {
   };
 
   const handleResendOTP = async () => {
-    if (!emailParam) {
-      setError("Email tidak ditemukan. Silakan ulangi proses dari awal.");
-      return;
-    }
+    if (!emailParam || resending) return;
+    
     setError("");
+    setResending(true);
+    // Set timer immediately to 300 to prevent rapid clicks during the request
+    setTimeLeft(300);
+
     try {
       await api.post("/auth/request-otp", { email: emailParam }, {}, true);
-      setTimeLeft(59);
     } catch (err) {
       const msg = err?.response?.data?.message;
       setError(msg || "Gagal mengirim ulang kode. Silakan coba lagi.");
+      // Reset timer if it fails so they can try again
+      setTimeLeft(0);
+    } finally {
+      setResending(false);
     }
   };
 
   const formatTime = (seconds) => {
-    return `00:${seconds < 10 ? `0${seconds}` : seconds}`;
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins < 10 ? `0${mins}` : mins}:${secs < 10 ? `0${secs}` : secs}`;
   };
 
   return (
@@ -224,14 +232,14 @@ function OTPForm() {
           </p>
           <button
             type="button"
-            disabled={timeLeft > 0}
+            disabled={timeLeft > 0 || resending}
             onClick={handleResendOTP}
             className={`text-[10px] font-semibold uppercase tracking-[0.1em] transition-colors block mx-auto mb-4 ${
-              timeLeft > 0 ? "text-[#a89c97] cursor-not-allowed" : "text-[#4C2222] hover:text-[#4a1a1a]"
+              (timeLeft > 0 || resending) ? "text-[#a89c97] cursor-not-allowed" : "text-[#4C2222] hover:text-[#4a1a1a]"
             }`}
             style={{ fontFamily: "var(--font-be-vietnam)" }}
           >
-            RESEND CODE {timeLeft > 0 ? `(${formatTime(timeLeft)})` : ""}
+            {resending ? "SENDING..." : `RESEND CODE ${timeLeft > 0 ? `(${formatTime(timeLeft)})` : ""}`}
           </button>
 
           <Link

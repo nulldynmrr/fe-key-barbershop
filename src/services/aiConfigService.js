@@ -18,4 +18,5 @@ export const aiConfigService = {
 
   getFeaturePricing: () => api.get("/ai-config/feature-pricing"),
   updateFeaturePricing: (id, data) => api.put(`/ai-config/feature-pricing/${id}`, data),
+  parseCurl: (curl) => api.post("/ai-config/parse-curl", { curl }),
 };

@@ -147,7 +147,7 @@ export default function AiResultPage() {
   const targetScrollRef = useRef(null);
   const router = useRouter();
 
-  useEffect(() => {
+  const loadData = () => {
     const stored = sessionStorage.getItem("aiAnalysisResult");
     if (stored && stored !== "undefined") {
       try {
@@ -155,7 +155,9 @@ export default function AiResultPage() {
         if (parsedData) {
           setAnalysisData(parsedData);
           const savedImage = sessionStorage.getItem("aiOriginalImage");
-          setOriginalImage(savedImage || parsedData.record?.url_foto_upload);
+          // Prioritize image from record if available (from history)
+          setOriginalImage(parsedData.url_foto_upload || savedImage || parsedData.record?.url_foto_upload);
+          setSelectedStyleIndex(0); // Reset style index when switching data
 
           const activeFeats = parsedData.active_features || parsedData.activeFeatures || [];
           if (activeFeats.includes("HISTORY")) {
@@ -171,6 +173,10 @@ export default function AiResultPage() {
     } else {
       router.push("/ai");
     }
+  };
+
+  useEffect(() => {
+    loadData();
 
     const timer = setTimeout(() => setMounted(true), 100);
 
@@ -184,7 +190,7 @@ export default function AiResultPage() {
       clearTimeout(timer);
       clearTimeout(scrollTimer);
     };
-  }, [router]);
+  }, [router]); // Router change will trigger this if coming from /ai/history
 
   const fetchHistory = async () => {
     setLoadingHistory(true);
@@ -210,8 +216,16 @@ export default function AiResultPage() {
   if (!analysisData) return null;
 
   let data = analysisData.hasil_analisis || {};
-  const activeFeatures = analysisData.active_features || analysisData.activeFeatures || [];
-  const styles = data.rekomendasi_gaya || [];
+  let activeFeatures = analysisData.active_features || analysisData.activeFeatures || [];
+  
+  // Backfill for old history data: if it's history and activeFeatures is empty, 
+  // try to infer from data (if we have heatmap or symmetry, unlock them)
+  if (activeFeatures.length === 0 && analysisData.hasil_analisis) {
+    const h = analysisData.hasil_analisis;
+    if (h.heatmap_wajah || h.skor_simetri || (h.rekomendasi_gaya && h.rekomendasi_gaya.length > 1)) {
+      activeFeatures = ["SYMMETRY", "FACE_HEATMAP", "HAIR_ANALYSIS", "BARBER_INSTRUCTIONS", "VIRTUAL_TRY_ON", "HISTORY"];
+    }
+  }
 
   const isPremiumLocked = !activeFeatures.includes("SYMMETRY") && !activeFeatures.includes("FACE_HEATMAP");
 
@@ -230,17 +244,24 @@ export default function AiResultPage() {
     };
   }
 
+  const styles = data.rekomendasi_gaya || [];
+
 
   let aiImageUrls = [];
-  if (analysisData.record?.url_hasil_img) {
+  const rawAiUrls = analysisData.url_hasil_img || analysisData.record?.url_hasil_img;
+  if (rawAiUrls) {
     try {
-      const parsedUrls = typeof analysisData.record.url_hasil_img === 'string'
-        ? JSON.parse(analysisData.record.url_hasil_img)
-        : analysisData.record.url_hasil_img;
+      const parsedUrls = typeof rawAiUrls === 'string'
+        ? JSON.parse(rawAiUrls)
+        : rawAiUrls;
       if (Array.isArray(parsedUrls)) {
         aiImageUrls = parsedUrls;
+      } else if (typeof parsedUrls === 'string') {
+        aiImageUrls = [parsedUrls];
       }
-    } catch (e) { }
+    } catch (e) { 
+      console.warn("Failed to parse AI images:", e);
+    }
   }
 
   const aiImageUrl = aiImageUrls.length > selectedStyleIndex ? aiImageUrls[selectedStyleIndex] : (aiImageUrls.length > 0 ? aiImageUrls[0] : null);
@@ -297,7 +318,7 @@ export default function AiResultPage() {
   return (
     <main className="min-h-screen bg-[#351C1C] text-[#2B1D19] overflow-x-clip">
 
-      <div className="fixed top-0 left-0 w-full z-50 bg-[#351C1C]">
+      <div className="fixed top-0 left-0 w-full z-[100] bg-[#351C1C]">
         <SiteNavbar activeLabel="AI Feature" />
       </div>
 
@@ -320,14 +341,16 @@ export default function AiResultPage() {
                 </div>
               </div>
               <h1 className="text-3xl font-semibold leading-tight tracking-tight text-[#F3E8DE] sm:text-4xl lg:text-5xl font-serif">
-                {data.kualitas_foto_ok === false ? "Analisis Belum Lengkap" : "Hasil Rekomendasi AI"}
+                {data.kualitas_foto_ok === false && styles.length === 0 ? "Analisis Belum Lengkap" : "Hasil Rekomendasi AI"}
               </h1>
               <p className="mx-auto mt-6 max-w-2xl text-sm leading-7 text-[#D2C3BD] font-light">
                 {data.kualitas_foto_ok === false
-                  ? (data.alasan_kualitas || "Wajah tidak terdeteksi dengan jelas. Silakan coba lagi dengan foto yang lebih baik.")
+                  ? (styles.length > 0 
+                      ? "Meskipun kualitas foto kurang optimal, AI kami tetap berusaha memberikan rekomendasi terbaik untuk Anda."
+                      : (data.alasan_kualitas || "Wajah tidak terdeteksi dengan jelas. Silakan coba lagi dengan foto yang lebih baik."))
                   : "AI kami telah menganalisis data biometrik Anda untuk merekomendasikan gaya rambut yang paling sesuai dengan proporsi wajah Anda."}
               </p>
-              {data.kualitas_foto_ok === false && (
+              {data.kualitas_foto_ok === false && styles.length === 0 && (
                 <button
                   onClick={() => router.push("/ai")}
                   className="mt-8 bg-[#C59B8F] text-[#2B1D19] px-8 py-3 text-xs font-bold uppercase tracking-widest rounded-sm hover:bg-[#D4B4A9] transition-colors"
@@ -952,11 +975,44 @@ export default function AiResultPage() {
                           } catch (e) { }
                         }
 
+                        const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace("/api/v1", "");
+                        const getHistoryImg = (url) => {
+                          if (!url) return null;
+                          if (url.startsWith("http") || url.startsWith("data:")) return url;
+                          return `${baseUrl}${url}`;
+                        };
+
                         return (
-                          <div key={item.id} className="flex gap-5 p-5 border border-[#3A1E1E] bg-[#1C0D0D] rounded-sm group/history hover:border-[#C59B8F]/40 transition-all">
+                          <div 
+                            key={item.id} 
+                            onClick={() => {
+                              let activeFeaturesUsed = activeFeatures; // Fallback to current
+                              if (item.features_used) {
+                                try {
+                                  activeFeaturesUsed = typeof item.features_used === 'string' 
+                                    ? JSON.parse(item.features_used) 
+                                    : item.features_used;
+                                } catch (e) {}
+                              }
+
+                              const formatted = {
+                                hasil_analisis: item.hasil_analisis,
+                                url_foto_upload: getHistoryImg(item.url_foto_upload),
+                                url_hasil_img: Array.isArray(item.url_hasil_img) 
+                                  ? item.url_hasil_img.map(u => getHistoryImg(u))
+                                  : item.url_hasil_img ? [getHistoryImg(item.url_hasil_img)] : [],
+                                tgl_generate: item.tgl_generate,
+                                active_features: activeFeaturesUsed
+                              };
+                              sessionStorage.setItem("aiAnalysisResult", JSON.stringify(formatted));
+                              loadData();
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                            className="flex gap-5 p-5 border border-[#3A1E1E] bg-[#1C0D0D] rounded-sm group/history hover:border-[#C59B8F]/40 transition-all cursor-pointer"
+                          >
                             <div className="relative w-24 h-24 shrink-0 overflow-hidden bg-[#2A1616]">
                               <img
-                                src={item.url_foto_upload?.startsWith("http") ? item.url_foto_upload : `${(process.env.NEXT_PUBLIC_API_URL).replace("/api/v1", "")}${item.url_foto_upload}`}
+                                src={getHistoryImg(item.url_foto_upload)}
                                 alt="Scan"
                                 className="object-cover w-full h-full opacity-40 group-hover/history:scale-110 transition-transform duration-700"
                               />

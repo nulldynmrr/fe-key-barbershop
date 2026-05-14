@@ -106,7 +106,7 @@ export default function SiteNavbar({
   const isAiPage = pathname?.startsWith("/ai");
 
   return (
-    <header className="sticky top-0 z-20 w-full bg-white bg-[radial-gradient(ellipse_74.79%_67.23%_at_50%_50%,rgba(29,27,25,0)_0%,rgba(29,27,25,0.4)_100%)] border-b border-[#e6d1c7]/30">
+    <header className="sticky top-0 z-[100] w-full bg-white bg-[radial-gradient(ellipse_74.79%_67.23%_at_50%_50%,rgba(29,27,25,0)_0%,rgba(29,27,25,0.4)_100%)] border-b border-[#e6d1c7]/30">
       <div className="relative mx-auto flex max-w-8xl items-center justify-between px-6 py-3 lg:px-12 lg:py-0 h-[80px]">
         <Link href={logoHref} className="flex items-center gap-3 pl-0 lg:pl-5">
           <Image src={logoSrc} alt={logoAlt} width={100} height={100} className="h-12 w-16 object-contain lg:h-18 lg:w-24" />

@@ -125,12 +125,15 @@ export default function AiCameraPage() {
       const canvas = canvasRef.current;
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      const ctx = canvas.getContext("2d");
-
       // Optional: mirror the image on canvas if video is mirrored
+      const ctx = canvas.getContext("2d");
       ctx.translate(canvas.width, 0);
       ctx.scale(-1, 1);
+
+      // Apply slight enhancement filter to help AI detection in low light
+      ctx.filter = 'contrast(1.1) brightness(1.05) saturate(1.1)';
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      ctx.filter = 'none'; // Reset filter for next time
 
       // Save base64 image so the result page can display it
       const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
@@ -147,6 +150,7 @@ export default function AiCameraPage() {
       // 3. Send to analysis API
       const formData = new FormData();
       formData.append("foto", blob, "face-scan.jpg");
+      formData.append("source", "camera");
 
       if (activeFeatures.length === 0) {
         // Default to ALL globally active features for guests instead of just STANDARD_SCAN

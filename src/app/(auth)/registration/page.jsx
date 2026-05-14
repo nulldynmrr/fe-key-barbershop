@@ -127,9 +127,9 @@ export default function RegistrationPage() {
     setFieldErrors({});
 
     const registerSchema = z.object({
-      nama: z.string().trim().min(1, "Nama wajib diisi").min(3, "Nama minimal 3 karakter"),
-      email: z.string().min(1, "Email wajib diisi").email("Format email tidak valid"),
-      password: z.string().min(1, "Password wajib diisi").min(6, "Password minimal 6 karakter"),
+      nama: z.string().trim().min(3, "Nama minimal 3 karakter").min(1, "Nama wajib diisi"),
+      email: z.string().email("Format email tidak valid").min(1, "Email wajib diisi"),
+      password: z.string().min(6, "Password minimal 6 karakter").min(1, "Password wajib diisi"),
       confirmPassword: z.string().min(1, "Konfirmasi password wajib diisi"),
       agreed: z.boolean().refine(val => val === true, "Anda harus menyetujui Syarat & Ketentuan")
     }).refine((data) => data.password === data.confirmPassword, {

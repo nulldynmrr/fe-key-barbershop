@@ -80,6 +80,8 @@ export default function AiConfigPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
+  const [isParsing, setIsParsing] = useState(false);
+  const [curlInput, setCurlInput] = useState("");
   const [testResult, setTestResult] = useState(null);
 
   const [isExchangeModalOpen, setIsExchangeModalOpen] = useState(false);
@@ -202,6 +204,36 @@ export default function AiConfigPage() {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleParseCurl = async () => {
+    if (!curlInput.trim()) {
+      showToast("Silakan tempelkan perintah CURL terlebih dahulu", "error");
+      return;
+    }
+
+    setIsParsing(true);
+    try {
+      const response = await aiConfigService.parseCurl(curlInput);
+      const { data } = response.data;
+
+      setFormData((prev) => ({
+        ...prev,
+        namaRouter: data.namaRouter || prev.namaRouter,
+        baseUrl: data.baseUrl || prev.baseUrl,
+        modelName: data.modelName || prev.modelName,
+        apiKey: data.apiKey || prev.apiKey,
+        typeAi: data.typeAi === "CHAT" ? "LLM" : "IMAGE_GEN",
+        pricingUnit: data.pricingUnit === "TOKEN" ? "1M_TOKENS" : "IMAGE",
+      }));
+
+      setCurlInput("");
+      showToast("Data berhasil di-import dari CURL", "success");
+    } catch (err) {
+      showToast(err.response?.data?.message || "Gagal memproses CURL", "error");
+    } finally {
+      setIsParsing(false);
+    }
   };
 
   const handleTestConnection = async () => {
@@ -918,6 +950,41 @@ export default function AiConfigPage() {
               </div>
 
               <div className="space-y-6">
+                {/* CURL Import Section (Only show if not editing or if you want to allow overwriting) */}
+                {!isEditingAPI && (
+                  <div className="bg-[#fafafa] p-5 rounded-xl border border-dashed border-[#e6d1c7] mb-6">
+                    <label className="block text-[11px] font-bold text-[#4a1a1a] uppercase tracking-widest mb-3">
+                      Import from CURL (MAIA Router / OpenRouter)
+                    </label>
+                    <div className="flex gap-3">
+                      <textarea
+                        value={curlInput}
+                        onChange={(e) => setCurlInput(e.target.value)}
+                        placeholder="Paste curl command here..."
+                        className="flex-1 px-4 py-2 text-xs border border-[#e6d1c7] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#4a1a1a] min-h-[60px] bg-white font-mono"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleParseCurl}
+                        disabled={isParsing || !curlInput.trim()}
+                        className="px-4 py-2 bg-[#4a1a1a] text-white rounded-lg text-[10px] font-bold hover:bg-[#2b1d19] disabled:opacity-50 transition-all flex flex-col items-center justify-center gap-1 min-w-[100px]"
+                      >
+                        {isParsing ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <>
+                            <RefreshCw className="w-4 h-4" />
+                            <span>AUTO FILL</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-[#8b6f66] mt-2 italic">
+                      *Sistem akan otomatis mengisi URL, API Key, dan Nama Model.
+                    </p>
+                  </div>
+                )}
+
                 {/* Input Basic (Nama Router & URL) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
@@ -1107,7 +1174,7 @@ export default function AiConfigPage() {
                         value={formData.maxBudget}
                         onChange={handleInputChange}
                         className="w-full pl-8 px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm"
-                        placeholder="1.000"
+                        placeholder="1000"
                       />
                     </div>
                   </div>

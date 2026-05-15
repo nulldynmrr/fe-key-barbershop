@@ -99,7 +99,7 @@ function ResultPortrait({ url_foto_upload, ai_image_url }) {
         <div className="absolute bottom-6 left-6 z-[30] transition-opacity duration-700 group-hover:opacity-0">
           <div className="bg-[#D15C5C]/90 px-4 py-2 text-[0.65rem] uppercase tracking-[0.3em] text-[#f3e8de] backdrop-blur-md border border-white/20 w-fit shadow-lg flex items-center gap-2">
             <Sparkles className="w-3 h-3" />
-            AI Enhanced (Hover to Compare)
+            Rekomendasi AI
           </div>
         </div>
       )}
@@ -107,7 +107,7 @@ function ResultPortrait({ url_foto_upload, ai_image_url }) {
       <div className={`absolute bottom-6 left-6 z-[25] transition-opacity duration-700 ${ai_image_url ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
         <div className="bg-black/80 px-4 py-2 text-[0.65rem] uppercase tracking-[0.3em] text-[#f3e8de] backdrop-blur-md border border-white/10 w-fit shadow-lg flex items-center gap-2">
           <Focus className="w-3 h-3" />
-          Original Reference
+          Gambar Asli
         </div>
       </div>
 
@@ -185,9 +185,8 @@ export default function AiResultPage() {
         if (parsedData) {
           setAnalysisData(parsedData);
           const savedImage = sessionStorage.getItem("aiOriginalImage");
-          // Prioritize image from record if available (from history)
           setOriginalImage(parsedData.url_foto_upload || savedImage || parsedData.record?.url_foto_upload);
-          setSelectedStyleIndex(0); // Reset style index when switching data
+          setSelectedStyleIndex(0);
 
           const activeFeats = parsedData.active_features || parsedData.activeFeatures || [];
           if (activeFeats.includes("HISTORY")) {
@@ -220,8 +219,7 @@ export default function AiResultPage() {
       clearTimeout(timer);
       clearTimeout(scrollTimer);
     };
-  }, [router]); // Router change will trigger this if coming from /ai/history
-
+  }, [router]);
   const fetchHistory = async () => {
     setLoadingHistory(true);
     try {
@@ -248,8 +246,7 @@ export default function AiResultPage() {
   let data = analysisData.hasil_analisis || {};
   let activeFeatures = analysisData.active_features || analysisData.activeFeatures || [];
 
-  // Backfill for old history data: if it's history and activeFeatures is empty, 
-  // try to infer from data (if we have heatmap or symmetry, unlock them)
+  // logic untuk handle jika user tidak upgrade
   if (activeFeatures.length === 0 && analysisData.hasil_analisis) {
     const h = analysisData.hasil_analisis;
     if (h.heatmap_wajah || h.skor_simetri || (h.rekomendasi_gaya && h.rekomendasi_gaya.length > 1)) {

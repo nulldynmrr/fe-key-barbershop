@@ -110,7 +110,7 @@ export default function DashboardPage() {
       trendLabel: dashboardData?.summaryCards.users.trendLabel ?? "-",
     },
     {
-      title: "Total Pendapatan",
+      title: "Total Pemasukan",
       value: dashboardData
         ? new Intl.NumberFormat("id-ID", {
           style: "currency",

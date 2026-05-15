@@ -139,7 +139,7 @@ const CircularProgress = ({ percentage, color, label, subLabel, size = 80 }) => 
           />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <motion.span 
+          <motion.span
             initial={{ opacity: 0, scale: 0.5 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
@@ -247,7 +247,7 @@ export default function AiResultPage() {
 
   let data = analysisData.hasil_analisis || {};
   let activeFeatures = analysisData.active_features || analysisData.activeFeatures || [];
-  
+
   // Backfill for old history data: if it's history and activeFeatures is empty, 
   // try to infer from data (if we have heatmap or symmetry, unlock them)
   if (activeFeatures.length === 0 && analysisData.hasil_analisis) {
@@ -289,7 +289,7 @@ export default function AiResultPage() {
       } else if (typeof parsedUrls === 'string') {
         aiImageUrls = [parsedUrls];
       }
-    } catch (e) { 
+    } catch (e) {
       console.warn("Failed to parse AI images:", e);
     }
   }
@@ -375,9 +375,9 @@ export default function AiResultPage() {
               </h1>
               <p className="mx-auto mt-6 max-w-2xl text-sm leading-7 text-[#D2C3BD] font-light">
                 {data.kualitas_foto_ok === false
-                  ? (styles.length > 0 
-                      ? "Meskipun kualitas foto kurang optimal, AI kami tetap berusaha memberikan rekomendasi terbaik untuk Anda."
-                      : (data.alasan_kualitas || "Wajah tidak terdeteksi dengan jelas. Silakan coba lagi dengan foto yang lebih baik."))
+                  ? (styles.length > 0
+                    ? "Meskipun kualitas foto kurang optimal, AI kami tetap berusaha memberikan rekomendasi terbaik untuk Anda."
+                    : (data.alasan_kualitas || "Wajah tidak terdeteksi dengan jelas. Silakan coba lagi dengan foto yang lebih baik."))
                   : "AI kami telah menganalisis data biometrik Anda untuk merekomendasikan gaya rambut yang paling sesuai dengan proporsi wajah Anda."}
               </p>
               {data.kualitas_foto_ok === false && styles.length === 0 && (
@@ -394,8 +394,8 @@ export default function AiResultPage() {
           <div className="w-full border-y border-[#3A1E1E] bg-[#2E1616]">
             <div className="mx-auto flex max-w-7xl flex-wrap justify-between gap-6 px-6 py-4 lg:px-10">
               {dynamicStats.map((stat, idx) => (
-                <motion.div 
-                  key={idx} 
+                <motion.div
+                  key={idx}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
@@ -535,12 +535,12 @@ export default function AiResultPage() {
                             </div>
                           )}
                           <div className={isPremiumLocked ? "blur-md grayscale opacity-40 select-none" : ""}>
-                              <div className="flex justify-between items-start mb-4">
-                                <span className="text-[0.55rem] text-[#A68A82] font-bold tracking-widest uppercase">RECOMMENDATION #{idx + mainCount + 1}</span>
-                                <span className="text-xs font-bold text-[#F3E8DE] bg-[#3A1E1E] px-2 py-1 rounded-sm">
-                                  <CountUp value={style.match_score || 0} delay={idx * 0.1} />
-                                </span>
-                              </div>
+                            <div className="flex justify-between items-start mb-4">
+                              <span className="text-[0.55rem] text-[#A68A82] font-bold tracking-widest uppercase">RECOMMENDATION #{idx + mainCount + 1}</span>
+                              <span className="text-xs font-bold text-[#F3E8DE] bg-[#3A1E1E] px-2 py-1 rounded-sm">
+                                <CountUp value={style.match_score || 0} delay={idx * 0.1} />
+                              </span>
+                            </div>
                             <h5 className="text-lg text-[#F3E8DE] font-serif mb-3 group-hover/alt:text-[#C59B8F] transition-colors">{style.nama_gaya}</h5>
                             <p className="text-[0.7rem] text-[#A68A82] leading-relaxed mb-4 line-clamp-2 italic">"{style.alasan}"</p>
                           </div>
@@ -602,7 +602,7 @@ export default function AiResultPage() {
 
               <div className={isPremiumLocked ? "blur-[8px] pointer-events-none select-none opacity-40 transition-all duration-1000" : ""}>
 
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0 }}
                   whileInView={{ opacity: 1 }}
                   viewport={{ once: true }}
@@ -642,8 +642,8 @@ export default function AiResultPage() {
                               </h3>
                               <p className="text-[0.6rem] text-[#8A9A5B] font-bold mt-1 uppercase tracking-tighter">{data.level_simetri || "-"}</p>
                               <div className="h-1 w-full bg-[#3A1E1E] rounded-full overflow-hidden mt-3">
-                                <motion.div 
-                                  className="h-full bg-[#8A9A5B]" 
+                                <motion.div
+                                  className="h-full bg-[#8A9A5B]"
                                   initial={{ width: 0 }}
                                   whileInView={{ width: `${clamp(data.skor_simetri)}%` }}
                                   viewport={{ once: true }}
@@ -660,8 +660,8 @@ export default function AiResultPage() {
                             </h3>
                             <p className="text-[0.6rem] text-[#C59B8F] font-bold mt-1 uppercase tracking-tighter">Verified</p>
                             <div className="h-1 w-full bg-[#3A1E1E] rounded-full overflow-hidden mt-3">
-                              <motion.div 
-                                className="h-full bg-[#C59B8F]" 
+                              <motion.div
+                                className="h-full bg-[#C59B8F]"
                                 initial={{ width: 0 }}
                                 whileInView={{ width: `${clamp(data.ai_confidence)}%` }}
                                 viewport={{ once: true }}
@@ -847,12 +847,12 @@ export default function AiResultPage() {
 
 
 
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0 }}
                   whileInView={{ opacity: 1 }}
                   viewport={{ once: true }}
                   transition={{ duration: 1 }}
-                  className={`transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+                  className={`mt-12 transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
                 >
                   <h2 className="text-[0.75rem] uppercase tracking-[0.3em] text-[#A68A82] mb-8 font-bold flex items-center gap-3">
                     DETAILED FACIAL ANALYSIS
@@ -862,8 +862,8 @@ export default function AiResultPage() {
                       <p className="absolute top-6 left-6 text-xs text-[#A68A82]">Facial Proportion</p>
                       <>
 
-                        <motion.svg 
-                          viewBox="0 0 120 120" 
+                        <motion.svg
+                          viewBox="0 0 120 120"
                           className="w-48 h-48 mt-4"
                           initial={{ opacity: 0, scale: 0.8, rotate: -10 }}
                           whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
@@ -872,12 +872,12 @@ export default function AiResultPage() {
                         >
                           <polygon points="60,10 105,45 85,105 35,105 15,45" fill="none" stroke="#4A2626" strokeWidth="0.5" />
                           <polygon points="60,30 90,55 75,90 45,90 30,55" fill="none" stroke="#4A2626" strokeWidth="0.5" strokeDasharray="2,2" />
-                          <motion.polygon 
-                            points="60,60 60,60 60,60 60,60 60,60" 
+                          <motion.polygon
+                            points="60,60 60,60 60,60 60,60 60,60"
                             animate={{ points: "60,18 100,48 80,100 40,95 20,48" }}
-                            fill="rgba(197,155,143,0.1)" 
-                            stroke="#D15C5C" 
-                            strokeWidth="1" 
+                            fill="rgba(197,155,143,0.1)"
+                            stroke="#D15C5C"
+                            strokeWidth="1"
                             initial={{ opacity: 0 }}
                             whileInView={{ opacity: 1 }}
                             viewport={{ once: true }}
@@ -890,9 +890,9 @@ export default function AiResultPage() {
                             { cx: 40, cy: 95 },
                             { cx: 20, cy: 48 }
                           ].map((pt, i) => (
-                            <motion.circle 
+                            <motion.circle
                               key={i}
-                              cx={pt.cx} cy={pt.cy} r="1.5" fill="#D15C5C" 
+                              cx={pt.cx} cy={pt.cy} r="1.5" fill="#D15C5C"
                               initial={{ opacity: 0, scale: 0 }}
                               whileInView={{ opacity: 1, scale: 1 }}
                               viewport={{ once: true }}
@@ -900,19 +900,19 @@ export default function AiResultPage() {
                             />
                           ))}
                         </motion.svg>
-                        <motion.span 
+                        <motion.span
                           initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 1.2 }}
                           className="absolute top-10 text-[0.55rem] text-[#D2C3BD] text-center">Forehead<br /><CountUp value={clamp(data.peta_proporsi?.dahi)} delay={1.2} /></motion.span>
-                        <motion.span 
+                        <motion.span
                           initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 1.3 }}
                           className="absolute right-12 top-[40%] text-[0.55rem] text-[#D2C3BD] text-center">Cheekbones<br /><CountUp value={clamp(((data.peta_proporsi?.pipi_kiri || 0) + (data.peta_proporsi?.pipi_kanan || 0)) / 2)} delay={1.3} /></motion.span>
-                        <motion.span 
+                        <motion.span
                           initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 1.4 }}
                           className="absolute right-20 bottom-12 text-[0.55rem] text-[#D2C3BD] text-center">Jawline<br /><CountUp value={clamp(data.peta_proporsi?.rahang)} delay={1.4} /></motion.span>
-                        <motion.span 
+                        <motion.span
                           initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 1.5 }}
                           className="absolute left-20 bottom-12 text-[0.55rem] text-[#D2C3BD] text-center">Chin<br /><CountUp value={clamp(data.peta_proporsi?.dagu)} delay={1.5} /></motion.span>
-                        <motion.span 
+                        <motion.span
                           initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 1.6 }}
                           className="absolute left-12 top-[40%] text-[0.55rem] text-[#D2C3BD] text-center">Face Width<br /><CountUp value={clamp(data.pengukuran_fitur?.lebar_wajah)} delay={1.6} /></motion.span>
                         <div className="absolute bottom-4 flex items-center gap-6 text-[0.55rem] text-[#A68A82]">
@@ -939,8 +939,8 @@ export default function AiResultPage() {
                               <span className="text-[#C59B8F]"><CountUp value={clamp(item.val)} delay={0.5 + (i * 0.1)} /></span>
                             </div>
                             <div className="h-[2px] w-full bg-[#3A1E1E]">
-                              <motion.div 
-                                className="h-full bg-[#D15C5C]" 
+                              <motion.div
+                                className="h-full bg-[#D15C5C]"
                                 initial={{ width: 0 }}
                                 whileInView={{ width: `${clamp(item.val)}%` }}
                                 viewport={{ once: true }}
@@ -964,8 +964,8 @@ export default function AiResultPage() {
                           { label: "Nose Centering", val: data.keseimbangan_wajah?.pemusatan_hidung || "-" },
                           { label: "Mouth Alignment", val: data.keseimbangan_wajah?.kelurusan_mulut || "-" },
                         ].map((item, i) => (
-                          <motion.div 
-                            key={i} 
+                          <motion.div
+                            key={i}
                             initial={{ opacity: 0, x: -10 }}
                             whileInView={{ opacity: 1, x: 0 }}
                             viewport={{ once: true }}
@@ -983,12 +983,12 @@ export default function AiResultPage() {
                   </div>
                 </motion.div>
 
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0 }}
                   whileInView={{ opacity: 1 }}
                   viewport={{ once: true }}
                   transition={{ duration: 1 }}
-                  className={`transition-all duration-1000 delay-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+                  className={`mt-12 transition-all duration-1000 delay-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
                 >
                   <h2 className="text-[0.75rem] uppercase tracking-[0.3em] text-[#A68A82] mb-8 font-bold flex items-center gap-3">
                     HAIR ANALYSIS & SCALP HEALTH
@@ -1042,8 +1042,8 @@ export default function AiResultPage() {
                             <span className="font-bold text-[#8A9A5B]">{clamp(data.potensi_pertumbuhan)}%</span>
                           </div>
                           <div className="h-1.5 w-full bg-[#1C0D0D] rounded-full overflow-hidden">
-                            <motion.div 
-                              className="h-full bg-[#8A9A5B]" 
+                            <motion.div
+                              className="h-full bg-[#8A9A5B]"
                               initial={{ width: 0 }}
                               whileInView={{ width: `${clamp(data.potensi_pertumbuhan)}%` }}
                               viewport={{ once: true }}
@@ -1056,12 +1056,12 @@ export default function AiResultPage() {
                   )}
                 </motion.div>
 
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0 }}
                   whileInView={{ opacity: 1 }}
                   viewport={{ once: true }}
                   transition={{ duration: 1 }}
-                  className={`transition-all duration-1000 delay-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+                  className={`mt-12 transition-all duration-1000 delay-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
                 >
                   <h2 className="text-[0.75rem] uppercase tracking-[0.3em] text-[#A68A82] mb-8 font-bold flex items-center gap-3">
                     BARBER INSTRUCTIONS
@@ -1083,8 +1083,8 @@ export default function AiResultPage() {
                             { label: "Product Guide", val: data.instruksi_barber_detail.produk_saran, icon: <Check className="w-3 h-3" /> },
                             { label: "Est. Time", val: data.instruksi_barber_detail.estimasi_waktu, icon: <Clock className="w-3 h-3" /> },
                           ].map((item, i) => (
-                            <motion.div 
-                              key={i} 
+                            <motion.div
+                              key={i}
                               initial={{ opacity: 0, y: 20 }}
                               whileInView={{ opacity: 1, y: 0 }}
                               viewport={{ once: true }}
@@ -1109,7 +1109,7 @@ export default function AiResultPage() {
                 </motion.div>
 
                 {activeFeatures.includes("HISTORY") && historyItems.length > 0 && (
-                  <div className="mt-16 pt-16 border-t border-[#3A1E1E]">
+                  <div className="mt-12 border-t border-[#3A1E1E]">
                     <h2 className="text-[0.75rem] uppercase tracking-[0.3em] text-[#A68A82] mb-10 font-bold flex items-center gap-3">
                       SCANNING HISTORY
                     </h2>
@@ -1132,8 +1132,8 @@ export default function AiResultPage() {
                         };
 
                         return (
-                          <motion.div 
-                            key={item.id} 
+                          <motion.div
+                            key={item.id}
                             initial={{ opacity: 0, scale: 0.9 }}
                             whileInView={{ opacity: 1, scale: 1 }}
                             viewport={{ once: true }}
@@ -1142,16 +1142,16 @@ export default function AiResultPage() {
                               let activeFeaturesUsed = activeFeatures; // Fallback to current
                               if (item.features_used) {
                                 try {
-                                  activeFeaturesUsed = typeof item.features_used === 'string' 
-                                    ? JSON.parse(item.features_used) 
+                                  activeFeaturesUsed = typeof item.features_used === 'string'
+                                    ? JSON.parse(item.features_used)
                                     : item.features_used;
-                                } catch (e) {}
+                                } catch (e) { }
                               }
 
                               const formatted = {
                                 hasil_analisis: item.hasil_analisis,
                                 url_foto_upload: getHistoryImg(item.url_foto_upload),
-                                url_hasil_img: Array.isArray(item.url_hasil_img) 
+                                url_hasil_img: Array.isArray(item.url_hasil_img)
                                   ? item.url_hasil_img.map(u => getHistoryImg(u))
                                   : item.url_hasil_img ? [getHistoryImg(item.url_hasil_img)] : [],
                                 tgl_generate: item.tgl_generate,

@@ -3,6 +3,26 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Check, ArrowUp, ArrowDown, Focus, Sparkles, User, Info, Scissors, ShieldCheck, BarChart3, Clock, Lock } from "lucide-react";
+import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
+
+const CountUp = ({ value, suffix = "%", duration = 2, delay = 0 }) => {
+  const count = useMotionValue(0);
+  const rounded = useTransform(count, (latest) => Math.round(latest));
+  const [hasAnimated, setHasAnimated] = useState(false);
+
+  return (
+    <motion.span
+      onViewportEnter={() => {
+        if (!hasAnimated) {
+          animate(count, value, { duration, delay, ease: "easeOut" });
+          setHasAnimated(true);
+        }
+      }}
+    >
+      <motion.span>{rounded}</motion.span>{suffix}
+    </motion.span>
+  );
+};
 
 import SiteFooter from "@/components/SiteFooter";
 import SiteNavbar from "@/components/SiteNavbar";
@@ -102,22 +122,32 @@ function ResultPortrait({ url_foto_upload, ai_image_url }) {
 const CircularProgress = ({ percentage, color, label, subLabel, size = 80 }) => {
   const radius = size / 2 - 4;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
   return (
     <div className="flex items-center gap-4 group/progress">
       <div className="relative" style={{ width: size, height: size }}>
         <svg className="w-full h-full transform -rotate-90" viewBox={`0 0 ${size} ${size}`}>
           <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="#3A1E1E" strokeWidth="4" />
-          <circle
+          <motion.circle
             cx={size / 2} cy={size / 2} r={radius}
             fill="none" stroke={color} strokeWidth="4"
-            strokeDasharray={circumference} strokeDashoffset={strokeDashoffset}
-            className="transition-all duration-[2.5s] ease-out delay-300"
+            strokeDasharray={circumference}
+            initial={{ strokeDashoffset: circumference }}
+            whileInView={{ strokeDashoffset: circumference - (percentage / 100) * circumference }}
+            viewport={{ once: true }}
+            transition={{ duration: 2, ease: "easeOut", delay: 0.2 }}
           />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-sm font-semibold text-[#F3E8DE] group-hover/progress:scale-110 transition-transform duration-300">{percentage}%</span>
+          <motion.span 
+            initial={{ opacity: 0, scale: 0.5 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.8 }}
+            className="text-sm font-semibold text-[#F3E8DE] group-hover/progress:scale-110 transition-transform duration-300"
+          >
+            <CountUp value={percentage} delay={0.2} />
+          </motion.span>
         </div>
       </div>
       {(label || subLabel) && (
@@ -364,10 +394,17 @@ export default function AiResultPage() {
           <div className="w-full border-y border-[#3A1E1E] bg-[#2E1616]">
             <div className="mx-auto flex max-w-7xl flex-wrap justify-between gap-6 px-6 py-4 lg:px-10">
               {dynamicStats.map((stat, idx) => (
-                <div key={idx} className={`flex flex-col items-start transition-all duration-700 delay-[${idx * 150}ms] ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+                <motion.div 
+                  key={idx} 
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: idx * 0.1 }}
+                  className="flex flex-col items-start"
+                >
                   <span className="text-[0.6rem] uppercase tracking-[0.25em] text-[#A68A82]">{stat.label}</span>
                   <span className="mt-1 text-sm font-medium text-[#F3E8DE]">{stat.value}</span>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
@@ -389,8 +426,12 @@ export default function AiResultPage() {
                       const isLocked = isPremiumLocked && idx > 0;
 
                       return (
-                        <div
+                        <motion.div
                           key={idx}
+                          initial={{ opacity: 0, y: 40, scale: 0.95 }}
+                          whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                          viewport={{ once: true, margin: "-100px" }}
+                          transition={{ duration: 0.8, delay: idx * 0.15, ease: "easeOut" }}
                           onClick={() => {
                             if (isLocked) {
                               router.push('/service');
@@ -401,7 +442,7 @@ export default function AiResultPage() {
                               window.scrollTo({ top: 0, behavior: 'smooth' });
                             }
                           }}
-                          className={`bg-[#2B1615] rounded-sm border ${isSelected ? 'border-[#C59B8F] shadow-[0_0_20px_rgba(197,155,143,0.3)]' : 'border-[#3A1E1E]'} flex flex-col relative h-[500px] md:h-[650px] overflow-hidden group hover:border-[#C59B8F] transition-all duration-700 ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} ${isLocked ? 'cursor-pointer' : (hasImage ? 'cursor-pointer' : 'cursor-default opacity-90')}`}
+                          className={`bg-[#2B1615] rounded-sm border ${isSelected ? 'border-[#C59B8F] shadow-[0_0_20px_rgba(197,155,143,0.3)]' : 'border-[#3A1E1E]'} flex flex-col relative h-[500px] md:h-[650px] overflow-hidden group hover:border-[#C59B8F] transition-all duration-700 ${isLocked ? 'cursor-pointer' : (hasImage ? 'cursor-pointer' : 'cursor-default opacity-90')}`}
                         >
                           {isLocked && (
                             <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-[#2B1D19]/60 backdrop-blur-md transition-all group-hover:bg-[#2B1D19]/40">
@@ -435,7 +476,9 @@ export default function AiResultPage() {
                                 <h3 className="text-xl md:text-3xl text-[#F3E8DE] font-serif font-medium leading-tight">{style.nama_gaya}</h3>
                               </div>
                               <div className="bg-[#592D2D] rounded-sm flex flex-col items-center justify-center px-3 py-1.5 md:px-4 md:py-2 shadow-lg group-hover:scale-105 transition-transform duration-500">
-                                <span className="text-lg md:text-xl font-bold text-[#F3E8DE]">{style.match_score ? `${style.match_score}%` : "-"}</span>
+                                <span className="text-lg md:text-xl font-bold text-[#F3E8DE]">
+                                  <CountUp value={style.match_score || 0} delay={idx * 0.2 + 0.5} />
+                                </span>
                                 <span className="text-[0.4rem] md:text-[0.45rem] uppercase tracking-widest text-[#D2C3BD]">MATCH</span>
                               </div>
                             </div>
@@ -460,7 +503,7 @@ export default function AiResultPage() {
                             </div>
                           </div>
 
-                        </div>
+                        </motion.div>
                       );
                     })}
                   </div>
@@ -492,10 +535,12 @@ export default function AiResultPage() {
                             </div>
                           )}
                           <div className={isPremiumLocked ? "blur-md grayscale opacity-40 select-none" : ""}>
-                            <div className="flex justify-between items-start mb-4">
-                              <span className="text-[0.55rem] text-[#A68A82] font-bold tracking-widest uppercase">RECOMMENDATION #{idx + mainCount + 1}</span>
-                              <span className="text-xs font-bold text-[#F3E8DE] bg-[#3A1E1E] px-2 py-1 rounded-sm">{style.match_score}%</span>
-                            </div>
+                              <div className="flex justify-between items-start mb-4">
+                                <span className="text-[0.55rem] text-[#A68A82] font-bold tracking-widest uppercase">RECOMMENDATION #{idx + mainCount + 1}</span>
+                                <span className="text-xs font-bold text-[#F3E8DE] bg-[#3A1E1E] px-2 py-1 rounded-sm">
+                                  <CountUp value={style.match_score || 0} delay={idx * 0.1} />
+                                </span>
+                              </div>
                             <h5 className="text-lg text-[#F3E8DE] font-serif mb-3 group-hover/alt:text-[#C59B8F] transition-colors">{style.nama_gaya}</h5>
                             <p className="text-[0.7rem] text-[#A68A82] leading-relaxed mb-4 line-clamp-2 italic">"{style.alasan}"</p>
                           </div>
@@ -557,7 +602,13 @@ export default function AiResultPage() {
 
               <div className={isPremiumLocked ? "blur-[8px] pointer-events-none select-none opacity-40 transition-all duration-1000" : ""}>
 
-                <div className={`transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1 }}
+                  className={`transition-all duration-1000 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+                >
                   <h2 className="text-[0.75rem] uppercase tracking-[0.3em] text-[#A68A82] mb-8 font-bold flex items-center gap-3">
                     FACIAL ANALYSIS <span className="text-[#C59B8F]">OVERVIEW</span>
                   </h2>
@@ -586,20 +637,36 @@ export default function AiResultPage() {
                           <div className="w-full">
                             <p className="text-[0.6rem] text-[#A68A82] mb-2 uppercase tracking-widest font-bold">Symmetry</p>
                             <>
-                              <h3 className="text-3xl text-[#F3E8DE] font-light">{clamp(data.skor_simetri)}%</h3>
+                              <h3 className="text-3xl text-[#F3E8DE] font-light">
+                                <CountUp value={clamp(data.skor_simetri)} delay={0.5} />
+                              </h3>
                               <p className="text-[0.6rem] text-[#8A9A5B] font-bold mt-1 uppercase tracking-tighter">{data.level_simetri || "-"}</p>
                               <div className="h-1 w-full bg-[#3A1E1E] rounded-full overflow-hidden mt-3">
-                                <div className="h-full bg-[#8A9A5B] transition-all duration-[2s] ease-out delay-500" style={{ width: mounted ? `${clamp(data.skor_simetri)}%` : '0%' }}></div>
+                                <motion.div 
+                                  className="h-full bg-[#8A9A5B]" 
+                                  initial={{ width: 0 }}
+                                  whileInView={{ width: `${clamp(data.skor_simetri)}%` }}
+                                  viewport={{ once: true }}
+                                  transition={{ duration: 2, delay: 0.5, ease: "easeOut" }}
+                                />
                               </div>
                             </>
 
                           </div>
                           <div className="w-full">
                             <p className="text-[0.6rem] text-[#A68A82] mb-2 uppercase tracking-widest font-bold">AI Conf.</p>
-                            <h3 className="text-3xl text-[#F3E8DE] font-light">{clamp(data.ai_confidence)}%</h3>
+                            <h3 className="text-3xl text-[#F3E8DE] font-light">
+                              <CountUp value={clamp(data.ai_confidence)} delay={0.7} />
+                            </h3>
                             <p className="text-[0.6rem] text-[#C59B8F] font-bold mt-1 uppercase tracking-tighter">Verified</p>
                             <div className="h-1 w-full bg-[#3A1E1E] rounded-full overflow-hidden mt-3">
-                              <div className="h-full bg-[#C59B8F] transition-all duration-[2s] ease-out delay-700" style={{ width: mounted ? `${clamp(data.ai_confidence)}%` : '0%' }}></div>
+                              <motion.div 
+                                className="h-full bg-[#C59B8F]" 
+                                initial={{ width: 0 }}
+                                whileInView={{ width: `${clamp(data.ai_confidence)}%` }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 2, delay: 0.7, ease: "easeOut" }}
+                              />
                             </div>
                           </div>
                         </div>
@@ -772,7 +839,7 @@ export default function AiResultPage() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </motion.div>
 
 
 
@@ -780,7 +847,13 @@ export default function AiResultPage() {
 
 
 
-                <div className={`transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1 }}
+                  className={`transition-all duration-1000 delay-300 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+                >
                   <h2 className="text-[0.75rem] uppercase tracking-[0.3em] text-[#A68A82] mb-8 font-bold flex items-center gap-3">
                     DETAILED FACIAL ANALYSIS
                   </h2>
@@ -789,21 +862,59 @@ export default function AiResultPage() {
                       <p className="absolute top-6 left-6 text-xs text-[#A68A82]">Facial Proportion</p>
                       <>
 
-                        <svg viewBox="0 0 120 120" className="w-48 h-48 mt-4">
+                        <motion.svg 
+                          viewBox="0 0 120 120" 
+                          className="w-48 h-48 mt-4"
+                          initial={{ opacity: 0, scale: 0.8, rotate: -10 }}
+                          whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 1, ease: "easeOut" }}
+                        >
                           <polygon points="60,10 105,45 85,105 35,105 15,45" fill="none" stroke="#4A2626" strokeWidth="0.5" />
                           <polygon points="60,30 90,55 75,90 45,90 30,55" fill="none" stroke="#4A2626" strokeWidth="0.5" strokeDasharray="2,2" />
-                          <polygon points="60,18 100,48 80,100 40,95 20,48" fill="rgba(197,155,143,0.1)" stroke="#D15C5C" strokeWidth="1" />
-                          <circle cx="60" cy="18" r="1.5" fill="#D15C5C" />
-                          <circle cx="100" cy="48" r="1.5" fill="#D15C5C" />
-                          <circle cx="80" cy="100" r="1.5" fill="#D15C5C" />
-                          <circle cx="40" cy="95" r="1.5" fill="#D15C5C" />
-                          <circle cx="20" cy="48" r="1.5" fill="#D15C5C" />
-                        </svg>
-                        <span className="absolute top-10 text-[0.55rem] text-[#D2C3BD] text-center">Forehead<br />{clamp(data.peta_proporsi?.dahi)}%</span>
-                        <span className="absolute right-12 top-[40%] text-[0.55rem] text-[#D2C3BD] text-center">Cheekbones<br />{clamp(((data.peta_proporsi?.pipi_kiri || 0) + (data.peta_proporsi?.pipi_kanan || 0)) / 2)}%</span>
-                        <span className="absolute right-20 bottom-12 text-[0.55rem] text-[#D2C3BD] text-center">Jawline<br />{clamp(data.peta_proporsi?.rahang)}%</span>
-                        <span className="absolute left-20 bottom-12 text-[0.55rem] text-[#D2C3BD] text-center">Chin<br />{clamp(data.peta_proporsi?.dagu)}%</span>
-                        <span className="absolute left-12 top-[40%] text-[0.55rem] text-[#D2C3BD] text-center">Face Width<br />{clamp(data.pengukuran_fitur?.lebar_wajah)}%</span>
+                          <motion.polygon 
+                            points="60,60 60,60 60,60 60,60 60,60" 
+                            animate={{ points: "60,18 100,48 80,100 40,95 20,48" }}
+                            fill="rgba(197,155,143,0.1)" 
+                            stroke="#D15C5C" 
+                            strokeWidth="1" 
+                            initial={{ opacity: 0 }}
+                            whileInView={{ opacity: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 1.5, delay: 0.5, ease: "easeOut" }}
+                          />
+                          {[
+                            { cx: 60, cy: 18 },
+                            { cx: 100, cy: 48 },
+                            { cx: 80, cy: 100 },
+                            { cx: 40, cy: 95 },
+                            { cx: 20, cy: 48 }
+                          ].map((pt, i) => (
+                            <motion.circle 
+                              key={i}
+                              cx={pt.cx} cy={pt.cy} r="1.5" fill="#D15C5C" 
+                              initial={{ opacity: 0, scale: 0 }}
+                              whileInView={{ opacity: 1, scale: 1 }}
+                              viewport={{ once: true }}
+                              transition={{ delay: 1 + (i * 0.1) }}
+                            />
+                          ))}
+                        </motion.svg>
+                        <motion.span 
+                          initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 1.2 }}
+                          className="absolute top-10 text-[0.55rem] text-[#D2C3BD] text-center">Forehead<br /><CountUp value={clamp(data.peta_proporsi?.dahi)} delay={1.2} /></motion.span>
+                        <motion.span 
+                          initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 1.3 }}
+                          className="absolute right-12 top-[40%] text-[0.55rem] text-[#D2C3BD] text-center">Cheekbones<br /><CountUp value={clamp(((data.peta_proporsi?.pipi_kiri || 0) + (data.peta_proporsi?.pipi_kanan || 0)) / 2)} delay={1.3} /></motion.span>
+                        <motion.span 
+                          initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 1.4 }}
+                          className="absolute right-20 bottom-12 text-[0.55rem] text-[#D2C3BD] text-center">Jawline<br /><CountUp value={clamp(data.peta_proporsi?.rahang)} delay={1.4} /></motion.span>
+                        <motion.span 
+                          initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 1.5 }}
+                          className="absolute left-20 bottom-12 text-[0.55rem] text-[#D2C3BD] text-center">Chin<br /><CountUp value={clamp(data.peta_proporsi?.dagu)} delay={1.5} /></motion.span>
+                        <motion.span 
+                          initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: 1.6 }}
+                          className="absolute left-12 top-[40%] text-[0.55rem] text-[#D2C3BD] text-center">Face Width<br /><CountUp value={clamp(data.pengukuran_fitur?.lebar_wajah)} delay={1.6} /></motion.span>
                         <div className="absolute bottom-4 flex items-center gap-6 text-[0.55rem] text-[#A68A82]">
                           <div className="flex items-center gap-2"><div className="w-3 h-0.5 bg-[#D15C5C]"></div> You</div>
                           <div className="flex items-center gap-2"><div className="w-3 h-0.5 border-t border-dashed border-[#A68A82]"></div> Ideal</div>
@@ -825,10 +936,16 @@ export default function AiResultPage() {
                           <div key={i} className="group/item">
                             <div className="flex justify-between text-[0.65rem] text-[#D2C3BD] mb-1.5 font-medium">
                               <span className="group-hover/item:text-[#F3E8DE] transition-colors">{item.label}</span>
-                              <span className="text-[#C59B8F]">{clamp(item.val)}%</span>
+                              <span className="text-[#C59B8F]"><CountUp value={clamp(item.val)} delay={0.5 + (i * 0.1)} /></span>
                             </div>
                             <div className="h-[2px] w-full bg-[#3A1E1E]">
-                              <div className="h-full bg-[#D15C5C] transition-all duration-[2s] ease-out" style={{ width: mounted ? `${clamp(item.val)}%` : '0%', transitionDelay: `${i * 150}ms` }}></div>
+                              <motion.div 
+                                className="h-full bg-[#D15C5C]" 
+                                initial={{ width: 0 }}
+                                whileInView={{ width: `${clamp(item.val)}%` }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 1.5, delay: 0.2 + (i * 0.1), ease: "easeOut" }}
+                              />
                             </div>
                           </div>
                         ))}
@@ -847,19 +964,32 @@ export default function AiResultPage() {
                           { label: "Nose Centering", val: data.keseimbangan_wajah?.pemusatan_hidung || "-" },
                           { label: "Mouth Alignment", val: data.keseimbangan_wajah?.kelurusan_mulut || "-" },
                         ].map((item, i) => (
-                          <div key={i} className="flex justify-between items-center text-[0.7rem] border-b border-[#3A1E1E]/30 pb-2 hover:border-[#C59B8F]/30 transition-colors">
+                          <motion.div 
+                            key={i} 
+                            initial={{ opacity: 0, x: -10 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5, delay: 0.5 + (i * 0.1) }}
+                            className="flex justify-between items-center text-[0.7rem] border-b border-[#3A1E1E]/30 pb-2 hover:border-[#C59B8F]/30 transition-colors"
+                          >
                             <span className="text-[#A68A82]">{item.label}</span>
                             <span className="text-[#F3E8DE] font-semibold flex items-center gap-2">
                               <Check className="w-3 h-3 text-[#8A9A5B]" /> {item.val}
                             </span>
-                          </div>
+                          </motion.div>
                         ))}
                       </div>
                     </div>
                   </div>
-                </div>
+                </motion.div>
 
-                <div className={`transition-all duration-1000 delay-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1 }}
+                  className={`transition-all duration-1000 delay-500 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+                >
                   <h2 className="text-[0.75rem] uppercase tracking-[0.3em] text-[#A68A82] mb-8 font-bold flex items-center gap-3">
                     HAIR ANALYSIS & SCALP HEALTH
                   </h2>
@@ -912,15 +1042,27 @@ export default function AiResultPage() {
                             <span className="font-bold text-[#8A9A5B]">{clamp(data.potensi_pertumbuhan)}%</span>
                           </div>
                           <div className="h-1.5 w-full bg-[#1C0D0D] rounded-full overflow-hidden">
-                            <div className="h-full bg-[#8A9A5B] transition-all duration-[2.5s] ease-out" style={{ width: mounted ? `${clamp(data.potensi_pertumbuhan)}%` : '0%' }}></div>
+                            <motion.div 
+                              className="h-full bg-[#8A9A5B]" 
+                              initial={{ width: 0 }}
+                              whileInView={{ width: `${clamp(data.potensi_pertumbuhan)}%` }}
+                              viewport={{ once: true }}
+                              transition={{ duration: 2, delay: 0.5, ease: "easeOut" }}
+                            />
                           </div>
                         </div>
                       </div>
                     </div>
                   )}
-                </div>
+                </motion.div>
 
-                <div className={`transition-all duration-1000 delay-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1 }}
+                  className={`transition-all duration-1000 delay-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+                >
                   <h2 className="text-[0.75rem] uppercase tracking-[0.3em] text-[#A68A82] mb-8 font-bold flex items-center gap-3">
                     BARBER INSTRUCTIONS
                   </h2>
@@ -941,13 +1083,20 @@ export default function AiResultPage() {
                             { label: "Product Guide", val: data.instruksi_barber_detail.produk_saran, icon: <Check className="w-3 h-3" /> },
                             { label: "Est. Time", val: data.instruksi_barber_detail.estimasi_waktu, icon: <Clock className="w-3 h-3" /> },
                           ].map((item, i) => (
-                            <div key={i} className="bg-[#1C0D0D] border border-[#3A1E1E] rounded-sm p-4 hover:border-[#C59B8F]/30 transition-all group/inst">
+                            <motion.div 
+                              key={i} 
+                              initial={{ opacity: 0, y: 20 }}
+                              whileInView={{ opacity: 1, y: 0 }}
+                              viewport={{ once: true }}
+                              transition={{ duration: 0.5, delay: 0.1 * i }}
+                              className="bg-[#1C0D0D] border border-[#3A1E1E] rounded-sm p-4 hover:border-[#C59B8F]/30 transition-all group/inst"
+                            >
                               <div className="flex items-center gap-2 mb-3">
                                 <div className="text-[#C59B8F] group-hover/inst:scale-110 transition-transform">{item.icon}</div>
                                 <p className="text-[0.6rem] text-[#A68A82] uppercase tracking-[0.15em] font-bold">{item.label}</p>
                               </div>
                               <p className="text-[0.75rem] text-[#F3E8DE] leading-relaxed font-medium">{item.val || "-"}</p>
-                            </div>
+                            </motion.div>
                           ))}
                         </div>
                       ) : (
@@ -957,7 +1106,7 @@ export default function AiResultPage() {
                       )}
                     </div>
                   )}
-                </div>
+                </motion.div>
 
                 {activeFeatures.includes("HISTORY") && historyItems.length > 0 && (
                   <div className="mt-16 pt-16 border-t border-[#3A1E1E]">
@@ -965,7 +1114,7 @@ export default function AiResultPage() {
                       SCANNING HISTORY
                     </h2>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                      {historyItems.slice(0, 4).map((item) => {
+                      {historyItems.slice(0, 4).map((item, i) => {
                         const result = item.hasil_analisis || {};
                         let historyAiUrl = null;
                         if (item.url_hasil_img) {
@@ -983,8 +1132,12 @@ export default function AiResultPage() {
                         };
 
                         return (
-                          <div 
+                          <motion.div 
                             key={item.id} 
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            whileInView={{ opacity: 1, scale: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5, delay: i * 0.1 }}
                             onClick={() => {
                               let activeFeaturesUsed = activeFeatures; // Fallback to current
                               if (item.features_used) {
@@ -1033,7 +1186,9 @@ export default function AiResultPage() {
                               <div className="flex gap-4">
                                 <div className="flex flex-col">
                                   <span className="text-[0.5rem] uppercase text-[#A68A82]">Match</span>
-                                  <span className="text-[0.65rem] text-[#F3E8DE] font-bold">{result.rekomendasi_gaya?.[0]?.match_score || 0}%</span>
+                                  <span className="text-[0.65rem] text-[#F3E8DE] font-bold">
+                                    <CountUp value={result.rekomendasi_gaya?.[0]?.match_score || 0} delay={0.3} />
+                                  </span>
                                 </div>
                                 <div className="flex flex-col">
                                   <span className="text-[0.5rem] uppercase text-[#A68A82]">Face</span>
@@ -1041,7 +1196,7 @@ export default function AiResultPage() {
                                 </div>
                               </div>
                             </div>
-                          </div>
+                          </motion.div>
                         );
                       })}
                     </div>

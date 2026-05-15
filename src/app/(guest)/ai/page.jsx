@@ -73,6 +73,7 @@ export default function AiPage() {
   const [isExhaustedModalOpen, setIsExhaustedModalOpen] = useState(false);
   const [ripples, setRipples] = useState([]);
   const [hasHistoryAccess, setHasHistoryAccess] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState("");
 
   const addRipple = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -140,12 +141,12 @@ export default function AiPage() {
         deviceId = "dev_" + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
         Cookies.set("device_cookie", deviceId, { expires: 365 });
       }
-      
+
       try {
         const res = await aiScanService.guestLogin({ device_cookie: deviceId });
         const body = res.data;
         const { token: authToken, user } = body.data || {};
-        
+
         if (authToken && user) {
           saveUserAuth(authToken, user);
         } else {
@@ -226,7 +227,7 @@ export default function AiPage() {
       ctx.drawImage(bitmap, 0, 0);
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
-      
+
       let brightness = 0;
       for (let i = 0; i < data.length; i += 4) {
         brightness += (0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]);
@@ -299,10 +300,56 @@ export default function AiPage() {
             formData.append("requestedFeatures", JSON.stringify(activeFeatures));
           }
 
-          const analysisRes = await aiScanService.analyzeFace(formData);
-          const resultData = analysisRes.data?.data;
-          const isBadQuality = resultData?.hasil_analisis?.kualitas_foto_ok === false;
-          const hasImages = resultData?.url_hasil_img && resultData.url_hasil_img.length > 0;
+          // Gunakan fetch untuk membaca stream NDJSON dari backend
+          const token = Cookies.get("user_token");
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/analyze-face`, {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${token}`
+            },
+            body: formData
+          });
+
+          if (!response.ok) {
+            const errBody = await response.json().catch(() => ({}));
+            throw { response: { data: errBody, status: response.status } };
+          }
+
+          const streamReader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let resultData = null;
+          let buffer = "";
+
+          while (true) {
+            const { done, value } = await streamReader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split("\n");
+            buffer = lines.pop(); // Simpan sisa chunk yang belum lengkap
+
+            for (const line of lines) {
+              if (!line.trim()) continue;
+              try {
+                const chunk = JSON.parse(line);
+                if (chunk.type === "status") {
+                  setCurrentStatus(chunk.node);
+                } else if (chunk.type === "final") {
+                  resultData = chunk;
+                } else if (chunk.type === "error") {
+                  throw { response: { data: chunk, status: chunk.statusCode || 500 } };
+                }
+              } catch (e) {
+                console.error("Gagal parse chunk:", e);
+              }
+            }
+          }
+
+          if (!resultData) throw new Error("Gagal menerima hasil akhir dari AI.");
+          
+          const finalData = resultData.data;
+          const isBadQuality = finalData?.hasil_analisis?.kualitas_foto_ok === false;
+          const hasImages = finalData?.record?.url_hasil_img && finalData.record.url_hasil_img.length > 0;
 
           // Only block and show toast if it's bad quality AND no images were produced.
           // If images exist, we must show them even if quality was flagged.
@@ -319,19 +366,19 @@ export default function AiPage() {
           }
 
           try {
-            sessionStorage.setItem("aiAnalysisResult", JSON.stringify(resultData));
+            sessionStorage.setItem("aiAnalysisResult", JSON.stringify(finalData));
           } catch (storageErr) {
             // If saving result fails, try clearing the preview image to make room
             sessionStorage.removeItem("aiOriginalImage");
             try {
-              sessionStorage.setItem("aiAnalysisResult", JSON.stringify(analysisRes.data?.data));
+              sessionStorage.setItem("aiAnalysisResult", JSON.stringify(finalData));
             } catch (finalErr) {
               console.error("Critical: Cannot save analysis result to session storage.");
             }
           }
 
           // Sync credit to localStorage
-          const newCredit = analysisRes.data?.usage_info?.credit_after;
+          const newCredit = resultData.usage_info?.credit_after;
           if (typeof newCredit === "number") {
             try {
               const savedUser = JSON.parse(localStorage.getItem("user") || "{}");
@@ -353,7 +400,7 @@ export default function AiPage() {
           } else {
             const message = err.response?.data?.message || err.message || "";
             if (
-              message.toLowerCase().includes("credit") || 
+              message.toLowerCase().includes("credit") ||
               message.toLowerCase().includes("koin") ||
               errCode === "TRIAL_EXHAUSTED"
             ) {
@@ -404,6 +451,7 @@ export default function AiPage() {
     setIsAnalyzing(false);
     setIsApiDone(false);
     setIsAnimationDone(false);
+    setCurrentStatus("");
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -429,6 +477,7 @@ export default function AiPage() {
         isOpen={isAnalyzing}
         onClose={handleModalClose}
         onComplete={handleLoadingComplete}
+        currentStatus={currentStatus}
       />
 
       <AICreditExhaustedModal
@@ -659,7 +708,7 @@ export default function AiPage() {
       {hasHistoryAccess && (
         <button
           onClick={() => router.push("/ai/history")}
-          className="fixed bottom-6 right-6 z-[90] flex items-center gap-2 bg-[#2b1d19] text-white px-4 py-3 rounded-2xl shadow-2xl hover:bg-[#45312b] transition-all hover:scale-105 active:scale-95 border border-[#f0e2d9]/20"
+          className="fixed bottom-6 right-6 z-[90] flex items-center gap-2 bg-[#4a1a1a] text-white px-4 py-3 rounded-2xl shadow-2xl hover:bg-[#45312b] transition-all hover:scale-105 active:scale-95 border border-[#f0e2d9]/20"
           style={{ fontFamily: "var(--font-be-vietnam)" }}
         >
           <History className="w-5 h-5" />

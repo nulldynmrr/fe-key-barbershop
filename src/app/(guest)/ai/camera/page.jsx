@@ -23,6 +23,7 @@ export default function AiCameraPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isApiDone, setIsApiDone] = useState(false);
   const [isAnimationDone, setIsAnimationDone] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
@@ -108,84 +109,109 @@ export default function AiCameraPage() {
 
     setIsCapturing(true);
     setIsProcessing(true);
+    setCurrentStatus("");
 
     try {
       await ensureAuth();
 
-      // 1. Check AI Features global status + user package
       const featureRes = await aiScanService.getFeatures();
       const featuresData = featureRes.data?.data || {};
+      const activeFeatures = Object.keys(featuresData).filter(k => featuresData[k].available);
 
-      const activeFeatures = Object.keys(featuresData).filter(
-        (key) => featuresData[key].available
-      );
-
-      // 2. Capture image from video stream
       const video = videoRef.current;
       const canvas = canvasRef.current;
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
-      // Optional: mirror the image on canvas if video is mirrored
       const ctx = canvas.getContext("2d");
       ctx.translate(canvas.width, 0);
       ctx.scale(-1, 1);
-
-      // Apply slight enhancement filter to help AI detection in low light
       ctx.filter = 'contrast(1.1) brightness(1.05) saturate(1.1)';
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      ctx.filter = 'none'; // Reset filter for next time
+      ctx.filter = 'none';
 
-      // Save base64 image so the result page can display it
       const dataUrl = canvas.toDataURL("image/jpeg", 0.9);
       try {
         sessionStorage.setItem("aiOriginalImage", dataUrl);
-      } catch (storageErr) {
-        console.warn("Session storage quota exceeded, skipping local image save. The app will fall back to server URL.");
+      } catch (e) {
+        console.warn("Session storage quota exceeded.");
       }
 
-      // Convert canvas to blob for upload
       const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.9));
       if (!blob) throw new Error("Failed to capture image");
 
-      // 3. Send to analysis API
       const formData = new FormData();
       formData.append("foto", blob, "face-scan.jpg");
       formData.append("source", "camera");
 
       if (activeFeatures.length === 0) {
-        // Default to ALL globally active features for guests instead of just STANDARD_SCAN
-        const allGloballyActive = Object.keys(featuresData).filter(
-          (key) => featuresData[key].globallyActive
-        );
+        const allGloballyActive = Object.keys(featuresData).filter(k => featuresData[k].globallyActive);
         formData.append("requestedFeatures", JSON.stringify(allGloballyActive.length > 0 ? allGloballyActive : ["STANDARD_SCAN"]));
       } else {
         formData.append("requestedFeatures", JSON.stringify(activeFeatures));
       }
 
-      const analysisRes = await aiScanService.analyzeFace(formData);
+      const token = Cookies.get("user_token");
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/analyze-face`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${token}` },
+        body: formData
+      });
 
-      // Store result to display on the Result page
-      try {
-        sessionStorage.setItem("aiAnalysisResult", JSON.stringify(analysisRes.data?.data));
-      } catch (storageErr) {
-        console.error("Session storage quota exceeded for aiAnalysisResult.");
-        showToast("Result is too large to save locally. Please try again with a smaller photo.", "error");
-        setIsProcessing(false);
-        setIsCapturing(false);
-        return;
+      if (!response.ok) {
+        const errBody = await response.json().catch(() => ({}));
+        throw { response: { data: errBody, status: response.status } };
+      }
+
+      const streamReader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let resultData = null;
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await streamReader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop();
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const chunk = JSON.parse(line);
+            if (chunk.type === "status") {
+              setCurrentStatus(chunk.node);
+            } else if (chunk.type === "final") {
+              resultData = chunk;
+            } else if (chunk.type === "error") {
+              throw { response: { data: chunk, status: chunk.statusCode || 500 } };
+            }
+          } catch (e) {
+            console.error("Gagal parse chunk:", e);
+          }
+        }
+      }
+
+      if (!resultData) throw new Error("Gagal menerima hasil akhir dari AI.");
+      
+      const finalData = resultData.data;
+      sessionStorage.setItem("aiAnalysisResult", JSON.stringify(finalData));
+
+      // Sync credit
+      const newCredit = resultData.usage_info?.credit_after;
+      if (typeof newCredit === "number") {
+        try {
+          const savedUser = JSON.parse(localStorage.getItem("user") || "{}");
+          savedUser.sisa_credit = newCredit;
+          localStorage.setItem("user", JSON.stringify(savedUser));
+        } catch (e) {}
       }
 
       showToast("Analysis complete!", "success");
       setIsApiDone(true);
     } catch (err) {
       console.error(err);
-      const errCode = err.response?.data?.errorCode;
-      if (errCode === "SERVICE_UNAVAILABLE" || err.response?.status === 503 || err.response?.status === 429) {
-        router.push("/ai/busy");
-        return;
-      } else {
-        showToast(err.response?.data?.message || err.message || "Failed to analyze face", "error");
-      }
+      showToast(err.response?.data?.message || err.message || "Failed to analyze face", "error");
       setIsCapturing(false);
       setIsProcessing(false);
     }
@@ -200,6 +226,7 @@ export default function AiCameraPage() {
     setIsApiDone(false);
     setIsAnimationDone(false);
     setIsCapturing(false);
+    setCurrentStatus("");
   };
 
   if (packageGateOk !== true) {
@@ -265,6 +292,7 @@ export default function AiCameraPage() {
         isOpen={isProcessing}
         onClose={handleModalClose}
         onComplete={handleLoadingComplete}
+        currentStatus={currentStatus}
       />
 
       {errorMsg && (

@@ -436,7 +436,7 @@ export default function AiResultPage() {
                           transition={{ duration: 0.8, delay: idx * 0.15, ease: "easeOut" }}
                           onClick={() => {
                             if (isLocked) {
-                              router.push('/service');
+                              router.push('/service#ai-pricing');
                               return;
                             }
                             if (hasImage) {
@@ -526,7 +526,7 @@ export default function AiResultPage() {
                       {styles.slice(mainCount).map((style, idx) => (
                         <div
                           key={idx + mainCount}
-                          onClick={() => isPremiumLocked && router.push('/service')}
+                          onClick={() => isPremiumLocked && router.push('/service#ai-pricing')}
                           className={`p-6 border border-[#3A1E1E] bg-[#211111] hover:border-[#C59B8F]/30 transition-all duration-500 group/alt relative overflow-hidden ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'} ${isPremiumLocked ? 'cursor-pointer' : ''}`}
                           style={{ transitionDelay: `${idx * 100}ms` }}
                         >
@@ -568,7 +568,7 @@ export default function AiResultPage() {
                   </button>
                 ) : (
                   <button
-                    onClick={() => router.push('/service')}
+                    onClick={() => router.push('/service#ai-pricing')}
                     className="bg-[#2A1616] border border-[#3A1E1E] px-8 py-3 rounded-sm flex items-center gap-3 group hover:border-[#C59B8F]/50 transition-all"
                   >
                     <Lock className="w-4 h-4 text-[#C59B8F] group-hover:scale-110 transition-transform" />
@@ -583,8 +583,8 @@ export default function AiResultPage() {
 
 
 
-              <div className="mt-8">
-                <div>
+            <div className="mt-8">
+              <div>
 
                 <motion.div
                   initial={{ opacity: 0 }}
@@ -622,7 +622,7 @@ export default function AiResultPage() {
                             <p className="text-[0.6rem] text-[#A68A82] mb-2 uppercase tracking-widest font-bold">Symmetry</p>
                             {!hasSymmetry && (
                               <div
-                                onClick={() => router.push('/service')}
+                                onClick={() => router.push('/service#ia-pricing')}
                                 className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#2B1D19]/60 backdrop-blur-sm cursor-pointer rounded-sm"
                               >
                                 <Lock className="w-6 h-6 text-[#C59B8F] mb-1" />
@@ -668,7 +668,7 @@ export default function AiResultPage() {
                     <div className="w-full bg-[#2A1616] border border-[#3A1E1E] rounded-sm overflow-hidden hover:border-[#C59B8F]/40 transition-colors flex flex-col h-full relative group">
                       {!hasHeatmap && (
                         <div
-                          onClick={() => router.push('/service')}
+                          onClick={() => router.push('/service#ai-pricing')}
                           className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#2B1D19]/60 backdrop-blur-sm cursor-pointer rounded-sm"
                         >
                           <Lock className="w-10 h-10 text-[#C59B8F] mb-2" />
@@ -861,7 +861,7 @@ export default function AiResultPage() {
                   <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#3A1E1E] relative overflow-hidden group">
                     {!hasAdvMapping && (
                       <div
-                        onClick={() => router.push('/service')}
+                        onClick={() => router.push('/service#ai-pricing')}
                         className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#2B1D19]/60 backdrop-blur-sm cursor-pointer rounded-sm"
                       >
                         <Lock className="w-16 h-16 text-[#C59B8F] mb-3" />

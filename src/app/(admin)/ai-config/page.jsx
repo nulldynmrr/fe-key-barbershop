@@ -781,7 +781,9 @@ export default function AiConfigPage() {
               </thead>
               <tbody>
                 {logsData.length > 0 ? (
-                  logsData.map((row) => (
+                  logsData
+                    .filter(row => !row.modelName?.includes("SYSTEM_LOCK"))
+                    .map((row) => (
                     <tr
                       key={row._id || row.id}
                       className="border-b border-[#f5ebe6] last:border-none hover:bg-[#fafafa] transition-colors"
@@ -839,10 +841,14 @@ export default function AiConfigPage() {
                       </td>
                       <td className="py-5 px-4">
                         <span
-                          className="inline-flex items-center px-3 py-1 rounded border border-emerald-100 bg-emerald-50 text-[10px] font-semibold text-emerald-700"
+                          className={`inline-flex items-center px-3 py-1 rounded border text-[10px] font-semibold ${
+                            Number(row.profit) >= 0
+                              ? "border-emerald-100 bg-emerald-50 text-emerald-700"
+                              : "border-red-100 bg-red-50 text-red-700"
+                          }`}
                           style={{ fontFamily: "var(--font-plus-jakarta)" }}
                         >
-                          +${row.profit || "0.00000"}
+                          {Number(row.profit) >= 0 ? "+$" : "-$"}{Math.abs(Number(row.profit || 0)).toFixed(5)}
                         </span>
                       </td>
                     </tr>

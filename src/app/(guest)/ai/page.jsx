@@ -347,7 +347,7 @@ export default function AiPage() {
           }
 
           if (!resultData) throw new Error("Gagal menerima hasil akhir dari AI.");
-          
+
           const finalData = resultData.data;
           const isBadQuality = finalData?.hasil_analisis?.kualitas_foto_ok === false;
           const hasImages = finalData?.record?.url_hasil_img && finalData.record.url_hasil_img.length > 0;
@@ -395,11 +395,20 @@ export default function AiPage() {
         } catch (err) {
           console.error(err);
           const errCode = err.response?.data?.errorCode;
+          const message = err.response?.data?.message || err.message || "";
+
+          if (errCode === "NO_ACTIVE_PACKAGE" || errCode === "INSUFFICIENT_CREDITS") {
+            showToast(message, "error", 5000);
+            setTimeout(() => {
+              router.push("/service#ai-pricing");
+            }, 2000);
+            return;
+          }
+
           if (errCode === "SERVICE_UNAVAILABLE" || err.response?.status === 503 || err.response?.status === 429) {
             router.push("/ai/busy");
             return;
           } else {
-            const message = err.response?.data?.message || err.message || "";
             if (
               message.toLowerCase().includes("credit") ||
               message.toLowerCase().includes("koin") ||
@@ -418,18 +427,27 @@ export default function AiPage() {
 
     } catch (err) {
       console.error(err);
+      const errCode = err.response?.data?.errorCode;
+      const message = err.response?.data?.message || err.message || "";
+
+      if (errCode === "NO_ACTIVE_PACKAGE" || errCode === "INSUFFICIENT_CREDITS") {
+        showToast(message, "error", 5000);
+        setTimeout(() => {
+          router.push("/service");
+        }, 2000);
+        return;
+      }
+
       if (err.message === "TRIAL_EXHAUSTED" || err.message === "GUEST_AUTH_FAILED") {
         setIsAnalyzing(false);
         return;
       }
 
-      const errCode = err.response?.data?.errorCode;
       if (errCode === "SERVICE_UNAVAILABLE" || err.response?.status === 503 || err.response?.status === 429) {
         router.push("/ai/busy");
         return;
       }
 
-      const message = err.response?.data?.message || err.message || "";
       if (
         message.toLowerCase().includes("credit") ||
         message.toLowerCase().includes("koin") ||

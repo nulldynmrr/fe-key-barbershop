@@ -183,7 +183,7 @@ export default function SiteNavbar({
                         </span>
                         <span className="flex items-center gap-1 text-[0.6rem] bg-[#4a1a1a] px-1.5 py-0.5 rounded-sm text-[#fbf7f3] uppercase tracking-wider">
                           <Sparkles className="w-3 h-3 text-[#C59B8F]" />
-                          {user.active_package?.namaPaket || "Free"}
+                          {user.active_package?.namaPaket || (user.purchased_package_ids?.length > 0 ? "Premium" : "Free")}
                         </span>
                       </button>
 
@@ -288,7 +288,7 @@ export default function SiteNavbar({
                 {user.sisa_credit || 0} COINS
               </span>
               <span className="text-[0.5rem] uppercase tracking-wider text-[#78716c]">
-                {user.active_package?.namaPaket || "Free"}
+                {user.active_package?.namaPaket || (user.purchased_package_ids?.length > 0 ? "Premium" : "Free")}
               </span>
             </div>
           )}
@@ -346,7 +346,7 @@ export default function SiteNavbar({
                         </span>
                         <span className="flex items-center gap-1 text-[0.6rem] bg-[#4a1a1a] px-2 py-1 rounded-sm text-[#fbf7f3] uppercase tracking-wider">
                           <Sparkles className="w-3 h-3 text-[#C59B8F]" />
-                          {user.active_package?.namaPaket || "Free"}
+                          {user.active_package?.namaPaket || (user.purchased_package_ids?.length > 0 ? "Premium" : "Free")}
                         </span>
                       </div>
                     )}

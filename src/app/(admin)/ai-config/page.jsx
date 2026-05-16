@@ -331,6 +331,29 @@ export default function AiConfigPage() {
   };
 
   const handleSaveAPI = async () => {
+    // Validation
+    const requiredFields = [
+      { key: "namaRouter", label: "Nama Router" },
+      { key: "baseUrl", label: "Base URL" },
+      { key: "modelName", label: "Model" },
+      { key: "apiKey", label: "API KEY" },
+      { key: "hargaInput1M", label: "Harga Input" },
+      { key: "maxBudget", label: "Max Budget" },
+    ];
+
+    if (formData.typeAi === "LLM") {
+      requiredFields.push({ key: "hargaOutput1M", label: "Harga Output" });
+    } else {
+      requiredFields.push({ key: "hargaPerImage", label: "Harga Output (Per Image)" });
+    }
+
+    const missing = requiredFields.filter(f => !formData[f.key] && formData[f.key] !== 0);
+
+    if (missing.length > 0) {
+      showToast(`Harap isi semua bidang wajib: ${missing.map(m => m.label).join(", ")}`, "error");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const payload = {
@@ -547,7 +570,7 @@ export default function AiConfigPage() {
 
                     <div className="grid grid-cols-2">
                       <div className="bg-[#fdf2f0] p-2 rounded-lg">
-                        <p className="text-[9px] text-[#8b6f66] mb-0.5">Used (DB)</p>
+                        <p className="text-[9px] text-[#8b6f66] mb-0.5">Spent USD</p>
                         <p className="text-xs font-bold text-[#4a1a1a]">${Number(router.usedBudget || 0).toFixed(4)}</p>
                       </div>
                     </div>
@@ -981,7 +1004,7 @@ export default function AiConfigPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-semibold text-[#2b1d19] mb-2">
-                      Nama Router
+                      Nama Router <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -994,7 +1017,7 @@ export default function AiConfigPage() {
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-[#2b1d19] mb-2">
-                      Base Url
+                      Base Url <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -1009,7 +1032,7 @@ export default function AiConfigPage() {
 
                 <div>
                   <label className="block text-sm font-semibold text-[#2b1d19] mb-2">
-                    Model
+                    Model <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -1023,7 +1046,7 @@ export default function AiConfigPage() {
 
                 <div>
                   <label className="block text-sm font-semibold text-[#2b1d19] mb-2">
-                    API KEY
+                    API KEY <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     name="apiKey"
@@ -1080,7 +1103,7 @@ export default function AiConfigPage() {
                   {/* Harga Input (1M Tokens) - SELALU MUNCUL DI KEDUA TIPE AI */}
                   <div>
                     <label className="block text-sm font-semibold text-[#2b1d19] mb-2">
-                      Harga Input
+                      Harga Input <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
@@ -1105,7 +1128,7 @@ export default function AiConfigPage() {
                   {formData.typeAi === "LLM" ? (
                     <div>
                       <label className="block text-sm font-semibold text-[#2b1d19] mb-2">
-                        Harga Output
+                        Harga Output <span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
@@ -1128,7 +1151,7 @@ export default function AiConfigPage() {
                   ) : (
                     <div>
                       <label className="block text-sm font-semibold text-[#2b1d19] mb-2">
-                        Harga Output (Per Image)
+                        Harga Output (Per Image) <span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
                         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
@@ -1154,7 +1177,7 @@ export default function AiConfigPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-semibold text-[#2b1d19] mb-2">
-                      Max Budget
+                      Max Budget <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">

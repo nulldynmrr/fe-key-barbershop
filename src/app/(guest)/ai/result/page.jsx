@@ -246,7 +246,7 @@ export default function AiResultPage() {
   let data = analysisData.hasil_analisis || {};
   let activeFeatures = analysisData.active_features || analysisData.activeFeatures || [];
 
-  // logic untuk handle jika user tidak upgrade
+  // Logic untuk handle jika user tidak upgrade (fallback for old data/guest)
   if (activeFeatures.length === 0 && analysisData.hasil_analisis) {
     const h = analysisData.hasil_analisis;
     if (h.heatmap_wajah || h.skor_simetri || (h.rekomendasi_gaya && h.rekomendasi_gaya.length > 1)) {
@@ -254,20 +254,25 @@ export default function AiResultPage() {
     }
   }
 
-  const isPremiumLocked = !activeFeatures.includes("SYMMETRY") && !activeFeatures.includes("FACE_HEATMAP");
+  // Individual Feature Flags
+  const hasSymmetry = activeFeatures.includes("SYMMETRY");
+  const hasHeatmap = activeFeatures.includes("FACE_HEATMAP");
+  const hasAdvMapping = activeFeatures.includes("ADV_MAPPING");
+  const hasHairAnalysis = activeFeatures.includes("HAIR_ANALYSIS");
+  const hasBarberInstructions = activeFeatures.includes("BARBER_INSTRUCTIONS");
+  const hasVirtualTryOn = activeFeatures.includes("VIRTUAL_TRY_ON");
+  const hasHistory = activeFeatures.includes("HISTORY");
+
+  // Global Premium Indicator (for locking extra styles/images)
+  const isPremiumUser = activeFeatures.some(f => ["SYMMETRY", "FACE_HEATMAP", "ADV_MAPPING", "HAIR_ANALYSIS"].includes(f));
+  const isPremiumLocked = !isPremiumUser; // Used for styles locking logic
 
   if (isPremiumLocked) {
+    // Ensure basic metadata exists but don't fill premium data
     data = {
       ...data,
-      bentuk_wajah: data.bentuk_wajah || "Diamond",
-      deskripsi_bentuk_wajah: data.deskripsi_bentuk_wajah || "Your Diamond face shape provides a strong foundation for the selected styles.",
-      skor_simetri: 92,
-      level_simetri: "Excellent",
-      ai_confidence: data.ai_confidence || 98,
-      heatmap_wajah: { dahi: "High Suitability", pipi: "Mid Suitability", rahang: "Low Suitability", dagu: "High Suitability", zona_terbaik: "Dahi" },
-      peta_proporsi: { dahi: 32, pipi_kiri: 15, pipi_kanan: 15, rahang: 20, dagu: 18 },
-      pengukuran_fitur: { panjang_wajah: 85, kekuatan_rahang: 75, lebar_tulang_pipi: 90, lebar_dahi: 80, lebar_wajah: 100 },
-      keseimbangan_wajah: { mata_kiri_kanan: "Symmetric", alis_kiri_kanan: "Aligned", pemusatan_hidung: "Centered", kelurusan_mulut: "Straight" }
+      bentuk_wajah: data.bentuk_wajah || "Analysis Pending",
+      ai_confidence: data.ai_confidence || 0,
     };
   }
 
@@ -578,26 +583,8 @@ export default function AiResultPage() {
 
 
 
-            <div className="relative mt-8">
-              {isPremiumLocked && (
-                <div
-                  className="absolute inset-0 z-50 flex flex-col items-center justify-center cursor-pointer backdrop-blur-sm bg-[#2B1D19]/40 rounded-sm"
-                  onClick={() => router.push('/service')}
-                >
-                  <div className="sticky top-[40vh] flex flex-col items-center justify-center bg-[#2B1D19]/90 p-10 rounded-xl border border-[#C59B8F]/30 shadow-2xl backdrop-blur-xl">
-                    <Lock className="w-16 h-16 text-[#C59B8F] mb-4 drop-shadow-lg" />
-                    <h3 className="text-2xl text-[#F3E8DE] font-serif mb-3 tracking-wide text-center">Premium Analysis Locked</h3>
-                    <p className="text-xs text-[#D2C3BD] mb-8 tracking-wide text-center max-w-xs leading-relaxed opacity-80">
-                      Upgrade to unlock detailed facial mapping, personalized hair analysis, and barber instructions.
-                    </p>
-                    <button className="text-xs text-[#2B1D19] uppercase font-bold tracking-widest bg-[#C59B8F] px-8 py-3 rounded-sm hover:bg-[#D4B4A9] transition-colors shadow-[0_0_20px_rgba(197,155,143,0.3)]">
-                      View Pricing
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <div className={isPremiumLocked ? "blur-[8px] pointer-events-none select-none opacity-40 transition-all duration-1000" : ""}>
+              <div className="mt-8">
+                <div>
 
                 <motion.div
                   initial={{ opacity: 0 }}
@@ -629,11 +616,20 @@ export default function AiResultPage() {
                         </div>
                       </div>
 
-                      <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm p-6 flex flex-col justify-center space-y-4 hover:border-[#C59B8F]/40 transition-colors">
+                      <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm p-6 flex flex-col justify-center space-y-4 hover:border-[#C59B8F]/40 transition-colors relative overflow-hidden group">
                         <div className="flex flex-col justify-between items-start gap-4">
-                          <div className="w-full">
+                          <div className="w-full relative">
                             <p className="text-[0.6rem] text-[#A68A82] mb-2 uppercase tracking-widest font-bold">Symmetry</p>
-                            <>
+                            {!hasSymmetry && (
+                              <div
+                                onClick={() => router.push('/service')}
+                                className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#2B1D19]/60 backdrop-blur-sm cursor-pointer rounded-sm"
+                              >
+                                <Lock className="w-6 h-6 text-[#C59B8F] mb-1" />
+                                <span className="text-[0.45rem] text-[#D2C3BD] uppercase tracking-widest font-bold">Locked</span>
+                              </div>
+                            )}
+                            <div className={!hasSymmetry ? "blur-sm opacity-40 select-none pointer-events-none" : ""}>
                               <h3 className="text-3xl text-[#F3E8DE] font-light">
                                 <CountUp value={clamp(data.skor_simetri)} delay={0.5} />
                               </h3>
@@ -647,8 +643,7 @@ export default function AiResultPage() {
                                   transition={{ duration: 2, delay: 0.5, ease: "easeOut" }}
                                 />
                               </div>
-                            </>
-
+                            </div>
                           </div>
                           <div className="w-full">
                             <p className="text-[0.6rem] text-[#A68A82] mb-2 uppercase tracking-widest font-bold">AI Conf.</p>
@@ -670,8 +665,17 @@ export default function AiResultPage() {
                       </div>
                     </div>
 
-                    <div className="w-full bg-[#2A1616] border border-[#3A1E1E] rounded-sm overflow-hidden hover:border-[#C59B8F]/40 transition-colors flex flex-col h-full">
-                      <div className="w-full flex flex-col h-full">
+                    <div className="w-full bg-[#2A1616] border border-[#3A1E1E] rounded-sm overflow-hidden hover:border-[#C59B8F]/40 transition-colors flex flex-col h-full relative group">
+                      {!hasHeatmap && (
+                        <div
+                          onClick={() => router.push('/service')}
+                          className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#2B1D19]/60 backdrop-blur-sm cursor-pointer rounded-sm"
+                        >
+                          <Lock className="w-10 h-10 text-[#C59B8F] mb-2" />
+                          <span className="text-[0.6rem] text-[#D2C3BD] uppercase tracking-widest font-bold">Locked</span>
+                        </div>
+                      )}
+                      <div className={`w-full flex flex-col h-full ${!hasHeatmap ? "blur-sm opacity-40 select-none pointer-events-none" : ""}`}>
 
                         <style>
                           {`
@@ -854,8 +858,17 @@ export default function AiResultPage() {
                   <h2 className="text-[0.75rem] uppercase tracking-[0.3em] text-[#A68A82] mb-8 font-bold flex items-center gap-3">
                     DETAILED FACIAL ANALYSIS
                   </h2>
-                  <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#3A1E1E]">
-                    <div className="p-6 flex flex-col relative h-[250px] justify-center items-center">
+                  <div className="bg-[#2A1616] border border-[#3A1E1E] rounded-sm grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-[#3A1E1E] relative overflow-hidden group">
+                    {!hasAdvMapping && (
+                      <div
+                        onClick={() => router.push('/service')}
+                        className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#2B1D19]/60 backdrop-blur-sm cursor-pointer rounded-sm"
+                      >
+                        <Lock className="w-16 h-16 text-[#C59B8F] mb-3" />
+                        <span className="text-[0.8rem] text-[#D2C3BD] uppercase tracking-widest font-bold">Premium Mapping Locked</span>
+                      </div>
+                    )}
+                    <div className={`p-6 flex flex-col relative h-[250px] justify-center items-center ${!hasAdvMapping ? "blur-sm opacity-40 select-none pointer-events-none" : ""}`}>
                       <p className="absolute top-6 left-6 text-xs text-[#A68A82]">Facial Proportion</p>
                       <>
 
@@ -920,7 +933,7 @@ export default function AiResultPage() {
                     </div>
 
 
-                    <div className="p-8 flex flex-col justify-between">
+                    <div className={`p-8 flex flex-col justify-between ${!hasAdvMapping ? "blur-sm opacity-40 select-none pointer-events-none" : ""}`}>
                       <p className="text-[0.65rem] text-[#A68A82] mb-6 uppercase tracking-widest font-bold">Feature Measurements</p>
                       <div className="space-y-4 flex-1">
 
@@ -951,7 +964,7 @@ export default function AiResultPage() {
 
 
 
-                    <div className="p-8 flex flex-col justify-between">
+                    <div className={`p-8 flex flex-col justify-between ${!hasAdvMapping ? "blur-sm opacity-40 select-none pointer-events-none" : ""}`}>
                       <p className="text-[0.65rem] text-[#A68A82] mb-6 uppercase tracking-widest font-bold">Facial Balance</p>
                       <div className="space-y-4 flex-1">
 

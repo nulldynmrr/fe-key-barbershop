@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { X, Sparkles, Check, Circle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const analysisSteps = [
   {
@@ -51,6 +52,15 @@ const stepDetails = {
 export default function AILoadingModal({ isOpen, onClose, onComplete, currentStatus = "" }) {
   const [activeStepIndex, setActiveStepIndex] = useState(-1);
   const [substepIndex, setSubstepIndex] = useState(0);
+  const [dots, setDots] = useState(".");
+
+  // Cycle dots animation
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDots(prev => (prev.length >= 3 ? "." : prev + "."));
+    }, 450);
+    return () => clearInterval(interval);
+  }, []);
 
   const currentDetail = stepDetails[currentStatus] || {
     title: "Memulai Analisis...",
@@ -148,12 +158,16 @@ export default function AILoadingModal({ isOpen, onClose, onComplete, currentSta
             if (index > activeStepIndex) return null;
 
             return (
-              <div key={step.id} className="flex items-center gap-3 animate-in fade-in slide-in-from-left-4 duration-500">
+              <div key={step.id} className="flex items-center gap-3">
                 <div className="flex h-6 w-6 items-center justify-center">
                   {isCompleted ? (
-                    <div className="flex h-4 w-4 items-center justify-center rounded-full bg-[#c57e7b]">
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="flex h-4 w-4 items-center justify-center rounded-full bg-[#c57e7b]"
+                    >
                       <Check className="h-3 w-3 text-white" strokeWidth={3} />
-                    </div>
+                    </motion.div>
                   ) : isCurrent ? (
                     <div className="animate-pulse">
                       <Circle className="h-4 w-4 fill-[#4a1a1a] text-[#4a1a1a]" />
@@ -162,9 +176,38 @@ export default function AILoadingModal({ isOpen, onClose, onComplete, currentSta
                     <Circle className="h-4 w-4 text-[#d8c8bc]" />
                   )}
                 </div>
-                <span className={`text-sm tracking-wide ${isCompleted || isCurrent ? "text-[#4a1a1a]" : "text-[#c0b5ad]"}`} style={{ fontFamily: "var(--font-be-vietnam)" }}>
-                  {step.label}
-                </span>
+                <div className="relative overflow-hidden flex-1">
+                  <motion.span
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    className={`text-sm tracking-wide relative z-10 block ${
+                      isCurrent ? "font-bold text-[#4a1a1a]" : isCompleted ? "text-[#4a1a1a]" : "text-[#c0b5ad]"
+                    }`}
+                    style={{ fontFamily: "var(--font-be-vietnam)" }}
+                  >
+                    {step.label}
+                    {isCurrent && (
+                      <span className="inline-block min-w-[20px] ml-1 font-bold text-[#c57e7b]">
+                        {dots}
+                      </span>
+                    )}
+                  </motion.span>
+
+                  {/* Shimmer / Glint Overlay */}
+                  {isCurrent && (
+                    <motion.div
+                      initial={{ x: "-150%" }}
+                      animate={{ x: "200%" }}
+                      transition={{
+                        repeat: Infinity,
+                        duration: 1.5,
+                        ease: "linear",
+                        repeatDelay: 0.5
+                      }}
+                      className="absolute inset-0 z-20 pointer-events-none bg-gradient-to-r from-transparent via-white/40 to-transparent skew-x-[-20deg]"
+                    />
+                  )}
+                </div>
               </div>
             );
           })}

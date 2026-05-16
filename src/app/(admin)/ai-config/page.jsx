@@ -544,19 +544,11 @@ export default function AiConfigPage() {
                         </button>
                       )}
                     </div>
-                    
-                    <div className="grid grid-cols-2 gap-3">
+
+                    <div className="grid grid-cols-2">
                       <div className="bg-[#fdf2f0] p-2 rounded-lg">
                         <p className="text-[9px] text-[#8b6f66] mb-0.5">Used (DB)</p>
                         <p className="text-xs font-bold text-[#4a1a1a]">${Number(router.usedBudget || 0).toFixed(4)}</p>
-                      </div>
-                      <div className="bg-emerald-50 p-2 rounded-lg border border-emerald-100">
-                        <p className="text-[9px] text-emerald-600 mb-0.5">Real-time (MAIA)</p>
-                        <p className="text-xs font-bold text-emerald-700">
-                          {router.realtimeBalance !== undefined && router.realtimeBalance !== null 
-                            ? `$${Number(router.realtimeBalance).toFixed(4)}` 
-                            : "—"}
-                        </p>
                       </div>
                     </div>
 
@@ -565,7 +557,7 @@ export default function AiConfigPage() {
                       <p className="text-[10px] font-bold text-[#2b1d19]">${Number(router.maxBudget || 0).toFixed(2)}</p>
                     </div>
                     <div className="w-full bg-gray-100 h-1.5 rounded-full mt-1 overflow-hidden">
-                      <div 
+                      <div
                         className={`h-full transition-all duration-500 ${router.isWarning ? "bg-red-500" : "bg-[#4a1a1a]"}`}
                         style={{ width: `${Math.min(100, (router.usedBudget / (router.maxBudget || 1)) * 100)}%` }}
                       ></div>

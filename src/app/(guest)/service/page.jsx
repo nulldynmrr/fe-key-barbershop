@@ -85,6 +85,17 @@ function PricingCard({ pkg }) {
       const res = await api.post("/payments/buy-package", { package_id: pkg.id });
       if (res.data && res.data.success) {
         showToast("Paket berhasil dibeli dan diaktifkan!", "success");
+        
+        // Refresh profile to sync features and credit immediately
+        try {
+          const profileRes = await api.get("/users/profile");
+          if (profileRes.data && profileRes.data.success) {
+            localStorage.setItem("user", JSON.stringify(profileRes.data.data));
+          }
+        } catch (profileErr) {
+          console.error("Failed to refresh profile after purchase:", profileErr);
+        }
+
         router.push("/ai");
       }
     } catch (err) {

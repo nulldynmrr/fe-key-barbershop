@@ -337,9 +337,10 @@ export default function AiPage() {
                 } else if (chunk.type === "final") {
                   resultData = chunk;
                 } else if (chunk.type === "error") {
-                  throw { response: { data: chunk, status: chunk.statusCode || 500 } };
+                  throw { isApiError: true, response: { data: chunk, status: chunk.statusCode || 500 } };
                 }
               } catch (e) {
+                if (e.isApiError) throw e;
                 console.error("Gagal parse chunk:", e);
               }
             }

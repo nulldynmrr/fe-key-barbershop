@@ -29,17 +29,10 @@ export default function SiteNavbar({
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [user, setUser] = useState(() => {
-    if (typeof window !== "undefined") {
-      const savedUser = localStorage.getItem("user");
-      try {
-        return savedUser ? JSON.parse(savedUser) : null;
-      } catch (e) {
-        return null;
-      }
-    }
-    return null;
-  });
+  const [isBreakdownOpen, setIsBreakdownOpen] = useState(false);
+  const [user, setUser] = useState(null);
+  const [isSwitching, setIsSwitching] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [packagesResolved, setPackagesResolved] = useState(false);
   const [hasActivePackage, setHasActivePackage] = useState(false);
   const pathname = usePathname();
@@ -49,6 +42,30 @@ export default function SiteNavbar({
 
   const handleLogout = async () => {
     await logoutUser();
+  };
+
+  const handleSwitchPackage = async (packageId) => {
+    if (isSwitching || packageId === user?.active_package_id) return;
+
+    try {
+      setIsSwitching(true);
+      const res = await api.post("/users/switch-package", { package_id: packageId });
+      if (res.data && res.data.success) {
+        // Update user state and localStorage
+        const updatedUser = {
+          ...user,
+          active_package_id: packageId,
+          active_package: res.data.data.active_package
+        };
+        setUser(updatedUser);
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        setIsBreakdownOpen(false);
+      }
+    } catch (error) {
+      console.error("Failed to switch package:", error);
+    } finally {
+      setIsSwitching(false);
+    }
   };
 
   useEffect(() => {
@@ -74,13 +91,27 @@ export default function SiteNavbar({
       if (isDropdownOpen && !event.target.closest(".user-dropdown-container")) {
         setIsDropdownOpen(false);
       }
+      if (isBreakdownOpen && !event.target.closest(".coin-breakdown-container")) {
+        setIsBreakdownOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isDropdownOpen]);
+  }, [isDropdownOpen, isBreakdownOpen]);
 
   useEffect(() => {
+    setMounted(true);
     let cancelled = false;
+
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (e) {
+        console.error("Failed to parse user from localStorage");
+      }
+    }
+
     (async () => {
       const ok = await fetchHasActivePurchaseablePackage();
       if (cancelled) return;
@@ -91,6 +122,9 @@ export default function SiteNavbar({
       cancelled = true;
     };
   }, []);
+
+  // Prevent hydration mismatch by returning null until mounted
+  if (!mounted) return null;
 
   const showAiNavAndCta = packagesResolved && hasActivePackage && !hideAiCta;
   const visibleNavItems = navItems.filter((item) => item.href !== "/ai" || showAiNavAndCta);
@@ -138,15 +172,68 @@ export default function SiteNavbar({
                     <ChevronDown className={`w-3 h-3 transition-transform duration-300 ${isDropdownOpen ? "rotate-180" : ""}`} />
                   </button>
                   {isAiPage && (
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="flex items-center gap-1 text-[0.6rem] bg-[#f7f1ea] px-1.5 py-0.5 rounded-sm border border-[#e6d1c7] text-[#5a2725] font-semibold">
-                        <Coins className="w-3 h-3 text-[#C59B8F]" />
-                        {user.sisa_credit || 0}
-                      </span>
-                      <span className="flex items-center gap-1 text-[0.6rem] bg-[#4a1a1a] px-1.5 py-0.5 rounded-sm text-[#fbf7f3] uppercase tracking-wider">
-                        <Sparkles className="w-3 h-3 text-[#C59B8F]" />
-                        {user.active_package?.namaPaket || "Free"}
-                      </span>
+                    <div className="flex items-center gap-2 mt-1 relative coin-breakdown-container">
+                      <button
+                        onClick={() => setIsBreakdownOpen(!isBreakdownOpen)}
+                        className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                      >
+                        <span className="flex items-center gap-1 text-[0.6rem] bg-[#f7f1ea] px-1.5 py-0.5 rounded-sm border border-[#e6d1c7] text-[#5a2725] font-semibold">
+                          <Coins className="w-3 h-3 text-[#C59B8F]" />
+                          {user.sisa_credit || 0}
+                        </span>
+                        <span className="flex items-center gap-1 text-[0.6rem] bg-[#4a1a1a] px-1.5 py-0.5 rounded-sm text-[#fbf7f3] uppercase tracking-wider">
+                          <Sparkles className="w-3 h-3 text-[#C59B8F]" />
+                          {user.active_package?.namaPaket || "Free"}
+                        </span>
+                      </button>
+
+                      {/* Coin Breakdown Dropdown */}
+                      {isBreakdownOpen && (
+                        <div className="absolute top-full right-0 mt-2 w-64 bg-white border border-[#e6d1c7] rounded-md shadow-[0_10px_30px_-10px_rgba(43,29,25,0.15)] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 z-[110]">
+                          <div className="px-4 py-2 bg-[#f7f1ea] border-b border-[#e6d1c7]">
+                            <p className="text-[10px] uppercase tracking-widest font-bold text-[#4a1a1a]">Package Breakdown</p>
+                          </div>
+                          <div className="max-h-60 overflow-y-auto">
+                            {user.package_balances && user.package_balances.length > 0 ? (
+                              user.package_balances.map((balance) => {
+                                const isActive = balance.package_id === user.active_package_id;
+                                return (
+                                  <div key={balance.id} className={`p-3 border-b border-[#e6d1c7]/50 last:border-0 ${isActive ? "bg-[#f7f1ea]/30" : ""}`}>
+                                    <div className="flex justify-between items-start mb-1">
+                                      <p className="text-[11px] font-bold text-[#2b1d19]">{balance.package?.namaPaket || "Unknown Package"}</p>
+                                      {isActive && (
+                                        <span className="text-[8px] bg-[#4a1a1a] text-white px-1 rounded-full uppercase tracking-tighter">Aktif</span>
+                                      )}
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                      <div className="flex items-center gap-1 text-[10px] text-[#5a2725] font-medium">
+                                        <Coins className="w-2.5 h-2.5" />
+                                        Sisa {balance.coins_remaining} koin
+                                      </div>
+                                      {!isActive && balance.coins_remaining > 0 && (
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleSwitchPackage(balance.package_id);
+                                          }}
+                                          disabled={isSwitching}
+                                          className="text-[9px] uppercase tracking-widest bg-white border border-[#4a1a1a] text-[#4a1a1a] px-2 py-0.5 rounded hover:bg-[#4a1a1a] hover:text-white transition-all disabled:opacity-50"
+                                        >
+                                          {isSwitching ? "..." : "Pindah"}
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })
+                            ) : (
+                              <div className="p-4 text-center">
+                                <p className="text-[10px] text-[#78716c] italic">No active package details found. Please buy or refresh.</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 

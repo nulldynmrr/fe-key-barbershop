@@ -184,9 +184,10 @@ export default function AiCameraPage() {
             } else if (chunk.type === "final") {
               resultData = chunk;
             } else if (chunk.type === "error") {
-              throw { response: { data: chunk, status: chunk.statusCode || 500 } };
+              throw { isApiError: true, response: { data: chunk, status: chunk.statusCode || 500 } };
             }
           } catch (e) {
+            if (e.isApiError) throw e;
             console.error("Gagal parse chunk:", e);
           }
         }
@@ -211,6 +212,11 @@ export default function AiCameraPage() {
       setIsApiDone(true);
     } catch (err) {
       console.error(err);
+      const errCode = err.response?.data?.errorCode;
+      if (errCode === "SERVICE_UNAVAILABLE" || err.response?.status === 503 || err.response?.status === 429) {
+        router.push("/ai/busy");
+        return;
+      }
       showToast(err.response?.data?.message || err.message || "Failed to analyze face", "error");
       setIsCapturing(false);
       setIsProcessing(false);

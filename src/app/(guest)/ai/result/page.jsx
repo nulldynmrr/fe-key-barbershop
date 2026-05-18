@@ -82,7 +82,7 @@ function ResultPortrait({ url_foto_upload, ai_image_url }) {
       {url_foto_upload && (
         <img
           src={url_foto_upload.startsWith("data:") || url_foto_upload.startsWith("http") ? url_foto_upload : `${(process.env.NEXT_PUBLIC_API_URL).replace("/api/v1", "")}${url_foto_upload}`}
-          className="absolute inset-0 w-full h-full object-cover z-[1]"
+          className="absolute inset-0 w-full h-full object-contain z-[1]"
           alt="Original Reference"
         />
       )}
@@ -90,7 +90,7 @@ function ResultPortrait({ url_foto_upload, ai_image_url }) {
       {ai_image_url && (
         <img
           src={ai_image_url.startsWith("data:") || ai_image_url.startsWith("http") ? ai_image_url : `${(process.env.NEXT_PUBLIC_API_URL).replace("/api/v1", "")}${ai_image_url}`}
-          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700 group-hover:opacity-0 z-[2]"
+          className="absolute inset-0 w-full h-full object-contain transition-opacity duration-700 group-hover:opacity-0 z-[2]"
           alt="AI Generated Style"
         />
       )}
@@ -455,10 +455,10 @@ export default function AiResultPage() {
                           )}
 
                           {hasImage && !isLocked && (
-                            <div className="relative h-[60%] w-full shrink-0 overflow-hidden">
+                            <div className="relative h-[60%] w-full shrink-0 overflow-hidden flex items-center justify-center bg-black/20">
                               <img
                                 src={aiImageUrls[idx].startsWith("data:") || aiImageUrls[idx].startsWith("http") ? aiImageUrls[idx] : `${(process.env.NEXT_PUBLIC_API_URL || "").replace("/api/v1", "")}${aiImageUrls[idx]}`}
-                                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                className="absolute inset-0 w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
                                 alt={style.nama_gaya}
                               />
                               <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#1F0D0D] to-transparent z-10 pointer-events-none"></div>

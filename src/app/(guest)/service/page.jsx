@@ -106,23 +106,28 @@ function PricingCard({ pkg }) {
     }
   };
   const allFeatures = [
-    { key: "featStandardScan", label: "Standard Scan" },
-    { key: "featFaceHeatmap", label: "Face Heatmap" },
-    { key: "featSymmetry", label: "Facial Symmetry" },
-    { key: "featAdvMapping", label: "Adv. Feature Mapping" },
-    { key: "featHairAnalysis", label: "Hair Analysis" },
-    { key: "featRiskAnalysis", label: "Risk Analysis" },
-    { key: "featBarberInstructions", label: "Barber Instructions" },
-    { key: "featVirtualTryOn", label: "Virtual Try-On" },
-    { key: "featHistory", label: "Extended History" },
-    { key: "featTrendAnalysis", label: "Trend Analysis" },
+    { key: "featStandardScan", label: "Scan Wajah Standar" },
+    { key: "featFaceHeatmap", label: "Analisis Area Wajah" },
+    { key: "featSymmetry", label: "Skor Simetri Wajah" },
+    { key: "featAdvMapping", label: "Pemetaan Fitur Lanjut" },
+    { key: "featHairAnalysis", label: "Analisis Detail Rambut" },
+    { key: "featRiskAnalysis", label: "Analisis Risiko Rambut" },
+    { key: "featBarberInstructions", label: "Panduan Potong Barber" },
+    { key: "featVirtualTryOn", label: "Simulasi Gaya (Try-On)" },
+    { key: "featHistory", label: "Simpan Riwayat Lengkap" },
+    { key: "featTrendAnalysis", label: "Analisis Tren Terkini" },
   ];
 
   const isFeatureActive = (val) =>
     val === 1 || val === "1" || val === true || String(val).toLowerCase() === "true";
 
-  const activeFeats = allFeatures.filter((f) => isFeatureActive(pkg[f.key]));
-  const inactiveFeats = allFeatures.filter((f) => !isFeatureActive(pkg[f.key]));
+  const activeFeats = allFeatures.filter((f) => isFeatureActive(pkg[f.key])).map(f => ({ ...f, isActive: true }));
+  
+  if (pkg.virtualTryOnLimit && pkg.virtualTryOnLimit >= 2) {
+    activeFeats.push({ key: "virtualTryOnLimit", label: `Dapat ${pkg.virtualTryOnLimit} Foto Simulasi AI`, isActive: true });
+  }
+
+  const inactiveFeats = allFeatures.filter((f) => !isFeatureActive(pkg[f.key])).map(f => ({ ...f, isActive: false }));
   const displayedFeats = [...activeFeats, ...inactiveFeats.slice(0, 2)];
 
   return (
@@ -158,7 +163,7 @@ function PricingCard({ pkg }) {
 
       <ul className="mt-6 flex-1 space-y-3">
         {displayedFeats.map((feat, idx) => {
-          const active = isFeatureActive(pkg[feat.key]);
+          const active = feat.isActive;
           return (
             <li key={idx} className="flex items-start gap-3">
               {active ? (

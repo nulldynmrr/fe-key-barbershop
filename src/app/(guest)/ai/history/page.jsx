@@ -8,10 +8,12 @@ import SiteNavbar from "@/components/SiteNavbar";
 import {
   History,
   ChevronLeft,
+  ChevronRight,
   Calendar,
   Scan,
   ArrowRight,
   Loader2,
+  Search,
   Image as ImageIcon
 } from "lucide-react";
 
@@ -21,12 +23,40 @@ export default function AiHistoryPage() {
   const [loading, setLoading] = useState(true);
   const [history, setHistory] = useState([]);
 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const baseUrl = apiUrl.split("/api/v1")[0];
 
   useEffect(() => {
     fetchHistory();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
+  const filteredHistory = history.filter((item) => {
+    const searchLower = searchQuery.toLowerCase();
+    const faceShape = item.hasil_analisis?.bentuk_wajah?.toLowerCase() || "";
+    const styleName = item.hasil_analisis?.rekomendasi_gaya?.[0]?.nama_gaya?.toLowerCase() || "";
+
+    const dateStr = new Date(item.tgl_generate).toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    }).toLowerCase();
+
+    return faceShape.includes(searchLower) || styleName.includes(searchLower) || dateStr.includes(searchLower);
+  });
+
+  const totalPages = Math.ceil(filteredHistory.length / itemsPerPage) || 1;
+  const paginatedHistory = filteredHistory.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const getImageUrl = (url) => {
     if (!url) return null;
@@ -47,12 +77,11 @@ export default function AiHistoryPage() {
   };
 
   const handleViewDetail = (item) => {
-    // Format data to match what the result page expects
     let activeFeaturesUsed = [];
     if (item.features_used) {
       try {
-        activeFeaturesUsed = typeof item.features_used === 'string' 
-          ? JSON.parse(item.features_used) 
+        activeFeaturesUsed = typeof item.features_used === 'string'
+          ? JSON.parse(item.features_used)
           : item.features_used;
       } catch (e) {
         console.warn("Failed to parse features_used:", e);
@@ -62,13 +91,13 @@ export default function AiHistoryPage() {
     const formattedResult = {
       hasil_analisis: item.hasil_analisis,
       url_foto_upload: getImageUrl(item.url_foto_upload),
-      url_hasil_img: Array.isArray(item.url_hasil_img) 
+      url_hasil_img: Array.isArray(item.url_hasil_img)
         ? item.url_hasil_img.map(url => getImageUrl(url))
-        : item.url_hasil_img 
-          ? [getImageUrl(item.url_hasil_img)] 
+        : item.url_hasil_img
+          ? [getImageUrl(item.url_hasil_img)]
           : [],
       tgl_generate: item.tgl_generate,
-      active_features: activeFeaturesUsed.length > 0 ? activeFeaturesUsed : null 
+      active_features: activeFeaturesUsed.length > 0 ? activeFeaturesUsed : null
     };
 
     sessionStorage.setItem("aiAnalysisResult", JSON.stringify(formattedResult));
@@ -79,8 +108,7 @@ export default function AiHistoryPage() {
     <main className="min-h-screen bg-[#fcf9f7] text-[#2b1d19]">
       <SiteNavbar />
 
-      <div className="max-w-4xl mx-auto px-6 pt-32 pb-20">
-        {/* Header */}
+      <div className="max-w-4xl mx-auto px-6 pt-8 pb-20">
         <div className="flex items-center justify-between mb-10">
           <div className="flex items-center gap-4">
             <button
@@ -101,6 +129,22 @@ export default function AiHistoryPage() {
             <span className="text-sm font-semibold text-[#8a7a74]">{history.length} Records</span>
           </div>
         </div>
+
+        {!loading && history.length > 0 && (
+          <div className="mb-8 relative">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Search className="w-5 h-5 text-[#8a7a74]" />
+            </div>
+            <input
+              type="text"
+              placeholder="Cari berdasarkan bentuk wajah, gaya rambut, atau bulan (contoh: mei 2026)..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 bg-white border border-[#f0e2d9] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#d97706]/50 focus:border-[#d97706] transition-all shadow-sm"
+              style={{ fontFamily: "var(--font-plus-jakarta)" }}
+            />
+          </div>
+        )}
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20">
@@ -123,15 +167,21 @@ export default function AiHistoryPage() {
               Try AI Feature Now
             </button>
           </div>
+        ) : filteredHistory.length === 0 ? (
+          <div className="bg-white rounded-3xl p-12 text-center border border-[#f0e2d9] shadow-sm">
+            <h2 className="text-xl font-bold mb-2">Pencarian Tidak Ditemukan</h2>
+            <p className="text-[#8a7a74] max-w-md mx-auto">
+              Riwayat yang cocok dengan pencarian "{searchQuery}" tidak ditemukan.
+            </p>
+          </div>
         ) : (
           <div className="grid gap-4">
-            {history.map((item) => (
+            {paginatedHistory.map((item) => (
               <div
                 key={item.id}
                 onClick={() => handleViewDetail(item)}
                 className="group bg-white rounded-2xl p-4 border border-[#f0e2d9] shadow-sm hover:shadow-md hover:border-[#d97706]/30 transition-all cursor-pointer flex items-center gap-6"
               >
-                {/* Image Preview */}
                 <div className="relative w-20 h-20 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
                   {(() => {
                     const resultUrl = Array.isArray(item.url_hasil_img)
@@ -162,7 +212,6 @@ export default function AiHistoryPage() {
                   )}
                 </div>
 
-                {/* Content */}
                 <div className="flex-grow">
                   <div className="flex items-center gap-2 mb-1">
                     <Calendar className="w-3.5 h-3.5 text-[#8a7a74]" />
@@ -188,7 +237,6 @@ export default function AiHistoryPage() {
                   </p>
                 </div>
 
-                {/* Status/Action */}
                 <div className="flex flex-col items-end gap-2">
                   <div className="px-3 py-1 rounded-full bg-[#fcf9f7] border border-[#f0e2d9] text-[10px] font-bold text-[#8a7a74] uppercase tracking-wider">
                     {item.harga_credit_terpakai} Credits
@@ -199,6 +247,30 @@ export default function AiHistoryPage() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {!loading && filteredHistory.length > itemsPerPage && (
+          <div className="flex items-center justify-center gap-3 mt-10">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="p-2.5 rounded-lg border border-[#f0e2d9] bg-white text-[#524342] hover:bg-[#fcf9f7] disabled:opacity-50 transition-all flex items-center justify-center shadow-sm"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+
+            <div className="px-4 py-2 rounded-lg bg-white border border-[#f0e2d9] text-sm font-medium text-[#524342] shadow-sm" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
+              Halaman {currentPage} dari {totalPages}
+            </div>
+
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="p-2.5 rounded-lg border border-[#f0e2d9] bg-white text-[#524342] hover:bg-[#fcf9f7] disabled:opacity-50 transition-all flex items-center justify-center shadow-sm"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
           </div>
         )}
       </div>

@@ -397,6 +397,25 @@ export default function AiPage() {
           const errCode = err.response?.data?.errorCode;
           const message = err.response?.data?.message || err.message || "";
 
+          const creditAfter = err.response?.data?.credit_after;
+          if (creditAfter !== undefined) {
+            try {
+              const savedUser = JSON.parse(localStorage.getItem("user") || "{}");
+              savedUser.sisa_credit = creditAfter;
+              localStorage.setItem("user", JSON.stringify(savedUser));
+              window.dispatchEvent(new Event("userProfileUpdated"));
+            } catch (e) {
+              console.error("Failed to sync credit:", e);
+            }
+          }
+
+          if (errCode === "PHOTO_VIOLATION" || errCode === "MULTIPLE_FACES_DETECTED") {
+            showToast(message, "error", 7000);
+            setIsAnalyzing(false);
+            if (fileInputRef.current) fileInputRef.current.value = "";
+            return;
+          }
+
           if (errCode === "NO_ACTIVE_PACKAGE" || errCode === "INSUFFICIENT_CREDITS") {
             showToast(message, "error", 5000);
             setTimeout(() => {

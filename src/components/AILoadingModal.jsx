@@ -5,23 +5,42 @@ import Image from "next/image";
 import { X, Sparkles, Check, Circle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+const labelVariations = {
+  billingNode: [
+    "Cek koin dulu yah",
+    "Mimin intip saldo dulu ya",
+    "Verifikasi akses premium kamu",
+    "Lagi pastiin koinnya cukup nih",
+    "Cek kesiapan saldo sebentar"
+  ],
+  llmNode: [
+    "Ngulik struktur wajah",
+    "Menganalisis bentuk wajahmu",
+    "Mapping fitur wajah unikmu",
+    "AI lagi baca anatomi wajah nih",
+    "Bedah proporsi wajah dulu ya"
+  ],
+  imageGenNode: [
+    "Milihin hairstyle yang paling kece!",
+    "Kurasi gaya rambut paling pas",
+    "Lagi cari inspirasi rambut terbaik",
+    "Mixing hairstyle buat kamu nih",
+    "Nemu gaya yang cocok buat wajahmu"
+  ],
+  dbTransactionNode: [
+    "Siapin hasil rekomendasi terbaik",
+    "Finalisasi saran gaya rambut",
+    "Menyusun resep ketampanan kamu",
+    "Lagi bungkus hasil analisanya",
+    "Menyiapkan galeri eksklusif kamu"
+  ]
+};
+
 const analysisSteps = [
-  {
-    id: "billingNode",
-    label: "Cek koin dulu yah",
-  },
-  {
-    id: "llmNode",
-    label: "Ngulik struktur wajah",
-  },
-  {
-    id: "imageGenNode",
-    label: "Milihin hairstyle yang paling kece!",
-  },
-  {
-    id: "dbTransactionNode",
-    label: "Siapin hasil rekomendasi terbaik",
-  },
+  { id: "billingNode" },
+  { id: "llmNode" },
+  { id: "imageGenNode" },
+  { id: "dbTransactionNode" },
 ];
 
 const stepDetails = {
@@ -53,6 +72,19 @@ export default function AILoadingModal({ isOpen, onClose, onComplete, currentSta
   const [activeStepIndex, setActiveStepIndex] = useState(-1);
   const [substepIndex, setSubstepIndex] = useState(0);
   const [dots, setDots] = useState(".");
+  const [activeLabels, setActiveLabels] = useState({});
+
+  // Randomize labels only once when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      const selected = {};
+      Object.keys(labelVariations).forEach(key => {
+        const variants = labelVariations[key];
+        selected[key] = variants[Math.floor(Math.random() * variants.length)];
+      });
+      setActiveLabels(selected);
+    }
+  }, [isOpen]);
 
   // Cycle dots animation
   useEffect(() => {
@@ -180,12 +212,11 @@ export default function AILoadingModal({ isOpen, onClose, onComplete, currentSta
                   <motion.span
                     initial={{ x: -20, opacity: 0 }}
                     animate={{ x: 0, opacity: 1 }}
-                    className={`text-sm tracking-wide relative z-10 block ${
-                      isCurrent ? "font-bold text-[#4a1a1a]" : isCompleted ? "text-[#4a1a1a]" : "text-[#c0b5ad]"
-                    }`}
+                    className={`text-sm tracking-wide relative z-10 block ${isCurrent ? "font-bold text-[#4a1a1a]" : isCompleted ? "text-[#4a1a1a]" : "text-[#c0b5ad]"
+                      }`}
                     style={{ fontFamily: "var(--font-be-vietnam)" }}
                   >
-                    {step.label}
+                    {activeLabels[step.id]}
                     {isCurrent && (
                       <span className="inline-block min-w-[20px] ml-1 font-bold text-[#c57e7b]">
                         {dots}

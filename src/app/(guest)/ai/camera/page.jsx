@@ -213,11 +213,33 @@ export default function AiCameraPage() {
     } catch (err) {
       console.error(err);
       const errCode = err.response?.data?.errorCode;
+      const message = err.response?.data?.message || err.message || "Failed to analyze face";
+
+      const creditAfter = err.response?.data?.credit_after;
+      if (creditAfter !== undefined) {
+        try {
+          const savedUser = JSON.parse(localStorage.getItem("user") || "{}");
+          savedUser.sisa_credit = creditAfter;
+          localStorage.setItem("user", JSON.stringify(savedUser));
+          window.dispatchEvent(new Event("userProfileUpdated"));
+        } catch (e) {
+          console.error("Failed to sync credit:", e);
+        }
+      }
+
+      if (errCode === "PHOTO_VIOLATION" || errCode === "MULTIPLE_FACES_DETECTED") {
+        showToast(message, "error", 7000);
+        setIsCapturing(false);
+        setIsProcessing(false);
+        return;
+      }
+
       if (errCode === "SERVICE_UNAVAILABLE" || err.response?.status === 503 || err.response?.status === 429) {
         router.push("/ai/busy");
         return;
       }
-      showToast(err.response?.data?.message || err.message || "Failed to analyze face", "error");
+      
+      showToast(message, "error");
       setIsCapturing(false);
       setIsProcessing(false);
     }

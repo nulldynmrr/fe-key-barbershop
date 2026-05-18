@@ -84,6 +84,15 @@ export default function SiteNavbar({
     if (showSignIn) {
       fetchProfile();
     }
+
+    const handleProfileUpdate = () => {
+      if (showSignIn) {
+        fetchProfile();
+      }
+    };
+
+    window.addEventListener("userProfileUpdated", handleProfileUpdate);
+    return () => window.removeEventListener("userProfileUpdated", handleProfileUpdate);
   }, [showSignIn, pathname]);
 
   useEffect(() => {
@@ -195,8 +204,10 @@ export default function SiteNavbar({
                           </div>
                           <div className="max-h-60 overflow-y-auto">
                             {user.package_balances && user.package_balances.length > 0 ? (
-                              user.package_balances.map((balance) => {
-                                const isActive = balance.package_id === user.active_package_id;
+                              user.package_balances
+                                .filter((balance) => balance.coins_remaining > 0)
+                                .map((balance) => {
+                                  const isActive = balance.package_id === user.active_package_id;
                                 return (
                                   <div key={balance.id} className={`p-3 border-b border-[#e6d1c7]/50 last:border-0 ${isActive ? "bg-[#f7f1ea]/30" : ""}`}>
                                     <div className="flex justify-between items-start mb-1">

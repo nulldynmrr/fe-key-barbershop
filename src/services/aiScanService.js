@@ -7,5 +7,6 @@ export const aiScanService = {
     api.post("/ai/analyze-face", formData, {
       "Content-Type": "multipart/form-data",
     }),
+  generateTryOn: (data) => api.post("/ai/generate-tryon", data),
   getHistory: (params) => api.get("/users/ai-history", { params }),
 };

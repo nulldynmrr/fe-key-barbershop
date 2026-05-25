@@ -71,9 +71,33 @@ function InteractiveCard({ children, className = "", delay = "0ms" }) {
   );
 }
 
-function ResultPortrait({ url_foto_upload, ai_image_url }) {
+function ResultPortrait({ url_foto_upload, ai_image_url, isGenerating, error, onRetry }) {
   return (
     <div className="relative h-full min-h-[600px] lg:min-h-full w-full overflow-hidden bg-[linear-gradient(180deg,#1c1a1a_0%,#40312c_35%,#8b6f59_72%,#d2bfa7_100%)] shadow-2xl group">
+      <style>{`
+        @keyframes morph {
+          0% {
+            border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+          }
+          50% {
+            border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
+          }
+          100% {
+            border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+          }
+        }
+        @keyframes spin-slow {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        .liquid-blob {
+          background: linear-gradient(45deg, #4A1A1A, #C59B8F, #E0D8D5, #8b6f59);
+          background-size: 200% 200%;
+          animation: morph 8s ease-in-out infinite, spin-slow 15s linear infinite;
+          filter: blur(4px);
+        }
+      `}</style>
+
       <div className="absolute inset-x-0 top-0 h-28 bg-[linear-gradient(180deg,rgba(0,0,0,0.56),transparent)] z-[5]" />
       <div className="absolute inset-x-0 bottom-0 h-32 bg-[linear-gradient(0deg,rgba(46,17,17,0.8),transparent)] z-[5]" />
 
@@ -87,7 +111,7 @@ function ResultPortrait({ url_foto_upload, ai_image_url }) {
         />
       )}
 
-      {ai_image_url && (
+      {ai_image_url && !isGenerating && !error && (
         <img
           src={ai_image_url.startsWith("data:") || ai_image_url.startsWith("http") ? ai_image_url : `${(process.env.NEXT_PUBLIC_API_URL).replace("/api/v1", "")}${ai_image_url}`}
           className="absolute inset-0 w-full h-full object-contain transition-opacity duration-700 group-hover:opacity-0 z-[2]"
@@ -95,7 +119,48 @@ function ResultPortrait({ url_foto_upload, ai_image_url }) {
         />
       )}
 
-      {ai_image_url && (
+      {isGenerating && (
+        <div className="absolute inset-0 z-[10] flex flex-col items-center justify-center bg-black/40 backdrop-blur-md">
+          <div className="relative w-48 h-48 flex items-center justify-center">
+            <div className="absolute w-44 h-44 rounded-full liquid-blob opacity-80 mix-blend-screen animate-pulse" />
+            <div className="absolute w-40 h-40 rounded-full liquid-blob opacity-60 mix-blend-color-dodge [animation-delay:2s]" />
+            <div className="absolute w-36 h-36 rounded-full bg-gradient-to-tr from-[#4a1a1a]/80 to-[#c59b8f]/50 backdrop-blur-xl border border-white/10 flex items-center justify-center shadow-2xl">
+              <img
+                src="/images/logo-navbar.png"
+                className="w-20 h-16 object-contain animate-pulse"
+                alt="Key Logo"
+              />
+            </div>
+          </div>
+          
+          <div className="mt-8 text-center px-6">
+            <h3 className="text-md font-serif text-[#F3E8DE] tracking-widest uppercase">Mempersiapkan Rekomendasi</h3>
+            <p className="text-[0.55rem] text-[#D2C3BD] uppercase tracking-widest mt-2">Membentuk Gaya Rambut Terbaik Anda...</p>
+          </div>
+        </div>
+      )}
+
+      {error && (
+        <div className="absolute inset-0 z-[10] flex flex-col items-center justify-center bg-black/80 backdrop-blur-md px-6 text-center">
+          <div className="bg-[#4A1A1A]/40 border border-[#D15C5C]/30 p-8 rounded-sm max-w-sm flex flex-col items-center shadow-2xl">
+            <span className="text-4xl mb-4">⚠️</span>
+            <h3 className="text-md font-serif text-[#F3E8DE] uppercase tracking-wider">Pembuatan Gambar Gagal</h3>
+            <p className="text-[0.7rem] text-[#D2C3BD] mt-2 leading-relaxed">
+              {error || "Terjadi kesalahan saat memproses visual try-on lokal Anda."}
+            </p>
+            {onRetry && (
+              <button
+                onClick={onRetry}
+                className="mt-6 bg-[#C59B8F] text-[#2B1D19] px-6 py-2 text-[0.65rem] font-bold uppercase tracking-widest rounded-sm hover:bg-[#D4B4A9] transition-colors shadow-lg"
+              >
+                Coba Lagi
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {ai_image_url && !isGenerating && !error && (
         <div className="absolute bottom-6 left-6 z-[30] transition-opacity duration-700 group-hover:opacity-0">
           <div className="bg-[#D15C5C]/90 px-4 py-2 text-[0.65rem] uppercase tracking-[0.3em] text-[#f3e8de] backdrop-blur-md border border-white/20 w-fit shadow-lg flex items-center gap-2">
             <Sparkles className="w-3 h-3" />
@@ -104,7 +169,7 @@ function ResultPortrait({ url_foto_upload, ai_image_url }) {
         </div>
       )}
 
-      <div className={`absolute bottom-6 left-6 z-[25] transition-opacity duration-700 ${ai_image_url ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
+      <div className={`absolute bottom-6 left-6 z-[25] transition-opacity duration-700 ${ai_image_url && !isGenerating && !error ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
         <div className="bg-black/80 px-4 py-2 text-[0.65rem] uppercase tracking-[0.3em] text-[#f3e8de] backdrop-blur-md border border-white/10 w-fit shadow-lg flex items-center gap-2">
           <Focus className="w-3 h-3" />
           Gambar Asli
@@ -177,6 +242,59 @@ export default function AiResultPage() {
   const targetScrollRef = useRef(null);
   const router = useRouter();
 
+  const [generatingImages, setGeneratingImages] = useState(false);
+  const [generationError, setGenerationError] = useState(null);
+  const [generatedUrls, setGeneratedUrls] = useState([]);
+
+  const triggerImageGeneration = async (id) => {
+    setGeneratingImages(true);
+    setGenerationError(null);
+    try {
+      const res = await aiScanService.generateTryOn({ aiGenerationId: id });
+      if (res.data?.success) {
+        const newUrls = res.data.data?.url_hasil_img || [];
+        setGeneratedUrls(newUrls);
+        
+        // Update session storage so that if the user refreshes, they don't regenerate!
+        const stored = sessionStorage.getItem("aiAnalysisResult");
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            if (parsed.record) {
+              parsed.record.url_hasil_img = newUrls;
+            }
+            parsed.url_hasil_img = newUrls;
+            sessionStorage.setItem("aiAnalysisResult", JSON.stringify(parsed));
+            // Also update local state so everything updates
+            setAnalysisData(parsed);
+          } catch (e) {
+            console.error("Failed to update session storage:", e);
+          }
+        }
+
+        // Update user credit in localStorage
+        const newCredit = res.data.data?.credit_after;
+        if (typeof newCredit === "number") {
+          try {
+            const savedUser = JSON.parse(localStorage.getItem("user") || "{}");
+            savedUser.sisa_credit = newCredit;
+            localStorage.setItem("user", JSON.stringify(savedUser));
+            window.dispatchEvent(new Event("userProfileUpdated"));
+          } catch (e) {
+            console.error("Failed to sync credit:", e);
+          }
+        }
+      } else {
+        throw new Error(res.data?.message || "Failed to generate images");
+      }
+    } catch (err) {
+      console.error("Error generating try-on images:", err);
+      setGenerationError(err.response?.data?.message || err.message || "Failed to generate try-on images");
+    } finally {
+      setGeneratingImages(false);
+    }
+  };
+
   const loadData = () => {
     const stored = sessionStorage.getItem("aiAnalysisResult");
     if (stored && stored !== "undefined") {
@@ -191,6 +309,26 @@ export default function AiResultPage() {
           const activeFeats = parsedData.active_features || parsedData.activeFeatures || [];
           if (activeFeats.includes("HISTORY")) {
             fetchHistory();
+          }
+
+          // Trigger image generation if active and not generated yet
+          const rawAiUrls = parsedData.url_hasil_img || parsedData.record?.url_hasil_img;
+          let aiUrls = [];
+          if (rawAiUrls) {
+            try {
+              aiUrls = typeof rawAiUrls === 'string' ? JSON.parse(rawAiUrls) : rawAiUrls;
+            } catch (e) {
+              aiUrls = [rawAiUrls];
+            }
+          }
+
+          const hasTryOn = activeFeats.includes("VIRTUAL_TRY_ON");
+          const recordId = parsedData.record?.id || parsedData.id;
+          
+          if (hasTryOn && (!aiUrls || aiUrls.filter(Boolean).length === 0) && recordId) {
+            triggerImageGeneration(recordId);
+          } else if (aiUrls && aiUrls.length > 0) {
+            setGeneratedUrls(aiUrls);
           }
         } else {
           router.push("/ai");
@@ -279,20 +417,22 @@ export default function AiResultPage() {
   const styles = data.rekomendasi_gaya || [];
 
 
-  let aiImageUrls = [];
-  const rawAiUrls = analysisData.url_hasil_img || analysisData.record?.url_hasil_img;
-  if (rawAiUrls) {
-    try {
-      const parsedUrls = typeof rawAiUrls === 'string'
-        ? JSON.parse(rawAiUrls)
-        : rawAiUrls;
-      if (Array.isArray(parsedUrls)) {
-        aiImageUrls = parsedUrls;
-      } else if (typeof parsedUrls === 'string') {
-        aiImageUrls = [parsedUrls];
+  let aiImageUrls = generatedUrls.length > 0 ? generatedUrls : [];
+  if (aiImageUrls.length === 0) {
+    const rawAiUrls = analysisData.url_hasil_img || analysisData.record?.url_hasil_img;
+    if (rawAiUrls) {
+      try {
+        const parsedUrls = typeof rawAiUrls === 'string'
+          ? JSON.parse(rawAiUrls)
+          : rawAiUrls;
+        if (Array.isArray(parsedUrls)) {
+          aiImageUrls = parsedUrls;
+        } else if (typeof parsedUrls === 'string') {
+          aiImageUrls = [parsedUrls];
+        }
+      } catch (e) {
+        console.warn("Failed to parse AI images:", e);
       }
-    } catch (e) {
-      console.warn("Failed to parse AI images:", e);
     }
   }
 
@@ -358,7 +498,16 @@ export default function AiResultPage() {
 
         <div className="w-full lg:w-1/3 lg:sticky lg:top-[80px] lg:h-[calc(100vh-80px)] z-40 bg-[#1c1a1a]">
           <InteractiveCard className="h-full w-full">
-            <ResultPortrait url_foto_upload={originalImage} ai_image_url={aiImageUrl} />
+            <ResultPortrait 
+              url_foto_upload={originalImage} 
+              ai_image_url={aiImageUrl} 
+              isGenerating={generatingImages}
+              error={generationError}
+              onRetry={() => {
+                const recordId = analysisData.record?.id || analysisData.id;
+                if (recordId) triggerImageGeneration(recordId);
+              }}
+            />
           </InteractiveCard>
         </div>
 
@@ -415,7 +564,9 @@ export default function AiResultPage() {
 
             <div ref={targetScrollRef} className="pt-4 flex flex-col space-y-8 scroll-mt-24">
               {(() => {
-                const mainCount = aiImageUrls.length > 0 ? Math.min(aiImageUrls.length, 5) : 2;
+                const mainCount = aiImageUrls.length > 0 
+                  ? Math.min(aiImageUrls.length, 5) 
+                  : (hasVirtualTryOn && (generatingImages || generationError) ? Math.min(styles.length, 5) : 2);
                 const gridClass = mainCount === 1 ? "grid-cols-1" :
                   mainCount === 2 ? "grid-cols-1 md:grid-cols-2" :
                     mainCount === 4 ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-4" :
@@ -465,6 +616,30 @@ export default function AiResultPage() {
                             </div>
                           )}
 
+                          {!hasImage && !isLocked && generatingImages && (
+                            <div className="relative h-[60%] w-full shrink-0 overflow-hidden flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm z-20">
+                              <div className="relative w-24 h-24 flex items-center justify-center">
+                                <div className="absolute w-20 h-20 rounded-full liquid-blob opacity-80 mix-blend-screen animate-pulse" />
+                                <div className="absolute w-16 h-16 rounded-full bg-gradient-to-tr from-[#4a1a1a]/80 to-[#c59b8f]/50 backdrop-blur-xl flex items-center justify-center shadow-lg">
+                                  <img
+                                    src="/images/logo-navbar.png"
+                                    className="w-10 h-8 object-contain animate-pulse"
+                                    alt="Key Logo"
+                                  />
+                                </div>
+                              </div>
+                              <span className="text-[0.45rem] text-[#D2C3BD] uppercase tracking-widest mt-2 animate-pulse">Menghasilkan Gambar...</span>
+                            </div>
+                          )}
+
+                          {!hasImage && !isLocked && generationError && (
+                            <div className="relative h-[60%] w-full shrink-0 overflow-hidden flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm z-20 px-4 text-center">
+                              <span className="text-xl mb-1">⚠️</span>
+                              <span className="text-[0.55rem] text-[#F3E8DE] uppercase tracking-widest font-bold">Gagal</span>
+                              <span className="text-[0.45rem] text-[#D2C3BD] uppercase tracking-wide mt-1 line-clamp-2">{generationError}</span>
+                            </div>
+                          )}
+
                           {(!hasImage || isLocked) && (
                             <div className={`absolute inset-0 bg-gradient-to-b from-[#2B1615]/20 via-[#2B1615]/80 to-[#1F0D0D] z-0 ${isLocked ? 'blur-xl' : ''}`}></div>
                           )}
@@ -493,14 +668,20 @@ export default function AiResultPage() {
                             </div>
 
                             <div className="mt-4 pt-4 border-t border-[#3A1E1E]/50 flex justify-between items-center">
-                              <div className="flex items-center gap-1.5 text-[#8A9A5B]">
+                              <div className={`flex items-center gap-1.5 ${generationError ? 'text-red-400' : (generatingImages ? 'text-[#C59B8F]' : 'text-[#8A9A5B]')}`}>
                                 <Sparkles className="w-3 h-3 md:w-4 md:h-4 animate-pulse" />
-                                <span className="text-[0.55rem] md:text-[0.65rem] font-bold tracking-wider uppercase">Premium Image Available</span>
+                                <span className="text-[0.55rem] md:text-[0.65rem] font-bold tracking-wider uppercase">
+                                  {generationError ? 'Gagal Membuat Gambar' : (generatingImages ? 'Sedang Membuat Gambar...' : 'Premium Image Ready')}
+                                </span>
                               </div>
-                              {isSelected ? (
-                                <span className="text-[0.55rem] md:text-[0.6rem] border border-[#C59B8F] text-[#C59B8F] px-3 py-1 md:px-4 md:py-1.5 rounded-sm font-bold uppercase tracking-wider bg-[#C59B8F]/10">Viewing</span>
+                              {generatingImages ? (
+                                <span className="text-[0.55rem] md:text-[0.6rem] border border-[#C59B8F]/40 text-[#C59B8F]/60 px-3 py-1 md:px-4 md:py-1.5 rounded-sm font-bold uppercase tracking-wider animate-pulse">Loading...</span>
                               ) : (
-                                <span className="text-[0.55rem] md:text-[0.6rem] bg-[#C59B8F] text-[#2B1615] px-3 py-1 md:px-4 md:py-1.5 rounded-sm font-bold uppercase tracking-wider group-hover:bg-[#d4b4a9] transition-colors">View Image</span>
+                                isSelected ? (
+                                  <span className="text-[0.55rem] md:text-[0.6rem] border border-[#C59B8F] text-[#C59B8F] px-3 py-1 md:px-4 md:py-1.5 rounded-sm font-bold uppercase tracking-wider bg-[#C59B8F]/10">Viewing</span>
+                                ) : (
+                                  <span className="text-[0.55rem] md:text-[0.6rem] bg-[#C59B8F] text-[#2B1615] px-3 py-1 md:px-4 md:py-1.5 rounded-sm font-bold uppercase tracking-wider group-hover:bg-[#d4b4a9] transition-colors">View Image</span>
+                                )
                               )}
                             </div>
                           </div>

@@ -1,7 +1,15 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Scissors, Sparkles, Heart, Palette, Check, X, Loader2 } from "lucide-react";
+import {
+  Scissors,
+  Sparkles,
+  Heart,
+  Palette,
+  Check,
+  X,
+  Loader2,
+} from "lucide-react";
 import SiteFooter from "@/components/SiteFooter";
 import SiteNavbar from "@/components/SiteNavbar";
 import SeparatorKey from "@/components/SeparatorKey";
@@ -22,25 +30,29 @@ const services = [
   {
     icon: Scissors,
     title: "Classic Haircut",
-    description: "Precision cuts tailored to your features, delivering a clean and timeless finish.",
+    description:
+      "Precision cuts tailored to your features, delivering a clean and timeless finish.",
     price: "IDR 100K",
   },
   {
     icon: Sparkles,
     title: "Perming",
-    description: "Natural texture and volume designed to enhance movement and overall style.",
+    description:
+      "Natural texture and volume designed to enhance movement and overall style.",
     price: "IDR 90K - 550K",
   },
   {
     icon: Heart,
     title: "Keratin Treatment",
-    description: "Smoothing treatment that reduces frizz and improves control for a polished look.",
+    description:
+      "Smoothing treatment that reduces frizz and improves control for a polished look.",
     price: "IDR 500K",
   },
   {
     icon: Palette,
     title: "Coloring",
-    description: "Custom color work to enhance depth, tone, and personal style.",
+    description:
+      "Custom color work to enhance depth, tone, and personal style.",
     price: "IDR 200K - 700K",
   },
 ];
@@ -53,15 +65,24 @@ function ServiceCard({ icon: Icon, title, description, price }) {
           <Icon className="h-7 w-7 text-[#c57e7b]" />
         </div>
       </div>
-      <h3 className="text-lg font-semibold text-[#f7e7d8]" style={{ fontFamily: "var(--font-noto-serif)" }}>
+      <h3
+        className="text-lg font-semibold text-[#f7e7d8]"
+        style={{ fontFamily: "var(--font-noto-serif)" }}
+      >
         {title}
       </h3>
-      <p className="mt-3 flex-1 text-sm leading-6 text-[#d8b9b1]" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
+      <p
+        className="mt-3 flex-1 text-sm leading-6 text-[#d8b9b1]"
+        style={{ fontFamily: "var(--font-plus-jakarta)" }}
+      >
         {description}
       </p>
       <br />
       <Separator className={"bg-[#8b6f59]/30"}></Separator>
-      <p className="mt-4 text-sm font-light" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
+      <p
+        className="mt-4 text-sm font-light"
+        style={{ fontFamily: "var(--font-plus-jakarta)" }}
+      >
         {price}
       </p>
     </article>
@@ -80,30 +101,13 @@ function PricingCard({ pkg }) {
       return;
     }
 
-    try {
-      setIsBuying(true);
-      const res = await api.post("/payments/buy-package", { package_id: pkg.id });
-      if (res.data && res.data.success) {
-        showToast("Paket berhasil dibeli dan diaktifkan!", "success");
-        
-        // Refresh profile to sync features and credit immediately
-        try {
-          const profileRes = await api.get("/users/profile");
-          if (profileRes.data && profileRes.data.success) {
-            localStorage.setItem("user", JSON.stringify(profileRes.data.data));
-          }
-        } catch (profileErr) {
-          console.error("Failed to refresh profile after purchase:", profileErr);
-        }
-
-        router.push("/ai");
-      }
-    } catch (err) {
-      console.error("Gagal membeli paket:", err);
-      showToast(err.response?.data?.message || "Gagal membeli paket", "error");
-    } finally {
-      setIsBuying(false);
-    }
+    const amount = pkg.harga_bayar || pkg.hargaNominal;
+    const planName = pkg.nama || pkg.namaPaket;
+    router.push(
+      `/payment?type=package&package_id=${pkg.id}&plan=${encodeURIComponent(
+        planName,
+      )}&price=Rp%20${amount.toLocaleString("id-ID")}&amount=${amount}`,
+    );
   };
   const allFeatures = [
     { key: "featStandardScan", label: "Scan Wajah Standar" },
@@ -119,44 +123,69 @@ function PricingCard({ pkg }) {
   ];
 
   const isFeatureActive = (val) =>
-    val === 1 || val === "1" || val === true || String(val).toLowerCase() === "true";
+    val === 1 ||
+    val === "1" ||
+    val === true ||
+    String(val).toLowerCase() === "true";
 
-  const activeFeats = allFeatures.filter((f) => isFeatureActive(pkg[f.key])).map(f => ({ ...f, isActive: true }));
-  
+  const activeFeats = allFeatures
+    .filter((f) => isFeatureActive(pkg[f.key]))
+    .map((f) => ({ ...f, isActive: true }));
+
   if (pkg.virtualTryOnLimit && pkg.virtualTryOnLimit >= 2) {
-    activeFeats.push({ key: "virtualTryOnLimit", label: `Dapat ${pkg.virtualTryOnLimit} Foto Simulasi AI`, isActive: true });
+    activeFeats.push({
+      key: "virtualTryOnLimit",
+      label: `Dapat ${pkg.virtualTryOnLimit} Foto Simulasi AI`,
+      isActive: true,
+    });
   }
 
-  const inactiveFeats = allFeatures.filter((f) => !isFeatureActive(pkg[f.key])).map(f => ({ ...f, isActive: false }));
+  const inactiveFeats = allFeatures
+    .filter((f) => !isFeatureActive(pkg[f.key]))
+    .map((f) => ({ ...f, isActive: false }));
   const displayedFeats = [...activeFeats, ...inactiveFeats.slice(0, 2)];
 
   return (
-    <article className={`relative flex flex-col border p-8 transition bg-[#FFFFFF]/3 h-full w-full ${pkg.is_promo ? "border-[#EDE8E0]/30 md:scale-[1.04] md:-translate-y-1 md:shadow-2xl md:shadow-black/15" : "border-[#8b6f59]/30"}`}>
+    <article
+      className={`relative flex flex-col border p-8 transition bg-[#FFFFFF]/3 h-full w-full ${pkg.is_promo ? "border-[#EDE8E0]/30 md:scale-[1.04] md:-translate-y-1 md:shadow-2xl md:shadow-black/15" : "border-[#8b6f59]/30"}`}
+    >
       {pkg.is_promo && (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#934B19] px-3 py-1 text-xs uppercase tracking-wider font-light" style={{ fontFamily: "var(--font-be-vietnam)" }}>
+        <div
+          className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#934B19] px-3 py-1 text-xs uppercase tracking-wider font-light"
+          style={{ fontFamily: "var(--font-be-vietnam)" }}
+        >
           Promo Active
         </div>
       )}
 
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
-        <h3 className="text-2xl font-semibold text-[#f7e7d8] flex-1 min-w-[180px]" style={{ fontFamily: "var(--font-noto-serif)" }}>
+        <h3
+          className="text-2xl font-semibold text-[#f7e7d8] flex-1 min-w-[180px]"
+          style={{ fontFamily: "var(--font-noto-serif)" }}
+        >
           {pkg.nama || pkg.namaPaket}
         </h3>
-        <span 
-          className="shrink-0 px-2 py-1 rounded border border-[#d8b9b1]/20 bg-[#d8b9b1]/10 text-[9px] uppercase tracking-widest text-[#d8b9b1] mt-1" 
+        <span
+          className="shrink-0 px-2 py-1 rounded border border-[#d8b9b1]/20 bg-[#d8b9b1]/10 text-[9px] uppercase tracking-widest text-[#d8b9b1] mt-1"
           style={{ fontFamily: "var(--font-be-vietnam)" }}
         >
           {pkg.tipe || pkg.typeValue}
         </span>
       </div>
 
-      <div className="mt-3 flex items-baseline gap-2 text-[#f7e7d8]" style={{ fontFamily: "var(--font-noto-serif)" }}>
+      <div
+        className="mt-3 flex items-baseline gap-2 text-[#f7e7d8]"
+        style={{ fontFamily: "var(--font-noto-serif)" }}
+      >
         <span className="text-3xl font-bold">{pkg.koin || pkg.jumlahKoin}</span>
         <span className="text-sm font-medium opacity-80">Credits</span>
       </div>
 
       {pkg.durasi_text && (
-        <p className="mt-1 text-xs text-[#c57e7b]" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
+        <p
+          className="mt-1 text-xs text-[#c57e7b]"
+          style={{ fontFamily: "var(--font-plus-jakarta)" }}
+        >
           Valid for: {pkg.durasi_text}
         </p>
       )}
@@ -186,12 +215,24 @@ function PricingCard({ pkg }) {
         <div>
           {pkg.is_promo && pkg.harga_asli ? (
             <div className="flex flex-col">
-              <span className="text-sm text-[#c57e7b] line-through">IDR {pkg.harga_asli.toLocaleString('id-ID')}</span>
-              <span className="text-xl font-light" style={{ fontFamily: "var(--font-plus-jakarta)" }}>IDR {pkg.harga_bayar?.toLocaleString('id-ID')}</span>
+              <span className="text-sm text-[#c57e7b] line-through">
+                IDR {pkg.harga_asli.toLocaleString("id-ID")}
+              </span>
+              <span
+                className="text-xl font-light"
+                style={{ fontFamily: "var(--font-plus-jakarta)" }}
+              >
+                IDR {pkg.harga_bayar?.toLocaleString("id-ID")}
+              </span>
             </div>
           ) : (
-            <span className="text-xl font-light" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
-              IDR {pkg.harga_bayar?.toLocaleString('id-ID') || (pkg.hargaNominal?.toLocaleString('id-ID'))}
+            <span
+              className="text-xl font-light"
+              style={{ fontFamily: "var(--font-plus-jakarta)" }}
+            >
+              IDR{" "}
+              {pkg.harga_bayar?.toLocaleString("id-ID") ||
+                pkg.hargaNominal?.toLocaleString("id-ID")}
             </span>
           )}
         </div>
@@ -226,22 +267,27 @@ export default function ServicesPage() {
       if (res.data && res.data.success) {
         let allPackages = [
           ...(res.data.data.topup_koin || []),
-          ...(res.data.data.langganan_premium || [])
+          ...(res.data.data.langganan_premium || []),
         ];
 
         // 1. Filter: Hanya yang isActive/status AKTIF
-        allPackages = allPackages.filter(pkg => 
-          pkg.is_active === true || 
-          pkg.is_active === 1 || 
-          pkg.status === "AKTIF"
+        allPackages = allPackages.filter(
+          (pkg) =>
+            pkg.is_active === true ||
+            pkg.is_active === 1 ||
+            pkg.status === "AKTIF",
         );
 
         // 2. Sort awal berdasarkan harga
-        allPackages.sort((a, b) => (a.harga_bayar || a.hargaNominal) - (b.harga_bayar || b.hargaNominal));
+        allPackages.sort(
+          (a, b) =>
+            (a.harga_bayar || a.hargaNominal) -
+            (b.harga_bayar || b.hargaNominal),
+        );
 
         // 3. Logika Promo di Tengah
-        const promoPackages = allPackages.filter(pkg => pkg.is_promo);
-        const normalPackages = allPackages.filter(pkg => !pkg.is_promo);
+        const promoPackages = allPackages.filter((pkg) => pkg.is_promo);
+        const normalPackages = allPackages.filter((pkg) => !pkg.is_promo);
 
         const midIndex = Math.floor(normalPackages.length / 2);
         const left = normalPackages.slice(0, midIndex);
@@ -267,10 +313,16 @@ export default function ServicesPage() {
       <div className="bg-radial from-black/0 to-black/40">
         <section className="mx-auto max-w-7xl px-6 pb-20 pt-24 lg:px-10 lg:pt-32">
           <div className="text-center">
-            <p className="text-xl uppercase tracking-[0.5em] text-[#C57E7B]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
+            <p
+              className="text-xl uppercase tracking-[0.5em] text-[#C57E7B]"
+              style={{ fontFamily: "var(--font-be-vietnam)" }}
+            >
               The Art of Grooming
             </p>
-            <h1 className="mt-4 text-xl font-light text-[#f7f1ea] sm:text-2xl lg:text-3xl" style={{ fontFamily: "var(--font-playfair)" }}>
+            <h1
+              className="mt-4 text-xl font-light text-[#f7f1ea] sm:text-2xl lg:text-3xl"
+              style={{ fontFamily: "var(--font-playfair)" }}
+            >
               Premium Grooming for the Modern Gentleman
             </h1>
           </div>
@@ -286,44 +338,70 @@ export default function ServicesPage() {
         </section>
 
         {showAiPricingSection ? (
-        <section id="ai-pricing" className="mx-auto max-w-6xl px-6 pb-20 lg:px-10">
-          <div className="text-center">
-            <p className="text-xl uppercase tracking-[0.5em] text-[#C57E7B]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
-              AI-Enhanced Experience
-            </p>
-            <h2 className="mt-4 text-3xl font-light text-[#f7f1ea] sm:text-4xl" style={{ fontFamily: "var(--font-playfair)" }}>
-              Digital Ritual Credits
-            </h2>
-            <p className="mx-auto mt-6 max-w-2xl text-sm leading-7 text-[#d8b9b1]" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
-              Fuel your AI style exploration with our credit packages. Use credits for high-definition facial mapping and style simulations.
-            </p>
-          </div>
+          <section
+            id="ai-pricing"
+            className="mx-auto max-w-6xl px-6 pb-20 lg:px-10"
+          >
+            <div className="text-center">
+              <p
+                className="text-xl uppercase tracking-[0.5em] text-[#C57E7B]"
+                style={{ fontFamily: "var(--font-be-vietnam)" }}
+              >
+                AI-Enhanced Experience
+              </p>
+              <h2
+                className="mt-4 text-3xl font-light text-[#f7f1ea] sm:text-4xl"
+                style={{ fontFamily: "var(--font-playfair)" }}
+              >
+                Digital Ritual Credits
+              </h2>
+              <p
+                className="mx-auto mt-6 max-w-2xl text-sm leading-7 text-[#d8b9b1]"
+                style={{ fontFamily: "var(--font-plus-jakarta)" }}
+              >
+                Fuel your AI style exploration with our credit packages. Use
+                credits for high-definition facial mapping and style
+                simulations.
+              </p>
+            </div>
 
-          <div className="mt-16">
-            {isLoading ? (
-              <div className="flex flex-col items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-[#c57e7b]" />
-                <p className="mt-4 text-sm text-[#d8b9b1]" style={{ fontFamily: "var(--font-plus-jakarta)" }}>Loading available packages...</p>
-              </div>
-            ) : error ? (
-              <div className="text-center py-12 border border-[#8b6f59]/30 bg-[#FFFFFF]/3 rounded-lg">
-                <p className="text-[#c57e7b]">{error}</p>
-              </div>
-            ) : (
-              <div className={
-                packages.length === 1
-                  ? "flex justify-center"
-                  : "grid grid-cols-1 gap-8 md:grid-cols-3 items-stretch"
-              }>
-                {packages.map((pkg, idx) => (
-                  <div key={pkg.id || idx} className={packages.length === 1 ? "w-full max-w-sm" : "w-full"}>
-                    <PricingCard pkg={pkg} />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
+            <div className="mt-16">
+              {isLoading ? (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-[#c57e7b]" />
+                  <p
+                    className="mt-4 text-sm text-[#d8b9b1]"
+                    style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                  >
+                    Loading available packages...
+                  </p>
+                </div>
+              ) : error ? (
+                <div className="text-center py-12 border border-[#8b6f59]/30 bg-[#FFFFFF]/3 rounded-lg">
+                  <p className="text-[#c57e7b]">{error}</p>
+                </div>
+              ) : (
+                <div
+                  className={
+                    packages.length === 1
+                      ? "flex justify-center"
+                      : "grid grid-cols-1 gap-8 md:grid-cols-3 items-stretch"
+                  }
+                >
+                  {packages.map((pkg, idx) => (
+                    <div
+                      key={pkg.id || idx}
+                      className={
+                        packages.length === 1 ? "w-full max-w-sm" : "w-full"
+                      }
+                    >
+                      <PricingCard pkg={pkg} />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
         ) : null}
       </div>
       <SiteFooter />

@@ -3,7 +3,7 @@
 import React, { useState, Suspense } from "react";
 import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
-import { ChevronRight, Landmark, Check, Store } from "lucide-react";
+import { ChevronRight, Landmark, Check, Store, QrCode } from "lucide-react";
 import SiteNavbar from "../../../components/SiteNavbar";
 import SiteFooter from "../../../components/SiteFooter";
 import api from "@/utils/request";
@@ -11,6 +11,8 @@ import api from "@/utils/request";
 // Map UI method strings to DOKU API expected payment method types
 const getDokuPaymentMethod = (selectedMethod) => {
   const methodMap = {
+    // QRIS
+    QRIS: "QRIS",
     // Virtual Accounts
     BNI: "VIRTUAL_ACCOUNT_BNI",
     BRI: "VIRTUAL_ACCOUNT_BRI",
@@ -220,6 +222,40 @@ function PaymentContent() {
 
         {/* Right Panel: Payment Methods */}
         <div className="space-y-10 pb-20">
+          {/* QRIS / E-Wallet */}
+          <section>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-0.5 h-4 bg-[#3a221c]"></div>
+              <h3 className="text-[11px] tracking-[0.3em] uppercase font-bold text-[#3a221c]">
+                QRIS / E-Wallet
+              </h3>
+            </div>
+            <div className="grid grid-cols-1 gap-4">
+              {["QRIS"].map((method) => (
+                <button
+                  key={method}
+                  onClick={() =>
+                    !isProcessingLoading && setSelectedMethod(method)
+                  }
+                  className={`flex items-center gap-4 border p-5 transition-all duration-300 text-left relative overflow-hidden group ${selectedMethod === method ? "bg-[#3a221c] border-[#3a221c] text-[#f8f1ea] shadow-lg scale-[1.02]" : "bg-[#ede8e0] border-[#e6d1c7] text-[#3a221c] hover:bg-[#e6d1c7]/50 hover:border-[#3a221c]/30"}`}
+                >
+                  <QrCode
+                    className={`w-5 h-5 ${selectedMethod === method ? "text-[#f8f1ea]" : "text-[#3a221c]"}`}
+                    strokeWidth={1.5}
+                  />
+                  <span className="text-xs font-semibold tracking-wider">
+                    QRIS (OVO, GoPay, Dana, LinkAja, ShopeePay, dsb.)
+                  </span>
+                  {selectedMethod === method && (
+                    <div className="absolute top-2 right-2 animate-fade-in">
+                      <Check className="w-3 h-3" strokeWidth={3} />
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </section>
+
           {/* Virtual Account */}
           <section>
             <div className="flex items-center gap-3 mb-6">

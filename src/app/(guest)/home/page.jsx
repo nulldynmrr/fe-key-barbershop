@@ -219,7 +219,7 @@ export default function HomePage() {
               >
                 {showAiEntry ? (
                   <Link
-                    href="/user/ai-analyze"
+                    href="/ai"
                     className="mt-8 inline-flex items-center gap-2 border-b border-white/30 pb-1 text-[0.72rem] uppercase tracking-[0.38em] text-[#fbf7f3] transition hover:border-white/70"
                     style={{ fontFamily: "var(--font-be-vietnam)" }}
                   >

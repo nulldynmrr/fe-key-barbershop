@@ -14,8 +14,6 @@ const defaultContactDetails = [
     icon: MapPinned,
     label: "Jl. Nanas No.31, Cihapit, Kec. Bandung Wetan, Kota Bandung, Jawa Barat 40114",
   },
-  { icon: Phone, label: "+62 813-1380-798" },
-  { icon: Mail, label: "hello@keybarber.id" },
 ];
 
 const defaultOpeningHours = [
@@ -44,15 +42,12 @@ export default function SiteFooter({ footerLinks = defaultFooterLinks, contactDe
 
             <div className="mt-8 flex items-center gap-3">
               <Link
-                href="https://www.instagram.com/"
+                href="https://www.instagram.com/__keybarber/"
                 aria-label="Instagram"
                 className="inline-flex h-11 w-11 items-center justify-center border border-[#c57e7b]/20 text-[0.72rem] font-semibold uppercase tracking-[0.3em] text-[#f3e8de] transition hover:bg-white/5"
                 style={{ fontFamily: "var(--font-be-vietnam)" }}
               >
                 IG
-              </Link>
-              <Link href="tel:+628131380798" aria-label="Phone" className="inline-flex h-11 w-11 items-center justify-center border border-[#c57e7b]/20 text-[#f3e8de] transition hover:bg-white/5">
-                <Phone className="h-4 w-4" />
               </Link>
             </div>
           </div>

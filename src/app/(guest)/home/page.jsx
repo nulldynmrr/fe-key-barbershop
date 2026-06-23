@@ -113,13 +113,6 @@ export default function HomePage() {
         <SiteNavbar activeLabel="Home" hideAiCta={hideAiCta} />
 
         <div className="relative mx-auto flex min-h-[min(100svh,58rem)] max-w-7xl flex-col items-center justify-center px-6 pb-24 pt-32 text-center lg:px-10 lg:pt-36">
-          <div className="mb-6 flex items-center gap-4" data-aos="fade-down">
-            <span className="h-px w-16 bg-[#f0e2d9]/50" />
-            <span className="text-lg  uppercase tracking-[0.42em] text-[#f0e2d9]" style={{ fontFamily: "var(--font-be-vietnam)" }}>
-              EST. 2024
-            </span>
-            <span className="h-px w-16 bg-[#f0e2d9]/50" />
-          </div>
 
           <h1
             className="max-w-5xl text-5xl font-semibold leading-[0.95] tracking-tight text-[#fdf9f4] text-shadow-soft sm:text-6xl lg:text-7xl"

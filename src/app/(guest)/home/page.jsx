@@ -21,9 +21,9 @@ const navItems = [
 ];
 
 const stats = [
-  { value: "100+", label: "Clients" },
-  { value: "2+ Years", label: "Expertise" },
-  { value: "20+", label: "Styles" },
+  { value: "1000+", label: "Clients" },
+  { value: "5+ Years", label: "Expertise" },
+  { value: "25+", label: "Styles" },
 ];
 
 const contactDetails = [
@@ -106,7 +106,7 @@ export default function HomePage() {
     <main className="min-h-screen overflow-x-hidden bg-white text-[#2B1D19] scroll-smooth">
       <section id="home" className="relative isolate overflow-hidden">
         <div className="absolute inset-0">
-          <Image src="/images/figma/home/hero-background-3dbeae.png" alt="Key Barber interior" fill priority sizes="100vw" className="object-cover object-center opacity-90" />
+          <Image src="/images/tampak depan.png" alt="Key Barber interior" fill priority sizes="100vw" className="object-cover object-center opacity-90" />
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(74,26,26,0.38)_80%,rgba(74,26,26,0.3)_20%,rgba(254,248,243,0.65)_100%)]" />
         </div>
 
@@ -121,8 +121,8 @@ export default function HomePage() {
             <span className="h-px w-16 bg-[#f0e2d9]/50" />
           </div>
 
-          <h1 
-            className="max-w-5xl text-5xl font-semibold leading-[0.95] tracking-tight text-[#fdf9f4] text-shadow-soft sm:text-6xl lg:text-7xl" 
+          <h1
+            className="max-w-5xl text-5xl font-semibold leading-[0.95] tracking-tight text-[#fdf9f4] text-shadow-soft sm:text-6xl lg:text-7xl"
             style={{ fontFamily: "var(--font-playfair)" }}
             data-aos="fade-up"
             data-aos-delay="200"
@@ -133,8 +133,8 @@ export default function HomePage() {
             </span>
           </h1>
 
-          <p 
-            className="mt-8 max-w-3xl text-base leading-8 text-[#f0e2d9]/85 sm:text-lg" 
+          <p
+            className="mt-8 max-w-3xl text-base leading-8 text-[#f0e2d9]/85 sm:text-lg"
             style={{ fontFamily: "var(--font-plus-jakarta)" }}
             data-aos="fade-up"
             data-aos-delay="400"
@@ -142,22 +142,22 @@ export default function HomePage() {
             Experience precision grooming powered by expertise and enhanced with AI-driven recommendations.
           </p>
 
-          <div 
+          <div
             className="mt-10 flex flex-col items-center gap-4 sm:flex-row sm:gap-5"
             data-aos="fade-up"
             data-aos-delay="600"
           >
             {showAiEntry ? (
-            <div className="exclusive-border-container group shadow-[0_0_20px_rgba(74,26,26,0.15)] hover:shadow-[0_0_30px_rgba(74,26,26,0.3)] transition-all">
-              <div className="exclusive-border-glow"></div>
-              <Link
-                href="/ai"
-                className="relative z-10 inline-flex items-center justify-center bg-[#4a1a1a] px-8 py-4 text-sm font-medium uppercase tracking-[0.3em] text-[#fbf7f3] transition hover:bg-[#3d1515]"
-                style={{ fontFamily: "var(--font-plus-jakarta)" }}
-              >
-                Start AI Recommendation
-              </Link>
-            </div>
+              <div className="exclusive-border-container group shadow-[0_0_20px_rgba(74,26,26,0.15)] hover:shadow-[0_0_30px_rgba(74,26,26,0.3)] transition-all">
+                <div className="exclusive-border-glow"></div>
+                <Link
+                  href="/ai"
+                  className="relative z-10 inline-flex items-center justify-center bg-[#4a1a1a] px-8 py-4 text-sm font-medium uppercase tracking-[0.3em] text-[#fbf7f3] transition hover:bg-[#3d1515]"
+                  style={{ fontFamily: "var(--font-plus-jakarta)" }}
+                >
+                  Start AI Recommendation
+                </Link>
+              </div>
             ) : null}
 
             <Link
@@ -178,13 +178,13 @@ export default function HomePage() {
       <div className="bg-gradient-to-b from-white to-[#E1D5C9]">
         <section className="relative isolate mx-auto max-w-7xl px-6 py-10 lg:px-10 lg:pb-14">
           <div className="relative z-10 grid gap-8 lg:grid-cols-[0.65fr_0.35fr]">
-            <article 
+            <article
               className="relative row-span-2 min-h-128 overflow-hidden border border-[#e6d1c7] bg-[#ede8e0]"
               data-aos="fade-right"
             >
 
               <Image
-                src="/images/figma/home/artisanal-precision.png"
+                src="/images/Artisanal Precision.jpg"
                 alt="Artisanal Precision"
                 fill
                 sizes="(min-width: 1024px) 52vw, 100vw"
@@ -225,13 +225,13 @@ export default function HomePage() {
                 descriptionClassName="text-[#f3ded6]"
               >
                 {showAiEntry ? (
-                <Link
-                  href="/user/ai-analyze"
-                  className="mt-8 inline-flex items-center gap-2 border-b border-white/30 pb-1 text-[0.72rem] uppercase tracking-[0.38em] text-[#fbf7f3] transition hover:border-white/70"
-                  style={{ fontFamily: "var(--font-be-vietnam)" }}
-                >
-                  Discover your look
-                </Link>
+                  <Link
+                    href="/user/ai-analyze"
+                    className="mt-8 inline-flex items-center gap-2 border-b border-white/30 pb-1 text-[0.72rem] uppercase tracking-[0.38em] text-[#fbf7f3] transition hover:border-white/70"
+                    style={{ fontFamily: "var(--font-be-vietnam)" }}
+                  >
+                    Discover your look
+                  </Link>
                 ) : (
                   <p className="mt-8 text-[0.72rem] uppercase tracking-[0.38em] text-[#f3ded6]/70" style={{ fontFamily: "var(--font-be-vietnam)" }}>
                     AI packages unavailable — check back soon
@@ -247,7 +247,7 @@ export default function HomePage() {
       <div className="bg-[#E1D5C9]">
         {/* Banner Section */}
         <section className="relative isolate mx-auto max-w-7xl px-6 py-4 pb-10 lg:px-10 lg:pb-14">
-          <div 
+          <div
             className="w-full mb-8 relative flex items-center justify-center rounded-sm overflow-hidden"
             data-aos="zoom-in"
           >
@@ -267,7 +267,7 @@ export default function HomePage() {
         {/* About Section */}
         <section id="about" className="relative isolate mx-auto max-w-7xl px-6 py-10 lg:px-10 lg:pb-24 mt-4">
           <div className="relative z-10 grid gap-12 lg:grid-cols-[0.3fr_0.7fr] items-center">
-            <div 
+            <div
               className="relative flex flex-col justify-center"
               data-aos="fade-right"
             >
@@ -281,7 +281,7 @@ export default function HomePage() {
                 </h2>
               </div>
             </div>
-            <article 
+            <article
               className="relative overflow-hidden p-4 sm:p-8 md:p-0"
               data-aos="fade-left"
             >
@@ -307,7 +307,7 @@ export default function HomePage() {
         </section>
 
         {/* Our Media Social Section */}
-        <section 
+        <section
           className="relative isolate mx-auto max-w-7xl px-6 py-10 lg:px-10 lg:pb-32 overflow-hidden"
           data-aos="fade-up"
         >

@@ -5,7 +5,6 @@ import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ChevronRight, Landmark, Check, Store, QrCode } from "lucide-react";
 import SiteNavbar from "../../../components/SiteNavbar";
-import SiteFooter from "../../../components/SiteFooter";
 import api from "@/utils/request";
 
 // Map UI method strings to DOKU API expected payment method types
@@ -117,230 +116,226 @@ function PaymentContent() {
   };
 
   return (
-    <div className="relative z-10 max-w-7xl mx-auto px-6 py-12 lg:px-10 animate-fade-in">
-      {/* Header */}
-      <div className="text-center mb-12">
+    <div className="relative z-10 w-full max-w-6xl mx-auto px-6 py-2 lg:py-3 flex-grow flex flex-col justify-between lg:overflow-hidden animate-fade-in min-h-0">
+      {/* Header (Highly Compact) */}
+      <div className="text-center mb-1.5 flex-shrink-0">
         <p
-          className="text-[10px] tracking-[0.4em] uppercase text-[#8b6f66] mb-4"
+          className="text-[9px] tracking-[0.4em] uppercase text-[#8b6f66] mb-0.5"
           style={{ fontFamily: "var(--font-be-vietnam)" }}
         >
           Checkout
         </p>
         <h1
-          className="text-4xl sm:text-5xl lg:text-6xl text-[#3a221c] mb-6"
+          className="text-xl sm:text-2xl lg:text-3xl text-[#3a221c] mb-0.5"
           style={{ fontFamily: "var(--font-playfair)" }}
         >
           Finalize Your Ritual
         </h1>
         <p
-          className="max-w-2xl mx-auto text-sm sm:text-base text-[#5f463d] leading-relaxed"
+          className="max-w-2xl mx-auto text-[11px] text-[#5f463d] leading-relaxed opacity-85"
           style={{ fontFamily: "var(--font-plus-jakarta)" }}
         >
-          Complete your payment to secure your artisanal grooming session at Key
-          Barber.
+          Complete your payment to secure your artisanal grooming session at Key Barber.
         </p>
       </div>
 
-      {/* Stepper */}
-      <div className="flex items-center justify-center gap-4 sm:gap-8 mb-16 text-[10px] sm:text-xs tracking-[0.25em] uppercase font-semibold">
-        <div className="flex items-center gap-3 text-[#3a221c]">
-          <span className="w-6 h-6 rounded-full border border-[#3a221c] flex items-center justify-center text-[8px] font-bold">
+      {/* Stepper (Compact & Clean) */}
+      <div className="flex items-center justify-center gap-4 sm:gap-6 mb-2.5 text-[8px] sm:text-[9px] tracking-[0.2em] uppercase font-semibold flex-shrink-0">
+        <div className="flex items-center gap-2 text-[#3a221c]">
+          <span className="w-4 h-4 rounded-full border border-[#3a221c] flex items-center justify-center text-[7px] font-bold">
             01
           </span>
           <span>Payment Method</span>
         </div>
-        <div className="h-px w-12 sm:w-20 bg-[#e6d1c7]"></div>
-        <div className="flex items-center gap-3 text-[#8b6f66]/50">
-          <span className="w-6 h-6 rounded-full border border-[#8b6f66]/30 flex items-center justify-center text-[8px] font-bold">
+        <div className="h-px w-8 sm:w-12 bg-[#e6d1c7]"></div>
+        <div className="flex items-center gap-2 text-[#8b6f66]/50">
+          <span className="w-4 h-4 rounded-full border border-[#8b6f66]/30 flex items-center justify-center text-[7px] font-bold">
             02
           </span>
           <span>Processing</span>
         </div>
-        <div className="h-px w-12 sm:w-20 bg-[#e6d1c7]"></div>
-        <div className="flex items-center gap-3 text-[#8b6f66]/50">
-          <span className="w-6 h-6 rounded-full border border-[#8b6f66]/30 flex items-center justify-center text-[8px] font-bold">
+        <div className="h-px w-8 sm:w-12 bg-[#e6d1c7]"></div>
+        <div className="flex items-center gap-2 text-[#8b6f66]/50">
+          <span className="w-4 h-4 rounded-full border border-[#8b6f66]/30 flex items-center justify-center text-[7px] font-bold">
             03
           </span>
           <span>Confirmation</span>
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-[0.4fr_0.6fr] gap-12 items-start">
-        {/* Left Panel: Reservation Details */}
-        <div className="bg-[#ede8e0]/80 backdrop-blur-sm border border-[#e6d1c7] p-8 sm:p-10 rounded-sm shadow-[0_30px_60px_-15px_rgba(57,28,22,0.1)] sticky top-32 transition-all hover:shadow-[0_40px_80px_-15px_rgba(57,28,22,0.15)]">
-          <h2
-            className="text-2xl text-[#3a221c] mb-8"
-            style={{ fontFamily: "var(--font-playfair)" }}
-          >
-            Reservation Details
-          </h2>
+      <div className="flex flex-col lg:flex-row gap-6 items-stretch flex-grow lg:overflow-hidden min-h-0">
+        {/* Left Panel: Reservation Details (Compact) */}
+        <div className="w-full lg:w-[38%] bg-[#ede8e0]/80 backdrop-blur-sm border border-[#e6d1c7] p-4 lg:p-5 rounded-2xl shadow-md flex flex-col justify-between flex-shrink-0 lg:max-h-full min-h-0">
+          <div>
+            <h2
+              className="text-base lg:text-lg text-[#3a221c] mb-3 font-semibold"
+              style={{ fontFamily: "var(--font-playfair)" }}
+            >
+              Reservation Details
+            </h2>
 
-          <div className="space-y-6">
-            <div className="flex justify-between items-start pt-6 border-t border-[#e6d1c7]/50">
-              <span className="text-[10px] tracking-[0.2em] uppercase text-[#8b6f66]">
-                {type === "package" ? "Package" : "Service"}
-              </span>
-              <div className="text-right">
-                <p className="text-sm font-semibold text-[#3a221c]">{plan}</p>
-                {type !== "package" && <p className="text-[10px] text-[#8b6f66] mt-1">{tier}</p>}
+            <div className="space-y-2.5">
+              <div className="flex justify-between items-start pt-2.5 border-t border-[#e6d1c7]/50">
+                <span className="text-[9px] tracking-[0.2em] uppercase text-[#8b6f66]">
+                  {type === "package" ? "Package" : "Service"}
+                </span>
+                <div className="text-right">
+                  <p className="text-xs font-semibold text-[#3a221c]">{plan}</p>
+                  {type !== "package" && <p className="text-[9px] text-[#8b6f66] mt-0.5">{tier}</p>}
+                </div>
               </div>
+
+              {type === "package" ? (
+                <div className="flex justify-between items-center py-2.5 border-t border-[#e6d1c7]/50">
+                  <span className="text-[9px] tracking-[0.2em] uppercase text-[#8b6f66]">
+                    Delivery
+                  </span>
+                  <span className="text-xs font-semibold text-[#3a221c]">
+                    Instant Activation
+                  </span>
+                </div>
+              ) : (
+                <div className="flex justify-between items-center py-2.5 border-t border-[#e6d1c7]/50">
+                  <span className="text-[9px] tracking-[0.2em] uppercase text-[#8b6f66]">
+                    Date & Time
+                  </span>
+                  <span className="text-xs font-semibold text-[#3a221c]">
+                    Oct 24, 2025 • 14:00
+                  </span>
+                </div>
+              )}
             </div>
+          </div>
 
-            {type === "package" ? (
-              <div className="flex justify-between items-center py-6 border-t border-[#e6d1c7]/50">
-                <span className="text-[10px] tracking-[0.2em] uppercase text-[#8b6f66]">
-                  Delivery
-                </span>
-                <span className="text-sm font-semibold text-[#3a221c]">
-                  Instant Activation
-                </span>
-              </div>
-            ) : (
-              <div className="flex justify-between items-center py-6 border-t border-[#e6d1c7]/50">
-                <span className="text-[10px] tracking-[0.2em] uppercase text-[#8b6f66]">
-                  Date & Time
-                </span>
-                <span className="text-sm font-semibold text-[#3a221c]">
-                  Oct 24, 2025 • 14:00
-                </span>
-              </div>
-            )}
-
-            <div className="pt-8 border-t border-[#3a221c]/20">
-              <span className="text-[10px] tracking-[0.2em] uppercase text-[#8b6f66]">
-                Total Amount
-              </span>
-              <p
-                className="text-3xl sm:text-4xl text-[#3a221c] mt-2"
-                style={{ fontFamily: "var(--font-playfair)" }}
-              >
-                {price}
-              </p>
-            </div>
+          <div className="pt-3 border-t border-[#3a221c]/20 mt-3">
+            <span className="text-[9px] tracking-[0.2em] uppercase text-[#8b6f66]">
+              Total Amount
+            </span>
+            <p
+              className="text-xl lg:text-2xl text-[#3a221c] mt-0.5 font-semibold"
+              style={{ fontFamily: "var(--font-playfair)" }}
+            >
+              {price}
+            </p>
           </div>
         </div>
 
-        {/* Right Panel: Payment Methods */}
-        <div className="space-y-10 pb-20">
-          {/* QRIS / E-Wallet */}
-          <section>
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-0.5 h-4 bg-[#3a221c]"></div>
-              <h3 className="text-[11px] tracking-[0.3em] uppercase font-bold text-[#3a221c]">
-                QRIS / E-Wallet
-              </h3>
-            </div>
-            <div className="grid grid-cols-1 gap-4">
-              {["QRIS"].map((method) => (
-                <button
-                  key={method}
-                  onClick={() =>
-                    !isProcessingLoading && setSelectedMethod(method)
-                  }
-                  className={`flex items-center gap-4 border p-5 transition-all duration-300 text-left relative overflow-hidden group ${selectedMethod === method ? "bg-[#3a221c] border-[#3a221c] text-[#f8f1ea] shadow-lg scale-[1.02]" : "bg-[#ede8e0] border-[#e6d1c7] text-[#3a221c] hover:bg-[#e6d1c7]/50 hover:border-[#3a221c]/30"}`}
-                >
-                  <QrCode
-                    className={`w-5 h-5 ${selectedMethod === method ? "text-[#f8f1ea]" : "text-[#3a221c]"}`}
-                    strokeWidth={1.5}
-                  />
-                  <span className="text-xs font-semibold tracking-wider">
-                    QRIS (OVO, GoPay, Dana, LinkAja, ShopeePay, dsb.)
-                  </span>
-                  {selectedMethod === method && (
-                    <div className="absolute top-2 right-2 animate-fade-in">
-                      <Check className="w-3 h-3" strokeWidth={3} />
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
-          </section>
+        {/* Right Panel: Payment Methods (Scroll-Controlled on Desktop) */}
+        <div className="w-full lg:w-[62%] flex flex-col justify-between lg:overflow-hidden min-h-0 space-y-3">
+          <div className="space-y-3 lg:overflow-y-auto lg:flex-grow pr-1.5 min-h-0">
+            {/* QRIS / E-Wallet */}
+            <section>
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-0.5 h-3 bg-[#3a221c]"></div>
+                <h3 className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#3a221c]">
+                  QRIS
+                </h3>
+              </div>
+              <button
+                key="QRIS"
+                onClick={() => !isProcessingLoading && setSelectedMethod("QRIS")}
+                className={`w-full flex items-center gap-3 border p-2.5 transition-all duration-300 text-left relative overflow-hidden rounded-xl cursor-pointer ${selectedMethod === "QRIS" ? "bg-[#3a221c] border-[#3a221c] text-[#f8f1ea] shadow-md" : "bg-[#ede8e0] border-[#e6d1c7] text-[#3a221c] hover:bg-[#e6d1c7]/30"}`}
+              >
+                <QrCode
+                  className={`w-3.5 h-3.5 ${selectedMethod === "QRIS" ? "text-[#f8f1ea]" : "text-[#3a221c]"}`}
+                  strokeWidth={1.5}
+                />
+                <span className="text-[10px] font-semibold tracking-wide">
+                  QRIS
+                </span>
+                {selectedMethod === "QRIS" && (
+                  <div className="absolute top-1.5 right-1.5">
+                    <Check className="w-2.5 h-2.5 text-[#f8f1ea]" strokeWidth={3} />
+                  </div>
+                )}
+              </button>
+            </section>
 
-          {/* Virtual Account */}
-          <section>
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-0.5 h-4 bg-[#3a221c]"></div>
-              <h3 className="text-[11px] tracking-[0.3em] uppercase font-bold text-[#3a221c]">
-                Virtual Account
-              </h3>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              {["BNI", "BRI", "BSI", "CIMB", "Danamon", "Maybank", "Permata", "BNC", "BTN", "Sinarmas"].map((bank) => (
-                <button
-                  key={bank}
-                  onClick={() =>
-                    !isProcessingLoading && setSelectedMethod(bank)
-                  }
-                  className={`flex items-center gap-4 border p-5 transition-all duration-300 text-left relative overflow-hidden group ${selectedMethod === bank ? "bg-[#3a221c] border-[#3a221c] text-[#f8f1ea] shadow-lg scale-[1.02]" : "bg-[#ede8e0] border-[#e6d1c7] text-[#3a221c] hover:bg-[#e6d1c7]/50 hover:border-[#3a221c]/30"}`}
-                >
-                  <Landmark
-                    className={`w-5 h-5 ${selectedMethod === bank ? "text-[#f8f1ea]" : "text-[#3a221c]"}`}
-                    strokeWidth={1.5}
-                  />
-                  <span className="text-xs font-semibold tracking-wider">
-                    {bank}
-                  </span>
-                  {selectedMethod === bank && (
-                    <div className="absolute top-2 right-2 animate-fade-in">
-                      <Check className="w-3 h-3" strokeWidth={3} />
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
-          </section>
+            {/* Virtual Account */}
+            <section>
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-0.5 h-3 bg-[#3a221c]"></div>
+                <h3 className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#3a221c]">
+                  Virtual Account
+                </h3>
+              </div>
+              {/* Scrollable grid container */}
+              <div className="max-h-[110px] lg:max-h-[135px] overflow-y-auto pr-1 border border-[#e6d1c7]/40 bg-[#ede8e0]/20 p-2 rounded-xl">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                  {["BNI", "BRI", "BSI", "CIMB", "Danamon", "Maybank", "Permata", "BNC", "BTN", "Sinarmas"].map((bank) => (
+                    <button
+                      key={bank}
+                      onClick={() => !isProcessingLoading && setSelectedMethod(bank)}
+                      className={`flex items-center gap-2 border p-2 transition-all duration-300 text-left relative rounded-lg cursor-pointer ${selectedMethod === bank ? "bg-[#3a221c] border-[#3a221c] text-[#f8f1ea] shadow-md" : "bg-[#ede8e0] border-[#e6d1c7] text-[#3a221c] hover:bg-[#e6d1c7]/30"}`}
+                    >
+                      <Landmark
+                        className={`w-3 h-3 ${selectedMethod === bank ? "text-[#f8f1ea]" : "text-[#3a221c]"}`}
+                        strokeWidth={1.5}
+                      />
+                      <span className="text-[9px] font-semibold tracking-wider">
+                        {bank}
+                      </span>
+                      {selectedMethod === bank && (
+                        <div className="absolute top-1 right-1 animate-fade-in">
+                          <Check className="w-2 h-2 text-[#f8f1ea]" strokeWidth={3} />
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </section>
 
-          {/* Convenience Store */}
-          <section>
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-0.5 h-4 bg-[#3a221c]"></div>
-              <h3 className="text-[11px] tracking-[0.3em] uppercase font-bold text-[#3a221c]">
-                Convenience Store (O2O)
-              </h3>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              {["Alfamart", "Indomaret"].map((store) => (
-                <button
-                  key={store}
-                  onClick={() =>
-                    !isProcessingLoading && setSelectedMethod(store)
-                  }
-                  className={`flex items-center gap-4 border p-5 transition-all duration-300 text-left relative overflow-hidden group ${selectedMethod === store ? "bg-[#3a221c] border-[#3a221c] text-[#f8f1ea] shadow-lg scale-[1.02]" : "bg-[#ede8e0] border-[#e6d1c7] text-[#3a221c] hover:bg-[#e6d1c7]/50 hover:border-[#3a221c]/30"}`}
-                >
-                  <Store
-                    className={`w-5 h-5 ${selectedMethod === store ? "text-[#f8f1ea]" : "text-[#3a221c]"}`}
-                    strokeWidth={1.5}
-                  />
-                  <span className="text-xs font-semibold tracking-wider">
-                    {store}
-                  </span>
-                  {selectedMethod === store && (
-                    <div className="absolute top-2 right-2 animate-fade-in">
-                      <Check className="w-3 h-3" strokeWidth={3} />
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
-          </section>
+            {/* Convenience Store */}
+            <section>
+              <div className="flex items-center gap-2 mb-1.5">
+                <div className="w-0.5 h-3 bg-[#3a221c]"></div>
+                <h3 className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#3a221c]">
+                  Convenience Store (O2O)
+                </h3>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {["Alfamart", "Indomaret"].map((store) => (
+                  <button
+                    key={store}
+                    onClick={() => !isProcessingLoading && setSelectedMethod(store)}
+                    className={`flex items-center gap-2 border p-2.5 transition-all duration-300 text-left relative rounded-lg cursor-pointer ${selectedMethod === store ? "bg-[#3a221c] border-[#3a221c] text-[#f8f1ea] shadow-md" : "bg-[#ede8e0] border-[#e6d1c7] text-[#3a221c] hover:bg-[#e6d1c7]/30"}`}
+                  >
+                    <Store
+                      className={`w-3.5 h-3.5 ${selectedMethod === store ? "text-[#f8f1ea]" : "text-[#3a221c]"}`}
+                      strokeWidth={1.5}
+                    />
+                    <span className="text-[10px] font-semibold tracking-wider">
+                      {store}
+                    </span>
+                    {selectedMethod === store && (
+                      <div className="absolute top-1.5 right-1.5 animate-fade-in">
+                        <Check className="w-2.5 h-2.5 text-[#f8f1ea]" strokeWidth={3} />
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </section>
+          </div>
 
           {/* Pay Button */}
-          <div className="pt-6">
+          <div className="pt-3 border-t border-[#e6d1c7]/40 flex-shrink-0">
             <button
               disabled={!selectedMethod || isProcessingLoading}
               onClick={handlePayment}
-              className={`w-full py-6 flex items-center justify-center text-sm font-semibold uppercase tracking-[0.4em] transition-all duration-500 rounded-sm shadow-xl ${selectedMethod ? "bg-[#4a1a1a] text-[#f8f1ea] hover:bg-[#3a221c] hover:scale-[1.02] active:scale-[0.98]" : "bg-[#8b6f66]/20 text-[#8b6f66] cursor-not-allowed"}`}
+              className={`w-full py-3.5 flex items-center justify-center text-xs font-semibold uppercase tracking-[0.3em] transition-all duration-500 rounded-xl shadow-md cursor-pointer ${selectedMethod ? "bg-[#4a1a1a] text-[#f8f1ea] hover:bg-[#3a221c] hover:scale-[1.01]" : "bg-[#8b6f66]/20 text-[#8b6f66] cursor-not-allowed"}`}
               style={{ fontFamily: "var(--font-be-vietnam)" }}
             >
               {isProcessingLoading ? (
-                <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
               ) : selectedMethod ? (
                 "Complete Transaction"
               ) : (
                 "Select Payment Method"
               )}
             </button>
-            <p className="text-center text-[9px] text-[#8b6f66] mt-4 tracking-wider uppercase opacity-60">
+            <p className="text-center text-[8px] text-[#8b6f66] mt-1.5 tracking-wider uppercase opacity-60">
               Secured by Key Barber Payment Gateway
             </p>
           </div>
@@ -359,17 +354,17 @@ function PaymentContent() {
                 </h3>
                 <p className="text-[9px] sm:text-[10px] opacity-75 mt-1 font-mono">Invoice: {invoiceNumber}</p>
               </div>
-              <button 
+              <button
                 onClick={handleCloseModal}
-                className="px-4 py-2 bg-[#f8f1ea] text-[#3a221c] hover:bg-[#ede8e0] rounded-lg transition-all font-bold text-[10px] tracking-widest uppercase shadow"
+                className="px-4 py-2 bg-[#f8f1ea] text-[#3a221c] hover:bg-[#ede8e0] rounded-lg transition-all font-bold text-[10px] tracking-widest uppercase shadow cursor-pointer"
               >
                 Tutup / Cek Status
               </button>
             </div>
             {/* Iframe container */}
             <div className="flex-grow w-full relative bg-white">
-              <iframe 
-                src={paymentUrl} 
+              <iframe
+                src={paymentUrl}
                 className="w-full h-full border-0"
                 title="Doku Payment Checkout"
                 allow="payment"
@@ -384,7 +379,7 @@ function PaymentContent() {
 
 export default function PaymentPage() {
   return (
-    <main className="min-h-screen bg-[#E1D5C9] text-[#2B1D19] relative overflow-hidden flex flex-col">
+    <main className="min-h-screen lg:h-screen lg:min-h-0 lg:overflow-hidden bg-[#E1D5C9] text-[#2B1D19] relative flex flex-col justify-between">
       <SiteNavbar />
       <div className="absolute inset-0 pointer-events-none opacity-[0.03] overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] flex items-center justify-center">
@@ -397,7 +392,7 @@ export default function PaymentPage() {
           />
         </div>
       </div>
-      <div className="flex-grow">
+      <div className="flex-grow flex flex-col justify-center lg:overflow-hidden min-h-0">
         <Suspense
           fallback={
             <div className="flex items-center justify-center min-h-[60vh]">
@@ -413,7 +408,6 @@ export default function PaymentPage() {
           <PaymentContent />
         </Suspense>
       </div>
-      <SiteFooter />
     </main>
   );
 }

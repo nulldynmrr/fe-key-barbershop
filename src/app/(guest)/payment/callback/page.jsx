@@ -173,10 +173,10 @@ function PaymentCallbackContent() {
             </div>
 
             <Link
-              href="/home"
+              href="/ai"
               className="w-full py-5 bg-[#3a221c] text-[#f8f1ea] text-xs font-bold tracking-[0.4em] uppercase transition-all hover:bg-[#1a1110] flex items-center justify-center gap-4 group rounded-lg shadow-lg"
             >
-              Kembali ke Beranda
+              Coba AI
               <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </Link>
           </div>

@@ -17,6 +17,7 @@ export const aiConfigService = {
   syncModelBalance: (id) => api.post(`/ai-config/models/${id}/sync-balance`),
 
   getFeaturePricing: () => api.get("/ai-config/feature-pricing"),
+  createFeaturePricing: (data) => api.post("/ai-config/feature-pricing", data),
   updateFeaturePricing: (id, data) => api.put(`/ai-config/feature-pricing/${id}`, data),
   parseCurl: (curl) => api.post("/ai-config/parse-curl", { curl }),
 };

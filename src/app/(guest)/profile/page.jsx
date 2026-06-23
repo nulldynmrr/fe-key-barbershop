@@ -146,6 +146,31 @@ export default function ProfilePage() {
     }
   };
 
+  const getImageUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith("http")) return url;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    const baseUrl = apiUrl.split("/api/v1")[0];
+    return `${baseUrl}${url}`;
+  };
+
+  const handleViewHistoryDetail = (item) => {
+    const formattedResult = {
+      hasil_analisis: item.hasil_analisis,
+      url_foto_upload: getImageUrl(item.url_foto_upload),
+      url_hasil_img: Array.isArray(item.url_hasil_img)
+        ? item.url_hasil_img.map((url) => getImageUrl(url))
+        : item.url_hasil_img
+          ? [getImageUrl(item.url_hasil_img)]
+          : [],
+      tgl_generate: item.tgl_generate,
+      active_features: item.active_features && item.active_features.length > 0 ? item.active_features : null,
+    };
+
+    sessionStorage.setItem("aiAnalysisResult", JSON.stringify(formattedResult));
+    router.push("/ai/result");
+  };
+
   const fetchTransactions = async (page) => {
     setTxLoading(true);
     try {
@@ -631,7 +656,7 @@ export default function ProfilePage() {
                                   Cost: {item.harga_credit_terpakai} coins
                                 </span>
                                 <button
-                                  onClick={() => router.push(`/ai?historyId=${item.id}`)}
+                                  onClick={() => handleViewHistoryDetail(item)}
                                   className="text-[9px] uppercase tracking-widest text-[#4a1a1a] font-bold hover:text-[#c57e7b] transition-colors flex items-center gap-1 self-start sm:self-auto mt-1"
                                 >
                                   Lihat Hasil Analisis

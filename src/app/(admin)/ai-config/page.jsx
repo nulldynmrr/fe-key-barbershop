@@ -40,6 +40,20 @@ const ToggleSwitch = ({ checked, onChange, disabled }) => {
   );
 };
 
+// Harus tetap sinkron dengan FEATURE_GATE_MAP di be-key-barbershop/src/services/ai/featureGateMap.js
+const KNOWN_FEATURE_CODES = [
+  "STANDARD_SCAN",
+  "FACE_HEATMAP",
+  "SYMMETRY",
+  "ADV_MAPPING",
+  "HAIR_ANALYSIS",
+  "RISK_ANALYSIS",
+  "BARBER_INSTRUCTIONS",
+  "VIRTUAL_TRY_ON",
+  "HISTORY",
+  "TREND_ANALYSIS",
+];
+
 export default function AiConfigPage() {
   const { showToast, showConfirm } = useToast();
   const [routers, setRouters] = useState([]);
@@ -92,6 +106,17 @@ export default function AiConfigPage() {
   });
   const [isExchangeSubmitting, setIsExchangeSubmitting] = useState(false);
 
+  const [featurePricingList, setFeaturePricingList] = useState([]);
+  const [isFpModalOpen, setIsFpModalOpen] = useState(false);
+  const [isEditingFp, setIsEditingFp] = useState(false);
+  const [editingFpId, setEditingFpId] = useState(null);
+  const [fpFormData, setFpFormData] = useState({ featureCode: "", namaFitur: "", koinCost: "", isActive: true });
+  const [isFpSubmitting, setIsFpSubmitting] = useState(false);
+
+  const availableFeatureCodes = KNOWN_FEATURE_CODES.filter(
+    (code) => !featurePricingList.some((fp) => fp.featureCode === code)
+  );
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -100,10 +125,11 @@ export default function AiConfigPage() {
     setLoading(true);
     setError(null);
     try {
-      const [modelsRes, exchangeRes, logsRes] = await Promise.all([
+      const [modelsRes, exchangeRes, logsRes, featurePricingRes] = await Promise.all([
         aiConfigService.getModels(),
         aiConfigService.getExchangeSettings(),
         aiConfigService.getLogs(1, 10),
+        aiConfigService.getFeaturePricing(),
       ]);
 
       if (modelsRes.data.success) {
@@ -112,6 +138,10 @@ export default function AiConfigPage() {
 
       if (exchangeRes.data.success && exchangeRes.data.data) {
         setExchange(exchangeRes.data.data);
+      }
+
+      if (featurePricingRes.data.success) {
+        setFeaturePricingList(featurePricingRes.data.data || []);
       }
 
       if (logsRes.data.success) {
@@ -388,6 +418,72 @@ export default function AiConfigPage() {
       showToast(err?.response?.data?.message || "Gagal menyimpan API", "error");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleOpenFpAddModal = () => {
+    setIsEditingFp(false);
+    setEditingFpId(null);
+    setFpFormData({ featureCode: "", namaFitur: "", koinCost: "", isActive: true });
+    setIsFpModalOpen(true);
+  };
+
+  const handleOpenFpEditModal = (fp) => {
+    setIsEditingFp(true);
+    setEditingFpId(fp.id);
+    setFpFormData({
+      featureCode: fp.featureCode,
+      namaFitur: fp.namaFitur,
+      koinCost: String(fp.koinCost),
+      isActive: fp.isActive,
+    });
+    setIsFpModalOpen(true);
+  };
+
+  const handleFpInputChange = (e) => {
+    const { name, value } = e.target;
+    setFpFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSaveFeaturePricing = async () => {
+    const missing = [];
+    if (!isEditingFp && !fpFormData.featureCode) missing.push("Feature Code");
+    if (!isEditingFp && !fpFormData.namaFitur) missing.push("Nama Fitur");
+    if (fpFormData.koinCost === "" || fpFormData.koinCost === null || fpFormData.koinCost === undefined) {
+      missing.push("Koin Cost");
+    }
+    if (missing.length > 0) {
+      showToast(`Harap isi semua bidang wajib: ${missing.join(", ")}`, "error");
+      return;
+    }
+
+    setIsFpSubmitting(true);
+    try {
+      let res;
+      if (isEditingFp) {
+        res = await aiConfigService.updateFeaturePricing(editingFpId, {
+          koinCost: Number(fpFormData.koinCost),
+          isActive: fpFormData.isActive,
+        });
+      } else {
+        res = await aiConfigService.createFeaturePricing({
+          featureCode: fpFormData.featureCode,
+          namaFitur: fpFormData.namaFitur,
+          koinCost: Number(fpFormData.koinCost),
+        });
+      }
+
+      if (res.data.success) {
+        showToast(`Feature Pricing berhasil ${isEditingFp ? "diupdate" : "dibuat"}!`, "success");
+        setIsFpModalOpen(false);
+        fetchData();
+      } else {
+        showToast(res.data.message || "Gagal menyimpan Feature Pricing", "error");
+      }
+    } catch (err) {
+      showToast(err?.response?.data?.message || "Gagal menyimpan Feature Pricing", "error");
+    } finally {
+      setIsFpSubmitting(false);
     }
   };
 
@@ -951,6 +1047,68 @@ export default function AiConfigPage() {
         </div>
       </section>
 
+      {/* Feature Pricing */}
+      <section>
+        <div className="flex justify-between items-start mb-6">
+          <div>
+            <h2 className="text-xl font-bold text-[#4a1a1a]" style={{ fontFamily: "var(--font-noto-serif)" }}>
+              Feature Pricing
+            </h2>
+            <p className="text-sm text-[#8b6f66] mt-1" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
+              Kelola harga koin per-fitur AI yang dikenal sistem billing
+            </p>
+          </div>
+          <button
+            onClick={handleOpenFpAddModal}
+            disabled={availableFeatureCodes.length === 0}
+            className="bg-[#4a1a1a] hover:bg-[#2b1d19] text-white text-xs font-semibold px-4 py-2 rounded-md transition-colors disabled:opacity-50"
+          >
+            Tambah Fitur
+          </button>
+        </div>
+
+        <div className="bg-white rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-[#f0e2d9] overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-[#fdf2f0] text-[#8b6f66] text-[10px] uppercase">
+              <tr>
+                <th className="px-4 py-3 text-left">Feature Code</th>
+                <th className="px-4 py-3 text-left">Nama Fitur</th>
+                <th className="px-4 py-3 text-left">Koin Cost</th>
+                <th className="px-4 py-3 text-left">Status</th>
+                <th className="px-4 py-3 text-left">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {featurePricingList.length > 0 ? (
+                featurePricingList.map((fp) => (
+                  <tr key={fp.id} className="border-t border-[#f0e2d9]">
+                    <td className="px-4 py-3 font-mono text-xs">{fp.featureCode}</td>
+                    <td className="px-4 py-3">{fp.namaFitur}</td>
+                    <td className="px-4 py-3">{fp.koinCost}</td>
+                    <td className="px-4 py-3">{fp.isActive ? "Aktif" : "Nonaktif"}</td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => handleOpenFpEditModal(fp)}
+                        className="text-[#4a1a1a] hover:text-[#8b6f66] transition-colors"
+                        title="Edit"
+                      >
+                        <SquarePen className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                    Belum ada data.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div
@@ -1356,6 +1514,95 @@ export default function AiConfigPage() {
                       <Loader2 className="w-5 h-5 animate-spin" />
                     ) : null}
                     <span>Simpan Master Exchange Setting</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isFpModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl" style={{ fontFamily: "var(--font-plus-jakarta)" }}>
+            <div className="p-8">
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="text-2xl font-bold text-[#2b1d19]">
+                  {isEditingFp ? "Edit Feature Pricing" : "Tambah Feature Pricing"}
+                </h2>
+                <button
+                  onClick={() => setIsFpModalOpen(false)}
+                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-semibold text-[#2b1d19] mb-2">Feature Code</label>
+                  {isEditingFp ? (
+                    <input
+                      type="text"
+                      value={fpFormData.featureCode}
+                      disabled
+                      className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-gray-100 text-gray-500 text-sm font-mono"
+                    />
+                  ) : (
+                    <select
+                      name="featureCode"
+                      value={fpFormData.featureCode}
+                      onChange={handleFpInputChange}
+                      className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm"
+                    >
+                      <option value="">-- Pilih Feature Code --</option>
+                      {availableFeatureCodes.map((code) => (
+                        <option key={code} value={code}>
+                          {code}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-[#2b1d19] mb-2">Nama Fitur</label>
+                  <input
+                    type="text"
+                    name="namaFitur"
+                    value={fpFormData.namaFitur}
+                    onChange={handleFpInputChange}
+                    disabled={isEditingFp}
+                    className={`w-full px-4 py-3 rounded-lg border border-gray-200 text-sm ${isEditingFp ? "bg-gray-100 text-gray-500" : "focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all"}`}
+                    placeholder="Contoh: Symmetry Scoring"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-[#2b1d19] mb-2">Koin Cost</label>
+                  <input
+                    type="number"
+                    name="koinCost"
+                    value={fpFormData.koinCost}
+                    onChange={handleFpInputChange}
+                    className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#4a1a1a]/20 focus:border-[#4a1a1a] transition-all text-sm"
+                    placeholder="0"
+                  />
+                </div>
+                {isEditingFp && (
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-semibold text-[#2b1d19]">Status Aktif</label>
+                    <ToggleSwitch
+                      checked={fpFormData.isActive}
+                      onChange={() => setFpFormData((prev) => ({ ...prev, isActive: !prev.isActive }))}
+                    />
+                  </div>
+                )}
+                <div className="pt-2">
+                  <button
+                    onClick={handleSaveFeaturePricing}
+                    disabled={isFpSubmitting}
+                    className="flex items-center justify-center gap-2 px-8 py-3 rounded-lg bg-[#3a201b] hover:bg-[#2b1d19] text-white text-sm font-semibold transition-colors disabled:opacity-70"
+                  >
+                    {isFpSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
+                    <span>{isEditingFp ? "Update Feature Pricing" : "Simpan Feature Pricing"}</span>
                   </button>
                 </div>
               </div>

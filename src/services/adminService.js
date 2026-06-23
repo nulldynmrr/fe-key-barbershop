@@ -34,3 +34,8 @@ export const resolveUserEmail = async (userId) => {
   const res = await api.get(`/user/${userId}/resolve-email`);
   return res.data;
 };
+
+export const getAdminTransactions = async (params) => {
+  const res = await api.get("/admin/transactions", params);
+  return res.data;
+};

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
 import { ChevronRight, Landmark, Check, Store, QrCode } from "lucide-react";
@@ -38,6 +38,14 @@ function PaymentContent() {
   const [paymentUrl, setPaymentUrl] = useState(null);
   const [invoiceNumber, setInvoiceNumber] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    setIsDesktop(window.innerWidth >= 1024);
+    const handleResize = () => setIsDesktop(window.innerWidth >= 1024);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const handleCloseModal = () => {
     if (invoiceNumber) {
@@ -163,7 +171,10 @@ function PaymentContent() {
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-6 items-stretch flex-grow lg:overflow-hidden min-h-0">
+      <div 
+        className="flex flex-col lg:flex-row gap-6 items-stretch flex-grow lg:min-h-0 lg:overflow-hidden min-h-0"
+        style={isDesktop ? { height: "calc(100vh - 235px)" } : undefined}
+      >
         {/* Left Panel: Reservation Details (Compact) */}
         <div className="w-full lg:w-[38%] bg-[#ede8e0]/80 backdrop-blur-sm border border-[#e6d1c7] p-4 lg:p-5 rounded-2xl shadow-md flex flex-col justify-between flex-shrink-0 lg:max-h-full min-h-0">
           <div>
@@ -225,7 +236,7 @@ function PaymentContent() {
           <div className="space-y-3 lg:overflow-y-auto lg:flex-grow pr-1.5 min-h-0">
             {/* QRIS / E-Wallet */}
             <section>
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-2 mb-1.5">
                 <div className="w-0.5 h-3 bg-[#3a221c]"></div>
                 <h3 className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#3a221c]">
                   QRIS
@@ -234,13 +245,13 @@ function PaymentContent() {
               <button
                 key="QRIS"
                 onClick={() => !isProcessingLoading && setSelectedMethod("QRIS")}
-                className={`w-full flex items-center gap-3 border p-2.5 transition-all duration-300 text-left relative overflow-hidden rounded-xl cursor-pointer ${selectedMethod === "QRIS" ? "bg-[#3a221c] border-[#3a221c] text-[#f8f1ea] shadow-md" : "bg-[#ede8e0] border-[#e6d1c7] text-[#3a221c] hover:bg-[#e6d1c7]/30"}`}
+                className={`w-full flex items-center gap-3 border p-3 transition-all duration-300 text-left relative overflow-hidden rounded-xl cursor-pointer ${selectedMethod === "QRIS" ? "bg-[#3a221c] border-[#3a221c] text-[#f8f1ea] shadow-md" : "bg-[#ede8e0] border-[#e6d1c7] text-[#3a221c] hover:bg-[#e6d1c7]/30"}`}
               >
                 <QrCode
-                  className={`w-3.5 h-3.5 ${selectedMethod === "QRIS" ? "text-[#f8f1ea]" : "text-[#3a221c]"}`}
+                  className={`w-4 h-4 ${selectedMethod === "QRIS" ? "text-[#f8f1ea]" : "text-[#3a221c]"}`}
                   strokeWidth={1.5}
                 />
-                <span className="text-[10px] font-semibold tracking-wide">
+                <span className="text-[11px] font-semibold tracking-wide">
                   QRIS
                 </span>
                 {selectedMethod === "QRIS" && (
@@ -253,31 +264,31 @@ function PaymentContent() {
 
             {/* Virtual Account */}
             <section>
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-2 mb-1.5">
                 <div className="w-0.5 h-3 bg-[#3a221c]"></div>
                 <h3 className="text-[9px] tracking-[0.2em] uppercase font-bold text-[#3a221c]">
                   Virtual Account
                 </h3>
               </div>
-              {/* Scrollable grid container */}
-              <div className="max-h-[110px] lg:max-h-[135px] overflow-y-auto pr-1 border border-[#e6d1c7]/40 bg-[#ede8e0]/20 p-2 rounded-xl">
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+              {/* Grid container (No inner scrollbar) */}
+              <div className="border border-[#e6d1c7]/40 bg-[#ede8e0]/20 p-2.5 rounded-xl">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5">
                   {["BNI", "BRI", "BSI", "CIMB", "Danamon", "Maybank", "Permata", "BNC", "BTN", "Sinarmas"].map((bank) => (
                     <button
                       key={bank}
                       onClick={() => !isProcessingLoading && setSelectedMethod(bank)}
-                      className={`flex items-center gap-2 border p-2 transition-all duration-300 text-left relative rounded-lg cursor-pointer ${selectedMethod === bank ? "bg-[#3a221c] border-[#3a221c] text-[#f8f1ea] shadow-md" : "bg-[#ede8e0] border-[#e6d1c7] text-[#3a221c] hover:bg-[#e6d1c7]/30"}`}
+                      className={`flex items-center gap-2 border p-2.5 transition-all duration-300 text-left relative rounded-lg cursor-pointer ${selectedMethod === bank ? "bg-[#3a221c] border-[#3a221c] text-[#f8f1ea] shadow-md" : "bg-[#ede8e0] border-[#e6d1c7] text-[#3a221c] hover:bg-[#e6d1c7]/30"}`}
                     >
                       <Landmark
-                        className={`w-3 h-3 ${selectedMethod === bank ? "text-[#f8f1ea]" : "text-[#3a221c]"}`}
+                        className={`w-3.5 h-3.5 ${selectedMethod === bank ? "text-[#f8f1ea]" : "text-[#3a221c]"}`}
                         strokeWidth={1.5}
                       />
-                      <span className="text-[9px] font-semibold tracking-wider">
+                      <span className="text-[10px] font-semibold tracking-wider">
                         {bank}
                       </span>
                       {selectedMethod === bank && (
-                        <div className="absolute top-1 right-1 animate-fade-in">
-                          <Check className="w-2 h-2 text-[#f8f1ea]" strokeWidth={3} />
+                        <div className="absolute top-1.5 right-1.5 animate-fade-in">
+                          <Check className="w-2.5 h-2.5 text-[#f8f1ea]" strokeWidth={3} />
                         </div>
                       )}
                     </button>
@@ -299,13 +310,13 @@ function PaymentContent() {
                   <button
                     key={store}
                     onClick={() => !isProcessingLoading && setSelectedMethod(store)}
-                    className={`flex items-center gap-2 border p-2.5 transition-all duration-300 text-left relative rounded-lg cursor-pointer ${selectedMethod === store ? "bg-[#3a221c] border-[#3a221c] text-[#f8f1ea] shadow-md" : "bg-[#ede8e0] border-[#e6d1c7] text-[#3a221c] hover:bg-[#e6d1c7]/30"}`}
+                    className={`flex items-center gap-2 border p-3 transition-all duration-300 text-left relative rounded-lg cursor-pointer ${selectedMethod === store ? "bg-[#3a221c] border-[#3a221c] text-[#f8f1ea] shadow-md" : "bg-[#ede8e0] border-[#e6d1c7] text-[#3a221c] hover:bg-[#e6d1c7]/30"}`}
                   >
                     <Store
                       className={`w-3.5 h-3.5 ${selectedMethod === store ? "text-[#f8f1ea]" : "text-[#3a221c]"}`}
                       strokeWidth={1.5}
                     />
-                    <span className="text-[10px] font-semibold tracking-wider">
+                    <span className="text-[11px] font-semibold tracking-wider">
                       {store}
                     </span>
                     {selectedMethod === store && (

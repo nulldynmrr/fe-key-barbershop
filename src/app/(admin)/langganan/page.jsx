@@ -5,6 +5,8 @@ import Link from "next/link";
 import {
   SquarePen,
   Trash2,
+  Power,
+  PowerOff,
   X,
   Loader2,
   AlertTriangle,
@@ -395,6 +397,26 @@ export default function LanggananPage() {
     setIsModalOpen(true);
   };
 
+  const handleToggleStatus = async (pkg) => {
+    const nextStatus = pkg.dbStatus === "AKTIF" ? "NONAKTIF" : "AKTIF";
+    const verb = nextStatus === "AKTIF" ? "mengaktifkan" : "menonaktifkan";
+    showConfirm(
+      nextStatus === "AKTIF" ? "Aktifkan Paket" : "Nonaktifkan Paket",
+      `Apakah Anda yakin ingin ${verb} paket "${pkg.nama}"?`,
+      async () => {
+        try {
+          const res = await packageService.togglePackageStatus(pkg.id, nextStatus);
+          if (res.data.success) {
+            showToast(`Paket berhasil di${nextStatus === "AKTIF" ? "aktifkan" : "nonaktifkan"}!`, "success");
+            fetchPackages();
+          }
+        } catch (err) {
+          showToast(err?.response?.data?.message || `Gagal ${verb} paket`, "error");
+        }
+      }
+    );
+  };
+
   const handleDelete = async (id) => {
     showConfirm(
       "Hapus Paket",
@@ -633,6 +655,21 @@ export default function LanggananPage() {
                             title="Edit"
                           >
                             <SquarePen className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => handleToggleStatus(pkg)}
+                            className={
+                              pkg.dbStatus === "AKTIF"
+                                ? "text-[#166534] hover:text-[#0f3d22] transition-colors"
+                                : "text-gray-400 hover:text-gray-600 transition-colors"
+                            }
+                            title={pkg.dbStatus === "AKTIF" ? "Nonaktifkan" : "Aktifkan"}
+                          >
+                            {pkg.dbStatus === "AKTIF" ? (
+                              <Power className="w-5 h-5" />
+                            ) : (
+                              <PowerOff className="w-5 h-5" />
+                            )}
                           </button>
                           <button
                             onClick={() => handleDelete(pkg.id)}

@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { Home, Cpu, Tags, Users, ReceiptText, Bell, Share2, LogOut, User, Settings, X, CheckCircle, MessageSquareText } from "lucide-react";
+import { Home, Cpu, Tags, Users, UserCog, ReceiptText, Bell, Share2, LogOut, User, Settings, X, CheckCircle, MessageSquareText } from "lucide-react";
 import { ToastProvider, useToast } from "@/contexts/ToastContext";
 import { logoutAdmin } from "@/utils/request";
 import { getAdminProfile, requestAdminOTP, getNotifications, updateAdminProfile, markNotificationRead, markAllNotificationsRead, resolveUserEmail } from "@/services/adminService";
@@ -150,6 +150,7 @@ function AdminLayoutContent({ children }) {
     { name: "Dashboard", href: "/dashboard", icon: Home },
     { name: "AI Engine Control", href: "/ai-config", icon: Cpu },
     { name: "Harga & Langganan", href: "/langganan", icon: Tags },
+    { name: "User & Subscription", href: "/users", icon: UserCog },
     { name: "Transaksi", href: "/transaksi", icon: ReceiptText },
     { name: "Barbers", href: "/barbers", icon: Users },
     { name: "Media Social", href: "/media-social", icon: Share2 },

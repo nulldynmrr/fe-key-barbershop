@@ -1068,6 +1068,7 @@ export default function AiConfigPage() {
         </div>
 
         <div className="bg-white rounded-xl shadow-[0_2px_10px_rgba(0,0,0,0.03)] border border-[#f0e2d9] overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-[#fdf2f0] text-[#8b6f66] text-[10px] uppercase">
               <tr>
@@ -1106,6 +1107,7 @@ export default function AiConfigPage() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
       </section>
 

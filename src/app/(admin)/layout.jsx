@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { Home, Cpu, Tags, Users, UserCog, ReceiptText, Bell, Share2, LogOut, User, Settings, X, CheckCircle, MessageSquareText } from "lucide-react";
+import { Home, Cpu, Tags, Users, UserCog, ReceiptText, Bell, Share2, LogOut, User, Settings, X, CheckCircle, MessageSquareText, Menu } from "lucide-react";
 import { ToastProvider, useToast } from "@/contexts/ToastContext";
 import { logoutAdmin } from "@/utils/request";
 import { getAdminProfile, requestAdminOTP, getNotifications, updateAdminProfile, markNotificationRead, markAllNotificationsRead, resolveUserEmail } from "@/services/adminService";
@@ -137,6 +137,7 @@ function AdminLayoutContent({ children }) {
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [unhandledCount, setUnhandledCount] = useState(0);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const notifDropdownRef = useRef(null);
   const profileDropdownRef = useRef(null);
@@ -160,6 +161,19 @@ function AdminLayoutContent({ children }) {
   useEffect(() => {
     fetchInitialData();
   }, []);
+
+  useEffect(() => {
+    setIsSidebarOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (isSidebarOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [isSidebarOpen]);
 
   useEffect(() => {
     if (!showNotifDropdown && !showProfileDropdown) return;
@@ -264,11 +278,20 @@ function AdminLayoutContent({ children }) {
   };
 
   return (
-    <div className="flex h-screen bg-[#fafafa] font-sans text-[#4a1a1a]">
+    <div className="flex h-dvh bg-[#fafafa] font-sans text-[#4a1a1a] overflow-hidden">
+      {/* Mobile overlay */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-[#e6d1c7] flex flex-col flex-shrink-0 z-20">
-        <div className="flex items-center justify-center h-20 px-6 mb-4">
-          <div className="relative w-48 h-12">
+      <aside className={`fixed md:static inset-y-0 left-0 z-40 w-72 md:w-64 bg-white border-r border-[#e6d1c7] flex flex-col flex-shrink-0 transition-transform duration-300 ease-in-out ${isSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}>
+        <div className="flex items-center justify-between h-16 md:h-20 px-5 mb-2">
+          <div className="relative w-36 md:w-48 h-10 md:h-12">
             <Image
               src="/images/logo-navbar.png"
               alt="Key Barber"
@@ -276,6 +299,13 @@ function AdminLayoutContent({ children }) {
               className="object-contain"
             />
           </div>
+          <button
+            className="md:hidden p-2 text-[#8b6f66] hover:text-[#4a1a1a] hover:bg-[#ede8e0] rounded-lg transition-colors"
+            onClick={() => setIsSidebarOpen(false)}
+            aria-label="Tutup menu"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
 
         <nav className="flex-1 px-4 space-y-1">
@@ -287,7 +317,7 @@ function AdminLayoutContent({ children }) {
               <Link
                 key={item.name}
                 href={item.href}
-                className={`flex items-center group relative px-3 py-3 text-sm font-medium transition-colors ${isActive
+                className={`flex items-center group relative px-3 py-3.5 md:py-3 text-sm font-medium transition-colors cursor-pointer ${isActive
                   ? "text-[#4a1a1a]"
                   : "text-[#8b6f66] hover:text-[#4a1a1a]"
                   }`}
@@ -330,37 +360,46 @@ function AdminLayoutContent({ children }) {
         </div>
       </aside>
 
-      <main className="flex-1 flex flex-col overflow-hidden relative">
-        <header className="h-20 flex items-center justify-between px-8 bg-[#fafafa] border-b border-transparent">
-          <div>
-            <div
-              className="flex items-center text-xs text-[#8b6f66] mb-1"
-              style={{ fontFamily: "var(--font-be-vietnam)" }}
+      <main className="flex-1 flex flex-col overflow-hidden relative min-w-0">
+        <header className="h-16 md:h-20 flex-shrink-0 flex items-center justify-between px-4 md:px-8 bg-[#fafafa] border-b border-transparent">
+          <div className="flex items-center gap-3">
+            <button
+              className="md:hidden p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center text-[#8b6f66] hover:bg-[#ede8e0] rounded-lg transition-colors"
+              onClick={() => setIsSidebarOpen(true)}
+              aria-label="Buka menu"
             >
-              <span>Pages</span>
-              <span className="mx-2">/</span>
-              <span className="capitalize">
-                {pathname.split("/").pop().replace("-", " ")}
-              </span>
+              <Menu className="h-5 w-5" />
+            </button>
+            <div>
+              <div
+                className="flex items-center text-xs text-[#8b6f66] mb-0.5"
+                style={{ fontFamily: "var(--font-be-vietnam)" }}
+              >
+                <span>Pages</span>
+                <span className="mx-1.5">/</span>
+                <span className="capitalize">
+                  {pathname.split("/").pop().replace("-", " ")}
+                </span>
+              </div>
+              <h1
+                className="text-lg md:text-2xl font-bold text-[#4a1a1a] leading-tight"
+                style={{ fontFamily: "var(--font-noto-serif)" }}
+              >
+                <span className="capitalize">
+                  {pathname.split("/").pop().replace("-", " ")}
+                </span>
+              </h1>
             </div>
-            <h1
-              className="text-2xl font-bold text-[#4a1a1a]"
-              style={{ fontFamily: "var(--font-noto-serif)" }}
-            >
-              <span className="capitalize">
-                {pathname.split("/").pop().replace("-", " ")}
-              </span>
-            </h1>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
             <div className="relative" ref={notifDropdownRef}>
               <button
                 onClick={() => {
                   setShowNotifDropdown(!showNotifDropdown);
                   setShowProfileDropdown(false);
                 }}
-                className={`relative p-2 rounded-full transition-all shadow-sm border ${showNotifDropdown ? 'bg-[#ede8e0] border-[#8b6f66]' : 'bg-white border-[#e6d1c7] text-[#8b6f66] hover:bg-[#ede8e0]'}`}
+                className={`relative min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full transition-all shadow-sm border ${showNotifDropdown ? 'bg-[#ede8e0] border-[#8b6f66]' : 'bg-white border-[#e6d1c7] text-[#8b6f66] hover:bg-[#ede8e0]'}`}
               >
                 <Bell className="h-4 w-4" />
                 {unreadCount > 0 && (
@@ -574,7 +613,7 @@ function AdminLayoutContent({ children }) {
         </header>
 
         {/* Page Content */}
-        <div className="flex-1 overflow-y-auto p-8 pt-4">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 pt-4">
           <div className="max-w-7xl mx-auto">
             {children}
           </div>

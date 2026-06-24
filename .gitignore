@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# superpowers Claude Code plugin — local-only specs/plans, never committed
+docs/superpowers/

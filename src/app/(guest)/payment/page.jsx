@@ -3,7 +3,8 @@
 import React, { useState, useEffect, Suspense } from "react";
 import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
-import { ChevronRight, Landmark, Check, Store, QrCode } from "lucide-react";
+import { Landmark, Check, Store, QrCode } from "lucide-react";
+import Cookies from "js-cookie";
 import SiteNavbar from "../../../components/SiteNavbar";
 import api from "@/utils/request";
 
@@ -39,8 +40,20 @@ function PaymentContent() {
   const [invoiceNumber, setInvoiceNumber] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(null);
 
   useEffect(() => {
+    const token = Cookies.get("user_token");
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+
+    if (type !== "package" || !packageId) {
+      router.push("/service");
+      return;
+    }
+
     setIsDesktop(window.innerWidth >= 1024);
     const handleResize = () => setIsDesktop(window.innerWidth >= 1024);
     window.addEventListener("resize", handleResize);
@@ -66,59 +79,32 @@ function PaymentContent() {
   const handlePayment = async () => {
     if (!selectedMethod) return;
     setIsProcessingLoading(true);
+    setErrorMessage(null);
 
     try {
-      if (type === "package" && packageId) {
-        // Call Backend to Create Package Transaction using Axios API Client
-        const response = await api.post("/payments/create-transaction", {
-          package_id: packageId,
-          amount: amount,
-          nama_paket: plan,
-          doku_payment_method: getDokuPaymentMethod(selectedMethod),
-        });
+      const response = await api.post("/payments/create-transaction", {
+        package_id: packageId,
+        amount: amount,
+        nama_paket: plan,
+        doku_payment_method: getDokuPaymentMethod(selectedMethod),
+      });
 
-        if (response.data && response.data.success && response.data.data?.payment_url) {
-          setPaymentUrl(response.data.data.payment_url);
-          setInvoiceNumber(response.data.data.invoice_number);
-          setShowModal(true);
-          setIsProcessingLoading(false);
-        } else {
-          console.error("Failed to generate payment link for package", response.data);
-          setIsProcessingLoading(false);
-        }
+      if (response.data && response.data.success && response.data.data?.payment_url) {
+        setPaymentUrl(response.data.data.payment_url);
+        setInvoiceNumber(response.data.data.invoice_number);
+        setShowModal(true);
       } else {
-        // 1. Call Backend to Create DOKU Checkout Link for haircut bookings
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/create-payment`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              plan,
-              price,
-              tier,
-              method: selectedMethod,
-              doku_payment_method: getDokuPaymentMethod(selectedMethod),
-            }),
-          },
-        );
-
-        const result = await response.json();
-
-        // 2. Redirect to DOKU Payment Page
-        if (result?.data?.payment_url) {
-          setPaymentUrl(result.data.payment_url);
-          const invFromUrl = result.data.payment_url.split("/").pop();
-          setInvoiceNumber(result.data.invoice_number || invFromUrl || `INV-${Date.now()}`);
-          setShowModal(true);
-          setIsProcessingLoading(false);
-        } else {
-          console.error("Failed to generate payment link", result);
-          setIsProcessingLoading(false);
-        }
+        setErrorMessage("Gagal membuat link pembayaran. Silakan coba lagi.");
       }
     } catch (error) {
-      console.error("Checkout Error:", error);
+      if (error.response?.status === 401) {
+        router.push("/login");
+        return;
+      }
+      setErrorMessage(
+        error.response?.data?.message || "Terjadi kesalahan. Silakan coba lagi."
+      );
+    } finally {
       setIsProcessingLoading(false);
     }
   };
@@ -346,6 +332,11 @@ function PaymentContent() {
                 "Select Payment Method"
               )}
             </button>
+            {errorMessage && (
+              <p className="text-center text-[10px] text-red-600 mt-2">
+                {errorMessage}
+              </p>
+            )}
             <p className="text-center text-[8px] text-[#8b6f66] mt-1.5 tracking-wider uppercase opacity-60">
               Secured by Key Barber Payment Gateway
             </p>
